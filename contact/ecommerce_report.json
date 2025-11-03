@@ -1,0 +1,19 @@
+[
+    {
+        "name": "ecommerce_goal",
+        "dimensions" :[
+          "date",
+          "sessionSourceMedium",
+          "sessionCampaignName",
+          "sessionManualAdContent",
+          "itemName",
+          "itemVariant",
+          "hostName"
+        ],
+        "metrics":[
+          "itemsPurchased",
+          "itemRevenue"
+        
+        ]
+      }
+]

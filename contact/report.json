@@ -1,0 +1,20 @@
+[
+  {
+      "name": "goal",
+      "dimensions" :[
+        "date",
+        "sessionSourceMedium",
+        "sessionCampaignName",
+        "sessionManualAdContent",
+        "eventName",
+        "hostName",
+        "customEvent:serviceType[screen_view]"
+
+      ],
+      "metrics":[
+        "eventCount",
+        "eventValue"
+      
+      ]
+    }
+]

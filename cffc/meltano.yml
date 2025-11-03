@@ -1,0 +1,157 @@
+version: 1
+default_environment: prod
+project_id: 2de0b6f6-586c-4cae-828a-f4b265302e9e
+environments:
+- name: dev
+- name: staging
+- name: prod
+state_backend:
+  uri: gs://cffc-main-meltano-state-staging
+plugins:
+  extractors:
+  - name: tap-linkedin-ads
+    variant: singer-io
+    pip_url: tap-linkedin-ads
+    config:
+      accounts: '508316549'
+      user_agent: agent
+      start_date: ${START_DATE}
+  - name: tap-facebook
+    variant: airbyte
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    config:
+        airbyte_config:
+          start_date: ${START_DATE}T00:00:00Z
+    select:
+        - ads_insights_*.*
+        - ad_account.*
+        - ad_sets.*
+        - ads.*
+        - campaigns.*
+  - name: tap-ga4
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
+    config:
+      reports: ./report.json
+      start_date: '2024-01-01'
+      keep_empty_rows: true
+      select:
+      - goal
+  - name: tap-ttd
+    namespace: tap-ttd
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git
+    executable: tap-ttd
+    config:
+      api_key: ${TAP_TTD_API_KEY}
+      start_date: '2025-01-01T00:00:00Z'
+      end_date: 
+      manual: False
+      advertiser_id: 4dpgyc6
+  - name: tap-tiktok
+    variant: airbyte
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    config:
+      airbyte_config:
+        credentials:
+          auth_type: oauth2.0
+        report_granularity: HOUR
+        start_date: ${START_DATE}
+  - name: tap-snapchat-ads
+    namespace: tap-snapchat-ads
+    pip_url: git+https://github.com/Together-NZ/tap_snapchat_ads.git
+    executable: tap-snapchat-ads
+    capabilities:
+    - catalog
+    config:
+      client_id: ${TAP_SNAPCHAT_ADS_CLIENT_ID}
+      client_secret: ${TAP_SNAPCHAT_ADS_CLIENT_SECRET}
+      refresh_token: ${TAP_SNAPCHAT_ADS_REFRESH_TOKEN}
+      start_date: ${START_DATE}T00:00:00Z
+      user_agent: Meltano
+      org_account_ids: ${TAP_SNAPCHAT_ADS_ORG_ACCOUNT_IDS}
+      ad_account_ids: ${TAP_SNAPCHAT_ADS_AD_ACCOUNT_IDS}
+    catalog: snapchat_catalog.json
+  - name: tap-dv360
+    namespace: tap-dv360
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git
+    executable: tap-dv360
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      start_date: ${START_DATE}
+      advertiser_id: '6062432'
+      query_standard: query_standard.json
+      query_youtube: query_youtube.json
+      service_account: together-meltano@together-internal.iam.gserviceaccount.com  
+  - name: tap-hivestack
+    namespace: tap-hivestack
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git
+    executable: tap-hivestack
+    config:
+        api_key: ${TAP_HIVESTACK_API_KEY}
+        report_id: '67655' 
+  loaders:
+  - name: target-jsonl
+    variant: andyh1203
+    pip_url: target-jsonl
+  - name: target-bigquery
+    variant: z3z1ma
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    config:
+      dataset: ${BQ_DATASET}
+      project: cffc-main
+      location: australia-southeast1
+      denormalized: false
+      schema_resolver_version: 2
+      column_name_transforms:
+        add_underscore_when_invalid: true
+        lower: true
+        snake_case: true
+      fail_fast: false
+      method: ${BQ_METHOD}
+      bucket: australia-southeast1-meltan-00c049c-bigquery-staging
+  transformers:
+  - name: dbt-bigquery
+    variant: dbt-labs
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
+    commands:
+      snapchat_cffc_models: 
+        args: run --select +snapchat__cffc
+      linkedin_cffc_models: 
+        args: run --select +linkedin__cffc
+      google_ads_sorted_models:
+        args: run --select +google_ads_search__sorted
+        description: Run the Google Ads model
+      google_ads_sorted_in_school_models:
+        args: run --select +google_ads_search__sorted_in_school +google
+      facebook_cffc_models:
+        args: run --select +facebook__cffc
+        description: Run the Facebook ads model
+      dv360_cffc_models:
+        args: run --select +dv360_standard__cffc +dv360_youtube__cffc
+        description: Run the DV360 ads model
+      ttd_cffc_models:
+        args: run --select  +ttd_transformed__cffc
+        description: Run the TTD ads model
+      cm360_cffc_models:
+        args: run --select +cm360_seralized__cffc +cm360_direct_buy__cffc
+        description: Run the CM360 ads model
+      ga4_retirement_commission_models:
+        args: run --select +ga4_goal_a__retirement_commission +ga4_goal_channel__retirement_commission
+        description: Run the GA4 ads model
+      ga4_sorted_models:
+        args: run --select +ga4_goal_a__sorted +ga4_goal_channel__sorted
+      ga4_smart_sorted_models:
+        args: run --select +ga4_goal_a__smart_sorted +ga4_goal_channel__smart_sorted
+      ga4_sorted_in_school_models:
+        args: run --select +ga4_goal_a__sorted_in_school +ga4_goal_channel__sorted_in_school
+      hivestack_cffc_models:
+        args: run --select +hivestack__cffc
+        description: Run the Hivestack ads model
+elt:
+  buffer_size: 52428800
+

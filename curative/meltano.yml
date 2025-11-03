@@ -1,0 +1,164 @@
+version: 1
+default_environment: dev
+project_id: 9c579100-c10a-4ecf-a23c-ffeace1cf097
+environments:
+- name: dev
+- name: staging
+- name: prod
+state_backend:
+  uri: gs://curative-main-meltano-state-staging
+plugins:
+  extractors:
+  - name: tap-tiktok
+    variant: gthesheep
+    pip_url: git+https://github.com/gthesheep/tap-tiktok.git
+    config:
+      start_date: ${START_DATE}
+  - name: tap-snapchat-ads
+    namespace: tap-snapchat-ads
+    pip_url: git+https://github.com/Together-NZ/tap_snapchat_ads.git
+    executable: tap-snapchat-ads
+    capabilities:
+    - catalog
+    config:
+      client_id: ${TAP_SNAPCHAT_ADS_CLIENT_ID}
+      client_secret: ${TAP_SNAPCHAT_ADS_CLIENT_SECRET}
+      refresh_token: ${TAP_SNAPCHAT_ADS_REFRESH_TOKEN}
+      start_date: ${START_DATE}T00:00:00Z
+      user_agent: Meltano
+      org_account_ids: ${TAP_SNAPCHAT_ADS_ORG_ACCOUNT_IDS}
+      ad_account_ids: ${TAP_SNAPCHAT_ADS_AD_ACCOUNT_IDS}
+    catalog: snapchat_catalog.json
+  - name: tap-dv360
+    namespace: tap-dv360
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git
+    executable: tap-dv360
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      start_date: ${START_DATE}
+      advertiser_id: ${DV360_ADVERTISER_ID}
+      query_standard: dv360_standard.json
+      query_youtube: dv360_youtube.json
+      service_account: together-meltano@together-internal.iam.gserviceaccount.com
+  - name: tap-ga4
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
+    config:
+      reports: ./report.json
+      start_date: ${START_DATE}
+      keep_empty_rows: true
+      select:
+      - goal
+  - name: tap-ttd
+    namespace: tap-ttd
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git
+    executable: tap-ttd
+    config:
+      api_key: ${TAP_TTD_API_KEY}
+      start_date: ${START_DATE}
+      end_date: ''
+      manual: false
+      advertiser_id: ${TAP_TTD_ADVERTISER_ID}
+  - name: tap-facebook
+    variant: airbyte
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    config:
+      airbyte_config:
+        start_date: ${START_DATE}T00:00:00Z
+    select:
+    - ads_insights_*.*
+    - ad_account.*
+    - ad_sets.*
+    - ads.*
+    - campaigns.*
+  - name: tap-hivestack
+    namespace: tap-hivestack
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git
+    executable: tap-hivestack
+    config:
+        api_key: ${TAP_HIVESTACK_API_KEY}
+        report_id: ${TAP_HIVESTACK_REPORT_ID}
+  loaders:
+  - name: target-bigquery
+    variant: z3z1ma
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    config:
+      dataset: ${BQ_DATASET}
+      project: curative-main
+      location: australia-southeast1
+      denormalized: false
+      schema_resolver_version: 2
+      column_name_transforms:
+        add_underscore_when_invalid: true
+        lower: true
+        snake_case: true
+      fail_fast: false
+      method: ${BQ_METHOD}
+      bucket: australia-southeast1-meltan-00c049c-bigquery-staging
+  orchestrators:
+  - name: airflow
+    variant: apache
+    pip_url: apache-airflow==2.10.5 --constraint 
+      https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-${MELTANO__PYTHON_VERSION}.txt
+  transformers:
+  - name: dbt-bigquery
+    variant: dbt-labs
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
+    config:
+      project: curative-main
+      method: oauth
+    commands:
+      cm360_creativenz_models:
+        args: run --select cm360_creativenz_seralized cm360_creativenz_direct_buy
+      cm360_fasd_models:
+        args: run --select cm360_fasd_seralized cm360_fasd_direct_buy
+      cm360_protectyourbreath_models:
+        args: run --select cm360_protectyourbreath_seralized cm360_protectyourbreath_direct_buy
+      dv360_fasd_models:
+        args: run --select dv360_fasd_standard dv360_fasd_youtube
+      dv360_protectyourbreath_models:
+        args: run --select dv360_protectyourbreath_standard dv360_protectyourbreath_youtube
+      dv360_mahi_models:
+        args: run --select dv360_mahi_standard dv360_mahi_youtube
+      facebook_creativenz_models:
+        args: run --select facebook_creativenz
+      facebook_protectyourbreath_models:
+        args: run --select facebook_protectyourbreath
+      facebook_fasd_models:
+        args: run --select facebook_fasd
+      ga4_mahi_models:
+        args: run --select ga4_goal_a__mahi ga4_goal_channel__mahi
+      ga4_fasd_models:
+        args: run --select ga4_goal_a__fasd ga4_goal_channel__fasd
+      ga4_realnurses_models:
+        args: run --select ga4_goal_a__realnurses ga4_goal_channel__realnurses
+      hivestack_protectyourbreath_models:
+        args: run --select hivestack_protectyourbreath
+      snapchat_protectyourbreath_models:
+        args: run --select snapchat_protectyourbreath
+      tiktok_creativenz_models:
+        args: run --select tiktok__creativenz
+      tiktok_protectyourbreath_models:
+
+        args: run --select tiktok__protectyourbreath
+      tiktok_mahi_models:
+        args: run --select tiktok__mahi
+      ttd_creativenz_models:
+        args: run --select  ttd_creativenz_transformed
+      ttd_protectyourbreath_models:
+        args: run --select  ttd_protectyourbreath_transformed
+      ttd_fasd_models:
+        args: run --select  ttd_fasd_transformed
+      ttd_mahi_models:
+        args: run --select ttd_mahi_transformed
+      ttd_realnurses_models:
+        args: run --select ttd_realnurses_transformed
+  files:
+  - name: files-airflow
+    variant: meltano
+    pip_url: git+https://github.com/meltano/files-airflow.git

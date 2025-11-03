@@ -1,0 +1,47 @@
+version: 1
+default_environment: dev
+project_id: 123b8fab-a351-4b3e-a547-d5446bd5cc7c
+environments:
+- name: dev
+- name: staging
+- name: prod
+state_backend:
+  uri: gs://farizon-main-meltano-state-staging
+plugins:
+  extractors:
+  - name: tap-ga4
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
+    config:
+      reports: ./report.json
+      start_date: ${START_DATE}
+      keep_empty_rows: true
+      select:
+      - goal
+  loaders:
+  - name: target-jsonl
+    variant: andyh1203
+    pip_url: target-jsonl
+  - name: target-bigquery
+    variant: z3z1ma
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    config:
+      dataset: ${BQ_DATASET}
+      project: farizon-main
+      location: australia-southeast1
+      denormalized: false
+      schema_resolver_version: 2
+      column_name_transforms:
+        add_underscore_when_invalid: true
+        lower: true
+        snake_case: true
+      fail_fast: false
+      method: gcs_stage
+      bucket: australia-southeast1-meltan-00c049c-bigquery-staging
+  transformers:
+  - name: dbt-bigquery
+    variant: dbt-labs
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
+    commands:
+      ga4_models:
+        args: run --select ga4_goal_a ga4_goal_channel

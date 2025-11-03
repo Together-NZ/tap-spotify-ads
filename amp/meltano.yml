@@ -1,0 +1,136 @@
+version: 1
+default_environment: prod
+project_id: 2de0b6f6-586c-4cae-828a-f4b265302e9e
+environments:
+- name: dev
+- name: staging
+- name: prod
+state_backend:
+  uri: gs://amp-main-meltano-state-staging
+plugins:
+  extractors:
+  - name: tap-facebook
+    variant: airbyte
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    config:
+      airbyte_config:
+        start_date: ${START_DATE}T00:00:00Z
+    select:
+    - ads_insights_*.*
+    - ad_account.*
+    - ad_sets.*
+    - ads.*
+    - campaigns.*
+  - name: tap-linkedin-ads
+    namespace: tap-linkedin-ads
+    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git
+    executable: tap-linkedin-ads
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      access_token: ${TAP_LINKEDIN_ADS_ACCESS_TOKEN}
+      refresh_token: ${TAP_LINKEDIN_ADS_REFRESH_TOKEN}
+      client_id: ${TAP_LINKEDIN_ADS_CLIENT_ID}
+      client_secret: ${TAP_LINKEDIN_ADS_CLIENT_SECRET}
+      accounts: '513502542'
+      user_agent: agent
+      start_date: ${START_DATE}
+      _catalog_path: ./catalog.json
+    select:
+    - ad_analytics_by_creative.*
+    - ad_analytics_by_campaign.*
+  
+  - name: tap-ttd
+    namespace: tap-ttd
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git
+    executable: tap-ttd
+    config:
+      api_key: ${TAP_TTD_API_KEY}
+      start_date: ${START_DATE}
+      end_date:
+      manual: false
+      advertiser_id: ogj9nzg
+  - name: tap-dv360
+    namespace: tap-dv360
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git
+    executable: tap-dv360
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      start_date: ${START_DATE}
+      advertiser_id: '6881895348'
+      query_standard: query_standard.json
+      query_youtube: query_youtube.json
+      service_account: ${TAP_DV360_SERVICE_ACCOUNT} 
+  - name: tap-hivestack
+    namespace: tap-hivestack
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git
+    executable: tap-hivestack
+    config:
+      api_key: ${TAP_HIVESTACK_API_KEY}
+      report_id: '69296'
+  - name: tap-reddit-ads
+    namespace: tap-reddit-ads
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-reddit-ads.git
+    executable: tap-reddit-ads
+    config:
+      refresh_token: ${TAP_REDDIT_ADS_REFRESH_TOKEN}
+      ad_account_id: ${TAP_REDDIT_ADS_AD_ACCOUNT_ID}
+      app_id: ${TAP_REDDIT_ADS_APP_ID}
+      client_secret: ${TAP_REDDIT_ADS_CLIENT_SECRET}
+      start_date: ${START_DATE}
+  loaders:
+  - name: target-jsonl
+    variant: andyh1203
+    pip_url: target-jsonl
+  - name: target-bigquery
+    variant: z3z1ma
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    config:
+      dataset: ${BQ_DATASET}
+      project: amp-main
+      location: australia-southeast1
+      denormalized: false
+      schema_resolver_version: 2
+      column_name_transforms:
+        add_underscore_when_invalid: true
+        lower: true
+        snake_case: true
+      fail_fast: false
+      method: ${BQ_METHOD}
+      bucket: australia-southeast1-meltan-00c049c-bigquery-staging
+  transformers:
+  - name: dbt-bigquery
+    variant: dbt-labs
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
+    commands:
+      dv360_models:
+        args: run --select dv360_standard dv360_youtube
+      adobe_centralized_models: 
+        args: run --select adobe
+      adobe_general_insurance_models:
+        args: run --select ga4_goal_channel__general_insurance
+      adobe_wealth_models:
+        args: run --select ga4_goal_channel__wealth
+      adobe_direct_models:
+        args: run --select ga4_goal_channel__direct
+      facebook_models: run --select facebook
+      reddit_models:
+        args: run --select reddit
+      ttd_models: run --select ttd_transformed
+      linkedin_models: run --select linkedin
+      hivestack_models: run --select hivestack
+      cm360_models: run --select cm360_seralized cm360_direct_buy
+      dash_models: run --select dash_table
+      dash_search_models: run --select dash_table_search
+      google_ads_search_models: run --select google_ads_search
+elt:
+  buffer_size: 52428800

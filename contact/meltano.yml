@@ -1,0 +1,139 @@
+version: 1
+default_environment: prod
+project_id: 9581b380-7374-4cd8-a337-4f24fe125b2b
+environments:
+- name: dev
+- name: staging
+- name: prod
+state_backend:
+  uri: gs://contact-main-meltano-state-staging
+plugins:
+  extractors:
+  - name: tap-ttd
+    namespace: tap-ttd
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git
+    executable: tap-ttd
+    config:
+      api_key: ${TAP_TTD_API_KEY}
+      start_date: ${START_DATE}
+      end_date: 
+      manual: false
+      advertiser_id: fsuopvg
+  - name: tap-ga4
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
+    config:
+      reports: ${GA4_REPORTS}
+      start_date: '2024-01-01'
+      keep_empty_rows: true
+      select:
+      - ${GA4_GOAL}
+  - name: tap-dv360
+    namespace: tap-dv360
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git
+    executable: tap-dv360
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      start_date: ${START_DATE}
+      advertiser_id: '7337697838'
+      query_standard: query_standard.json
+      query_youtube: query_youtube.json
+      service_account: together-meltano@together-internal.iam.gserviceaccount.com
+  - name: tap-tiktok
+    variant: gthesheep
+    pip_url: git+https://github.com/gthesheep/tap-tiktok.git
+    config:
+      start_date: ${START_DATE}
+  - name: tap-facebook
+    variant: airbyte
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    config:
+      airbyte_config:
+        start_date: ${START_DATE}T00:00:00Z
+    select:
+    - ads_insights_*.*
+    - ad_account.*
+    - ad_sets.*
+    - ads.*
+    - campaigns.*
+  loaders:
+  - name: target-bigquery
+    variant: z3z1ma
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    config:
+      dataset: ${BQ_DATASET}
+      project: contact-energy-main
+      location: australia-southeast1
+      denormalized: false
+      schema_resolver_version: 2
+      column_name_transforms:
+        add_underscore_when_invalid: true
+        lower: true
+        snake_case: true
+      fail_fast: false
+      method: ${BQ_METHOD}
+      bucket: australia-southeast1-meltan-00c049c-bigquery-staging
+  orchestrators:
+  - name: airflow
+    variant: apache
+    pip_url: apache-airflow==2.10.5 --constraint https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-${MELTANO__PYTHON_VERSION}.txt
+  transformers:
+  - name: dbt-bigquery
+    variant: dbt-labs
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
+    commands:
+      ga4_mobile_goal_models:
+        args: run --select ga4_goal_a__mobile ga4_goal_channel__mobile
+      ga4_broadband_goal_models:
+        args: run --select ga4_goal_a__broadband ga4_goal_channel__broadband
+      ga4_energy_goal_models:
+        args: run --select ga4_goal_a__energy ga4_goal_channel__energy
+      ga4_energy_ecommerce_models:
+        args: run --select ga4_goal_ecommerce__energy
+      ga4_mobile_ecommerce_models:
+        args: run --select ga4_goal_ecommerce__mobile
+      ga4_broadband_ecommerce_models:
+        args: run --select ga4_goal_ecommerce__broadband
+      dv360_energy_models:
+        args: run --select dv360_standard__energy dv360_youtube__energy
+      dv360_mobile_models:
+        args: run --select dv360_standard__mobile dv360_youtube__mobile
+      dv360_broadband_models:
+        args: run --select dv360_standard__broadband dv360_youtube__broadband
+      facebook_energy_models:
+        args: run --select facebook__energy
+      facebook_mobile_models:
+        args: run --select facebook__mobile
+      facebook_broadband_models:
+        args: run --select facebook__broadband
+      tiktok_energy_models:
+        args: run --select tiktok__energy
+      tiktok_mobile_models:
+        args: run --select tiktok__mobile
+      tiktok_broadband_models:
+        args: run --select tiktok__broadband
+      ttd_energy_models:
+        args: run --select ttd_transformed__energy
+      ttd_mobile_models:
+        args: run --select ttd_transformed__mobile
+      ttd_broadband_models:
+        args: run --select ttd_transformed__broadband
+      cm360_mobile_models:
+        args: run --select cm360__mobile
+      cm360_broadband_models:
+        args: run --select cm360__broadband
+      cm360_energy_models:
+        args: run --select cm360__energy
+      ga4_all_goal_models:
+        args: run --select ga4_goal_a__all ga4_goal_channel__all
+      ga4_all_ecommerce_models:
+        args: run --select ga4_goal_ecommerce__all
+  files:
+  - name: files-airflow
+    variant: meltano
+    pip_url: git+https://github.com/meltano/files-airflow.git

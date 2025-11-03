@@ -1,0 +1,22 @@
+/.git
+.meltano
+.venv
+# .gitignore
+/venv
+/.meltano
+/.env
+/ui.cfg
+/output
+
+# transform/.gitignore
+/transform/target/
+/transform/dbt_modules/
+/transform/logs/
+fresh-clone-repo/
+# custom
+tap-linkedin-ads/
+tap-snapchat-ads/
+tap-ttd/
+secret.json
+test.json
+tap-hivestack/

@@ -1,0 +1,112 @@
+version: 1
+default_environment: prod
+project_id: 2de0b6f6-586c-4cae-828a-f4b265302e9e
+environments:
+- name: dev
+- name: staging
+- name: prod
+state_backend:
+  uri: gs://squirrel-together-main-meltano-state-staging
+plugins:
+  extractors:
+  - name: tap-ga4
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
+    config:
+      reports: ./report.json
+      start_date: ${START_DATE}
+      keep_empty_rows: true
+      select:
+      - goal
+  - name: tap-facebook
+    variant: airbyte
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    config:
+        airbyte_config:
+          start_date: ${START_DATE}T00:00:00Z
+    select:
+        - ads_insights_*.*
+        - ad_account.*
+        - ad_sets.*
+        - ads.*
+        - campaigns.*
+  - name: tap-ttd
+    namespace: tap-ttd
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git
+    executable: tap-ttd
+    config:
+      api_key: ${TAP_TTD_API_KEY}
+      start_date: '2025-01-01T00:00:00Z'
+      end_date: 
+      manual: False
+      advertiser_id: 0w425ru
+  - name: tap-hivestack
+    namespace: tap-hivestack
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git
+    executable: tap-hivestack
+    config:
+        api_key: ${TAP_HIVESTACK_API_KEY}
+        report_id: '71717' 
+  - name: tap-tiktok
+    variant: gthesheep
+    pip_url: git+https://github.com/gthesheep/tap-tiktok.git
+    config:
+      start_date: ${START_DATE}
+  - name: tap-dv360
+    namespace: tap-dv360
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git
+    executable: tap-dv360
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      start_date: ${START_DATE}
+      advertiser_id: '6702922544'
+      query_standard: query_standard.json
+      query_youtube: query_youtube.json
+      service_account: together-meltano@together-internal.iam.gserviceaccount.com
+  loaders:
+  - name: target-jsonl
+    variant: andyh1203
+    pip_url: target-jsonl
+  - name: target-bigquery
+    variant: z3z1ma
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    config:
+      dataset: ${BQ_DATASET}
+      project: squirrel-together-main
+      location: australia-southeast1
+      denormalized: false
+      schema_resolver_version: 2
+      column_name_transforms:
+        add_underscore_when_invalid: true
+        lower: true
+        snake_case: true
+      fail_fast: false
+      method: ${BQ_METHOD}
+      bucket: australia-southeast1-meltan-00c049c-bigquery-staging
+  transformers:
+  - name: dbt-bigquery
+    variant: dbt-labs
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
+    commands:
+      hivestack_models:
+        args: run --select hivestack
+      ttd_models:
+        args: run --select ttd_transformed
+      tiktok_models:
+        args: run --select tiktok
+      facebook_models:
+        args: run --select facebook
+      dv360_models:
+        args: run --select dv360_standard dv360_youtube
+      cm360_models:
+        args: run --select cm360_seralized cm360_direct_buy
+      ga4_models:
+        args: run --select ga4_goal_a ga4_goal_channel
+elt:
+  buffer_size: 52428800
+

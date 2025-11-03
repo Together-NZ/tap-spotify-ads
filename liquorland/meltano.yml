@@ -1,0 +1,100 @@
+version: 1
+default_environment: prod
+project_id: 9581b380-7374-4cd8-a337-4f24fe125b2b
+environments:
+- name: dev
+- name: staging
+- name: prod
+state_backend:
+  uri: gs://liquorland-main-meltano-state-staging
+plugins:
+  extractors:
+  - name: tap-ttd
+    namespace: tap-ttd
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git
+    executable: tap-ttd
+    config:
+      api_key: ${TAP_TTD_API_KEY}
+      start_date: ${START_DATE}
+      end_date: 
+      manual: false
+      advertiser_id: rlxmszm
+  - name: tap-ga4
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
+    config:
+      reports: ./report.json
+      start_date: ${START_DATE}
+      keep_empty_rows: true
+      select:
+      - goal
+  - name: tap-dv360
+    namespace: tap-dv360
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git
+    executable: tap-dv360
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      start_date: ${START_DATE}
+      advertiser_id: '7127523771'
+      query_standard: query_standard.json
+      query_youtube: query_youtube.json
+      service_account: together-meltano@together-internal.iam.gserviceaccount.com
+  - name: tap-facebook
+    variant: airbyte
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    config:
+      airbyte_config:
+        start_date: ${START_DATE}T00:00:00Z
+    select:
+    - ads_insights_*.*
+    - ad_account.*
+    - ad_sets.*
+    - ads.*
+    - campaigns.*
+  loaders:
+  - name: target-bigquery
+    variant: z3z1ma
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    config:
+      dataset: ${BQ_DATASET}
+      project: liquorland-main
+      location: australia-southeast1
+      denormalized: false
+      schema_resolver_version: 2
+      column_name_transforms:
+        add_underscore_when_invalid: true
+        lower: true
+        snake_case: true
+      fail_fast: false
+      method: ${BQ_METHOD}
+      bucket: australia-southeast1-meltan-00c049c-bigquery-staging
+  orchestrators:
+  - name: airflow
+    variant: apache
+    pip_url: apache-airflow==2.10.5 --constraint https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-${MELTANO__PYTHON_VERSION}.txt
+  transformers:
+  - name: dbt-bigquery
+    variant: dbt-labs
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
+    commands:
+      google_ads_models:
+        args: run --select google_ads_search google_ads_demand
+      ga4_models:
+        args: run --select ga4_goal_a ga4_goal_channel
+      dv360_models:
+        args: run --select dv360_standard dv360_youtube
+      facebook_models:
+        args: run --select facebook
+      ttd_models:
+        args: run --select ttd
+      cm360_models:
+        args: run --select cm360_direct_buy
+  files:
+  - name: files-airflow
+    variant: meltano
+    pip_url: git+https://github.com/meltano/files-airflow.git

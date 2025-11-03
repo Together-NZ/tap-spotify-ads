@@ -1,0 +1,96 @@
+{
+  "plugin_type": "extractors",
+  "name": "tap-reddit",
+  "namespace": "tap_reddit",
+  "variant": "hotgluexyz",
+  "label": "Reddit",
+  "docs": "https://hub.meltano.com/extractors/tap-reddit--hotgluexyz",
+  "repo": "https://gitlab.com/hotglue/tap-reddit",
+  "pip_url": "git+https://gitlab.com/hotglue/tap-reddit.git",
+  "executable": "tap-reddit",
+  "description": "Online platform that enables users to submit links, create content, and have discussions about the topics of their interest.",
+  "logo_url": "https://hub.meltano.com/assets/logos/extractors/reddit.svg",
+  "capabilities": [
+    "about",
+    "catalog",
+    "discover",
+    "schema-flattening",
+    "state",
+    "stream-maps"
+  ],
+  "settings_group_validation": [
+    [
+      "client_id",
+      "client_secret",
+      "refresh_token",
+      "subreddit"
+    ]
+  ],
+  "settings": [
+    {
+      "name": "client_id",
+      "kind": "string",
+      "label": "Client ID",
+      "description": "Your Reddit API client ID.",
+      "sensitive": true
+    },
+    {
+      "name": "client_secret",
+      "kind": "string",
+      "label": "Client Secret",
+      "description": "Your Reddit API client secret.",
+      "sensitive": true
+    },
+    {
+      "name": "flattening_enabled",
+      "kind": "boolean",
+      "label": "Flattening Enabled",
+      "description": "'True' to enable schema flattening and automatically expand nested properties."
+    },
+    {
+      "name": "flattening_max_depth",
+      "kind": "integer",
+      "label": "Flattening Max Depth",
+      "description": "The max depth to flatten schemas."
+    },
+    {
+      "name": "redirect_uri",
+      "kind": "string",
+      "value": "https://hotglue.com/callback",
+      "label": "Redirect Uri",
+      "description": "Your Reddit API redirect URI."
+    },
+    {
+      "name": "refresh_token",
+      "kind": "string",
+      "label": "Refresh Token",
+      "description": "Your Reddit API refresh token.",
+      "sensitive": true
+    },
+    {
+      "name": "stream_map_config",
+      "kind": "object",
+      "label": "Stream Map Config",
+      "description": "User-defined config values to be used within map expressions."
+    },
+    {
+      "name": "stream_maps",
+      "kind": "object",
+      "label": "Stream Maps",
+      "description": "Config object for stream maps capability."
+    },
+    {
+      "name": "subreddit",
+      "kind": "string",
+      "label": "Subreddit",
+      "description": "The subreddit to filter by."
+    },
+    {
+      "name": "user_agent",
+      "kind": "string",
+      "value": "Python: Hotglue:0.01 by (/u/hotglue) ",
+      "label": "User Agent",
+      "description": "The user agent to send with requests."
+    }
+  ]
+}

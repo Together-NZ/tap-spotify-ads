@@ -1,0 +1,77 @@
+version: 1
+default_environment: dev
+project_id: 35ce4607-2a72-4658-88b3-af1ba05130fa
+environments:
+- name: dev
+- name: staging
+- name: prod
+state_backend:
+  uri: gs://together-meltano-state-staging
+plugins:
+  extractors:
+  - name: tap-cm360
+    namespace: tap-cm360
+    pip_url: git+https://github.com/Together-NZ/tap-cm360.git
+    executable: tap-cm360
+    config:
+      profile_id: '9840205'
+      secret-content: ${TAP_CM360_SECRET_CONTENT}
+      credential: ${TAP_CM360_CREDENTIAL}
+      oauth_scopes:
+      - https://www.googleapis.com/auth/dfareporting
+      start_date: ${START_DATE}
+  - name: tap-linkedin-ads
+    namespace: tap_linkedin_ads
+    pip_url: git+https://github.com/Together-NZ/tap-linkedin-ads.git
+    executable: tap-linkedin-ads
+    config:
+      start_date: ${START_DATE}
+      access_token: ${TAP_LINKEDIN_ADS_ACCESS_TOKEN}
+
+      user_agent: tap-linkedin-ads your_email@yourcompany.com
+  - name: tap-pinterest-ads
+    variant: gthesheep
+    pip_url: git+https://github.com/gthesheep/tap-pinterest-ads.git
+  loaders:
+  - name: target-bigquery
+    variant: z3z1ma
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    config:
+      dataset: ${BQ_DATASET}
+      project: together-internal
+      location: australia-southeast1
+      denormalized: false
+      schema_resolver_version: 2
+      column_name_transforms:
+        add_underscore_when_invalid: true
+        lower: true
+        snake_case: true
+      fail_fast: false
+      method: ${BQ_METHOD}
+      bucket: australia-southeast1-meltan-00c049c-bigquery-staging
+  orchestrators:
+  - name: airflow
+    variant: apache
+    pip_url: apache-airflow==2.10.5 --constraint 
+      https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-${MELTANO__PYTHON_VERSION}.txt
+  transformers:
+  - name: dbt-bigquery
+    variant: dbt-labs
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
+    commands:
+      cm360_models:
+        args: run --select +linkedin
+        description: Run the CM360 ads model
+      linkedin_models: run --select +linkedin_no_creative
+  files:
+  - name: files-airflow
+    variant: meltano
+    pip_url: git+https://github.com/meltano/files-airflow.git
+  utilities:
+  - name: run_python
+    namespace: run_python
+    executable: python
+    commands:
+      naming: linkedin_campaign_creative_url_name_fetching.py
+elt:
+  buffer_size: 52428800

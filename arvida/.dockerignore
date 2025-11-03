@@ -1,0 +1,11 @@
+secret.json
+/.peter
+/.git
+/.meltano
+docker.py
+ga4.py
+report.csv
+secret.json
+ttd.py
+ttd_sync.py
+facebook_syncing.py

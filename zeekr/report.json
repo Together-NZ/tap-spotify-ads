@@ -1,0 +1,19 @@
+[
+    {
+        "name": "goal",
+        "dimensions" :[
+          "date",
+          "sessionSourceMedium",
+          "sessionCampaignName",
+          "sessionManualAdContent",
+          "sessionMedium",
+          "eventName",
+          "pageLocation"
+        ],
+        "metrics":[
+          "eventCount",
+          "eventValue"
+        ]
+      }
+]
+

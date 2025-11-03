@@ -1,0 +1,13 @@
+{
+    "type": "service_account",
+    "project_id": "farizon-main",
+    "private_key_id": "13e8997ca976a01a82f78e4cdddbd54868b41a60",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDUnug6RspDqxLG\n9uoLKQvLHnKiVRgCUqzQ/O/WXN0Ein9swIultHTjEZxYPpGRslyYlJ5P2LGXFZcY\nkNwsuCNUKFNLVOvkkcKgvNqKFwikTRjm/DwYkUh1mZpckx1fdSqAN0iho3NDN1jM\n6M2lf2E5PtKMvxkWmYtlf9GgIMaAxqA4BFPbZhnWygLVOOrLVIiMjRT52KZ1e749\nCQa4buQtY3T+IqJ7gR9dYwNSKKUztT21VhlopNX0Ne1m40+nKXvDIIjpSG+zO07Z\nav/3c44oQleO2TsJTvdItovYWfpVN7QVQKlcoR/zK5mvoYfDpG6fjcTZTI4z1r0g\n7R4O4kZFAgMBAAECggEAEOWBlsio4A3whlC5bS0eyOO7dY81wvt/IcrepBD0UcfQ\nKVw3d3Hlhw+ky8t0cIO1gZJFRBr4PprX4NB5kBvgV4VZMdzxXmmUnLGdXAjJZkXS\niIqmG51cs4HDJ1UGlMnVbePWzlzpoZS8pmi1bPqNh0nThsf/Q6aXPLfsDfcE0gIH\nF8VauTIAdArYpgv/TGy4O11t/l6+oKAr4DEqFizxWwUSJffJO2i4IejQJwcUv7bm\nr9/rCw9uXCYb4Kenj1NxIilUklXoTejQtoSU54y0qkYW19w38RZ8deWyCgH1hYg5\ng+ZSlpoUmPAX1EU53bjDAnAoQRypimH3xayDxsakYQKBgQDvDr9Mnr5crK5tYOee\n9nDuHVjkVpBBgvaWJrGv7KBjbrzvJ6DGigf1zI+bj/w7exl/UUJdAGH3AzrTucH5\nhZxYAxLWrmlpeRB7fMOdRXjNPMmbbd1uhT5m4WwSK/kCjU8uPQxRGfNKJYthpuMn\nktz7yjIJ16kO6CivIwKY8wVlpQKBgQDjsIMjoRuDxDM76rDC9xIpP4t8pPeG/0kc\nQYeMxGyCEMdbm7rlpU+d3//wsaiPJ26J8SQOHofrly51BVLoAG3srhGiLEPi4+AB\ntdzbZDMZN+sxeJHMjuPxG64EGCZZkeAjwlSflk+c48fwWWc7C3G1ORN9G5q9grMY\n/+N+Sm+8IQKBgFCvwZGy4r2U6yqv0n2s4GD+NsqbDQWPlnsHhGHElD37Wnm9/l4E\nqLsl2DLBXnkVC34VhzissGQXCvv7bqUxm5t5LhqXs6yN2CpV6hBjKmrbYZC8fEiZ\nYH6JB1j6zok1+Mu6fzXAdIVKNsk28uSghUXW8RyxVbZaVaEHSBEntWKhAoGBAIu3\nKZF4b+DYSTQQHG1WnP9QrfBLblSZXCyJjXr0oTzivOJa2kHGwec3p97ztWI6qRre\nLOi5FWCcgXZvUONqOAnO+qUQEowslq2WAjNh9fUYmireOGFUoUy3Vn3Or+GwoOBw\ng+r1ml7Ea1DyG2Vg7WJt5qaThM2bYPkLNHaviIbhAoGBANqzQmQmKzhKBPw+yzGg\nzLCWhSRCxHbPQpoFSMQzkksAHS4bVgoiXo1PFbqfpuQ+IjnXmGzelpMkff05+0wz\nbzDDfBU/38sfPy1qWxgRibqLm42czoazdJdPzBrvOE81Z8qXEMy3wrnFM+bgR0/n\nYNIWx2EJhKcEbQ6/QzPMR3Ka\n-----END PRIVATE KEY-----\n",
+    "client_email": "default-service-account@farizon-main.iam.gserviceaccount.com",
+    "client_id": "118098174708041558237",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/default-service-account%40farizon-main.iam.gserviceaccount.com",
+    "universe_domain": "googleapis.com"
+  }

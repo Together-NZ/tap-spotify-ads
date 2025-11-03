@@ -1,0 +1,62 @@
+{
+  "plugin_type": "extractors",
+  "name": "tap-pinterest-ads",
+  "namespace": "tap_pinterest_ads",
+  "variant": "gthesheep",
+  "label": "Pinterest Ads",
+  "docs": "https://hub.meltano.com/extractors/tap-pinterest-ads--gthesheep",
+  "repo": "https://github.com/gthesheep/tap-pinterest-ads",
+  "pip_url": "git+https://github.com/gthesheep/tap-pinterest-ads.git",
+  "description": "Advertising Platform",
+  "logo_url": "https://hub.meltano.com/assets/logos/extractors/pinterest-ads.png",
+  "capabilities": [
+    "about",
+    "catalog",
+    "discover",
+    "state",
+    "stream-maps"
+  ],
+  "settings_group_validation": [
+    [
+      "client_id",
+      "client_secret",
+      "refresh_token",
+      "start_date"
+    ]
+  ],
+  "settings": [
+    {
+      "name": "client_id",
+      "kind": "string",
+      "label": "Client ID",
+      "description": "App ID",
+      "sensitive": true
+    },
+    {
+      "name": "client_secret",
+      "kind": "string",
+      "label": "Client Secret",
+      "description": "App secret key",
+      "sensitive": true
+    },
+    {
+      "name": "is_backfilled",
+      "kind": "boolean",
+      "label": "Is Backfilled",
+      "description": "Set to True once backfilled in order to reduce API calls per day"
+    },
+    {
+      "name": "refresh_token",
+      "kind": "string",
+      "label": "Refresh Token",
+      "description": "Refresh token obtained from the OAuth user flow",
+      "sensitive": true
+    },
+    {
+      "name": "start_date",
+      "kind": "date_iso8601",
+      "label": "Start Date",
+      "description": "Date to start collection analytics from"
+    }
+  ]
+}
