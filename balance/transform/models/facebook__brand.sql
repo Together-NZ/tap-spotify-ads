@@ -213,7 +213,7 @@ interest_data AS (
         JSON_VALUE(data, '$.id') AS ad_id,
         IFNULL(JSON_EXTRACT_ARRAY(JSON_EXTRACT(data, '$.targeting.flexible_spec')), []) AS flexible_spec_array,
         JSON_EXTRACT_ARRAY(data, '$.device_platforms') AS device
-    FROM `ballance-main.facebook_raw.ads`
+    FROM `ballance-main.facebook_raw__brand.ads`
 ),
 filtered_interest_data AS (
     SELECT
