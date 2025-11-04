@@ -36,7 +36,7 @@ WITH ranked_data AS (
                 _sdc_extracted_at DESC
         ) AS row_number
     FROM
-        `ballance-main.facebook_raw.ads_insights_action_video_type`
+        `ballance-main.facebook_raw__brand.ads_insights_action_video_type`
 ),
 deduplicated_data AS (
     SELECT *
@@ -186,7 +186,7 @@ campaign_data AS (
         JSON_VALUE(data, '$.objective') AS campaign_objective,
         JSON_VALUE(data, '$.start_time') AS start_time,
         JSON_VALUE(data, '$.stop_time') AS stop_time
-    FROM `ballance-main.facebook_raw.campaigns`
+    FROM `ballance-main.facebook_raw__brand.campaigns`
 ),
 deduplicated_campaign_data AS (
     SELECT
@@ -232,7 +232,7 @@ device_data AS (
             ELSE JSON_VALUE(data, '$.device_platform')
         END AS device_platform
     FROM 
-        `ballance-main.facebook_raw.ads_insights_delivery_device`
+        `ballance-main.facebook_raw__brand.ads_insights_delivery_device`
 ),
 deduplicated_device_data AS (
     SELECT DISTINCT ad_id, device_platform
