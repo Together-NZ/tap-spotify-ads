@@ -280,7 +280,7 @@ with models.DAG(
         task_id = "brightr-linkedin_transformation",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "run","tap-linkedin-ads","target-bigquery", "dbt-bigquery","run","--select","linkedin"],
+        arguments=["--environment=prod", "run","tap-linkedin-ads","target-bigquery", "dbt-bigquery:linkedin_models"],
         env_vars = set_env_vars_linkedin(),
     )
     kube_hivestack = KubernetesPodOperator(

@@ -12,7 +12,7 @@ plugins:
 
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
-    pip_url: -e /Users/peter/work/tap-linkedin-ads
+    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git
     executable: tap-linkedin-ads
     capabilities:
     - state
