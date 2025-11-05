@@ -51,7 +51,7 @@ def main():
 
     # Step 3: Save back to BigQuery
     table_id = "together-internal.linkedin_transformed.linkedin_naming"
-    job_config = bigquery.LoadJobConfig(write_disposition="WRITE_APPEND")
+    job_config = bigquery.LoadJobConfig(write_disposition="WRITE_TRUNCATE")
     job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()
 

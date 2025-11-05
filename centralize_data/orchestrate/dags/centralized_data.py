@@ -175,18 +175,7 @@ with models.DAG(
         ),
         env_vars=set_env_vars_cm360_contact(),
     )
-    kube_fetch_creative_linkedin=KubernetesPodOperator(
-        name="linkedin-to-bigquery",
-        task_id="linkedin_creative_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "run", "run_python:naming",
-                   "run_python:naming"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_linkedin(),
-    )
+
     kube_linkedin = KubernetesPodOperator(
         name="linkedin-to-bigquery",
         task_id="linkedin_to_bigquery",
@@ -202,4 +191,4 @@ with models.DAG(
     set_env_task_mapping >> kube_google_mapping
     set_env_task_cm360 >> kube_cm360 
     set_env_task_cm360_contact >> kube_cm360_contact
-    set_env_task_linkedin >> kube_linkedin >> kube_fetch_creative_linkedin>>kube_final_linkedin
+    set_env_task_linkedin >> kube_linkedin >>kube_final_linkedin

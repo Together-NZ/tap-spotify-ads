@@ -1,5 +1,5 @@
 version: 1
-default_environment: dev
+default_environment: prod
 project_id: 123b8fab-a351-4b3e-a547-d5446bd5cc7c
 environments:
 - name: dev
@@ -85,7 +85,7 @@ plugins:
 
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
-    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git
+    pip_url: -e /Users/peter/work/tap-linkedin-ads
     executable: tap-linkedin-ads
     capabilities:
     - state

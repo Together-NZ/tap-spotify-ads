@@ -45,3 +45,5 @@ plugins:
     commands:
       ga4_models:
         args: run --select ga4_goal_a ga4_goal_channel
+      google_ads_models:
+        args: run --select google_ads_search google_ads_demand

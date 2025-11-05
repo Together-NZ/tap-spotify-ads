@@ -1,8 +1,46 @@
 {{ config(
-  materialized='table',
+    materialized='table',
 ) }}
-SELECT SUM(clicks) AS clicks, SUM(impressions) as impressions, advertiser_account_id,
-campaign_name,campaign_descr,ad_format,media_format,ad_format_detail,publisher,audience_name,SUM(media_cost) AS media_cost, SUM(video_25_completion) as video_25_completion, SUM(video_50_completion) AS video_50_completion, SUM(video_75_completion) AS video_75_completion, SUM(video_completion) AS video_completion,SUM(video_views) AS video_views,SUM(likes) AS likes, SUM(comments) AS comments,SUM(commentLikes) AS comment_like,SUM(follows) AS follows,SUM(totalEngagements) as total_engagements,creative_name,creative_descr,date
+WITH final as (
+SELECT creative.creative_name ,
+base.*
 
 
-date FROM `together-internal.linkedin_transformed.linkedin` where  advertiser_account_id = '516476083' group by date,campaign_name,media_format,campaign_descr,ad_format,ad_format_detail,publisher,audience_name,creative_name,creative_descr,advertiser_account_id
+FROM {{ref ('linkedin_no_creative')}} AS base LEFT JOIN 
+ `together-internal.linkedin_transformed.linkedin_naming` AS creative
+ON SAFE_CAST(creative.creative_id AS STRING) = base.creative_id
+)
+select *, 
+SPLIT(campaign_name,'_')[OFFSET(1)] AS campaign_descr,
+CASE 
+  WHEN ARRAY_LENGTH(SPLIT(campaign_name, '_')) >= 7 THEN SPLIT(campaign_name, '_')[OFFSET(7)] 
+  ELSE NULL
+END AS audience_name,
+CASE 
+        WHEN SPLIT (campaign_name,'_')[OFFSET(2)] LIKE '%SOCIAL%'
+        AND (
+            lower(creative_name) LIKE '%vid%'
+            OR lower(campaign_name) LIKE '%vid%'
+        ) THEN 'Social Video'
+        WHEN SPLIT (campaign_name,'_')[OFFSET(2)] LIKE '%SOCIAL%'
+        AND (
+            lower(creative_name) NOT LIKE '%vid%'
+            AND lower(campaign_name) NOT LIKE '%vid%'
+        )
+        THEN 'Social Display'
+        ELSE 'Other'
+  END AS media_format,
+CASE 
+  WHEN ARRAY_LENGTH(SPLIT(campaign_name, '_')) >= 7 THEN SPLIT(creative_name, '_')[OFFSET(5)] 
+  ELSE NULL
+END AS ad_format_detail,
+CASE 
+  WHEN ARRAY_LENGTH(SPLIT(campaign_name, '_')) >= 7 THEN SPLIT(creative_name, '_')[OFFSET(ARRAY_LENGTH(SPLIT(creative_name, '_')) -2 )] 
+  ELSE NULL
+END AS ad_format,
+CASE 
+  WHEN ARRAY_LENGTH(SPLIT(campaign_name, '_')) >= 7 THEN SPLIT(creative_name, '_')[OFFSET(ARRAY_LENGTH(SPLIT(creative_name, '_')) -1 )] 
+  ELSE NULL
+END AS creative_descr,
+'Linkedin' as publisher
+FROM final
