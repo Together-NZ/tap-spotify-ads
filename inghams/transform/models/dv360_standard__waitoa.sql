@@ -2,14 +2,13 @@
 {{ config(
     materialized='table',
 ) }}
-
 WITH parsed_data AS (
     SELECT
         -- select the dv360 true view data
         JSON_VALUE(data, "$.Advertiser Currency") AS advertiser_currency,
         JSON_VALUE(data, "$.Clicks") AS clicks,
         JSON_EXTRACT_SCALAR(data, "$['Complete Views (Video)']") AS complete_views_video,
-        FORMAT_DATE('%Y-%m-%d', PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))) AS date, -- Convert date format
+        PARSE_DATE('%Y/%m/%d',(JSON_VALUE(data, "$.Date"))) AS date, -- Convert date format
         JSON_EXTRACT_SCALAR(data, "$['First-Quartile Views (Video)']") AS first_quartile_views_video,
         JSON_VALUE(data, "$.Impressions") AS impressions,
         JSON_VALUE(data, "$.Insertion Order") AS campaign_name,
@@ -20,12 +19,12 @@ WITH parsed_data AS (
         JSON_EXTRACT_SCALAR(data, "$['Midpoint Views (Video)']") AS midpoint_views_video,
         JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS media_cost,
         JSON_EXTRACT_SCALAR(data, "$['Third-Quartile Views (Video)']") AS third_quartile_views_video,
-        JSON_VALUE(data, "$.YouTube Ad") AS youtube_ad,
+        JSON_VALUE(data, "$.YouTube Ad") AS creative_name,
         JSON_VALUE(data, "$.YouTube Ad Group") AS youtube_ad_group,
         JSON_VALUE(data, "$.YouTube Ad Group ID") AS youtube_ad_group_id,
         ROW_NUMBER() OVER (
             PARTITION BY 
-                FORMAT_DATE('%Y-%m-%d', PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))), -- Use converted date
+                PARSE_DATE('%Y/%m/%d',(JSON_VALUE(data, "$.Date"))), -- Use converted date
                 JSON_VALUE(data, "$.Insertion Order ID"),
                 JSON_VALUE(data, "$.Line Item ID"),
                 JSON_VALUE(data, "$.YouTube Ad")
@@ -33,7 +32,7 @@ WITH parsed_data AS (
                 CAST(JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS FLOAT64) DESC -- Keep the record with the highest revenue
         ) AS row_num
     FROM
-        `inghams-main.dv360_raw__inghams.dv360_youtube`
+        `inghams-main.dv360_raw__waitoa.dv360_youtube` where LOWER(JSON_VALUE(data, "$.Insertion Order")) LIKE '%ing%'
 )
 
 SELECT
@@ -51,21 +50,21 @@ SELECT
     SAFE_CAST(midpoint_views_video AS INT64) AS video_50_completion,
     SAFE_CAST(media_cost AS FLOAT64) AS media_cost,
     SAFE_CAST(third_quartile_views_video AS INT64) AS video_75_completion,
-    youtube_ad,
+    creative_name,
     youtube_ad_group,
     youtube_ad_group_id,
-    REGEXP_EXTRACT(line_item, r'PLATFORM_([^_]+)') AS audience_name,
-    'Youtube' AS publisher,
+    --REGEXP_EXTRACT(line_item, r'PLATFORM_([^_]+)') AS audience_name,
+    'YouTube' AS publisher,
     'Youtube Video' AS media_format,
-    CASE WHEN ARRAY_LENGTH(SPLIT(youtube_ad,'_'))>=8 THEN 
-      SPLIT(youtube_ad,'_')[OFFSET(5)] ELSE 'OTher'
-    END AS ad_format_detail,
-    CASE WHEN ARRAY_LENGTH(SPLIT(youtube_ad,'_'))>=8 THEN
-      SPLIT(youtube_ad,'_')[OFFSET(7)] ELSE 'Other'
-    END AS creative_descr,
-    'No Valid' as ad_format,
-    SPLIT(campaign_name,'_')[OFFSET(1)] AS campaign_descr
+    CASE WHEN ARRAY_LENGTH(SPLIT(line_item, '_'))>=8 THEN
+    SPLIT(line_item, '_')[OFFSET(7)] ELSE 'Other' END AS audience_name,
+    SPLIT(creative_name, '_')[OFFSET(ARRAY_LENGTH(SPLIT(creative_name, '_'))-1)] AS creative_descr,
+    CASE WHEN ARRAY_LENGTH(SPLIT(creative_name,'_'))>=8 THEN SPLIT(creative_name, '_')[OFFSET(5)] ELSE 'Other' END AS ad_format_detail,
+    CASE WHEN ARRAY_LENGTH(SPLIT(creative_name,'_'))>=8 THEN SPLIT(creative_name, '_')[OFFSET(6)] ELSE 'Other' END AS ad_format,
+    CASE WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_')) <=1 THEN 'Other' ELSE SPLIT(campaign_name,'_')[OFFSET(1)] 
+    END AS campaign_descr
+   
 FROM
     parsed_data
 WHERE
-    row_num = 1
+    row_num = 1 and lower(campaign_name) like '%ing%'

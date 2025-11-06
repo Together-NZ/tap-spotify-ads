@@ -63,12 +63,11 @@ def get_meltano_env():
     meltano_env["BQ_METHOD"] = "batch_job"
     meltano_env_copy = deepcopy(meltano_env)
     return meltano_env_copy
-
 with models.DAG(
-    dag_id="inghams-meltano-extraction-transformation-dbt",
-    schedule_interval="0 6 * * *",
+    dag_id="inghams-meltano-google-ads",
+    schedule_interval="20 13 * * *",
     default_args=default_args,
-) as dag:
+) as google_dag:
     def set_env_vars_ga4(id,label):
         env = get_meltano_env()
         env["BQ_DATASET"] = f"ga4_raw__{label}"
@@ -88,7 +87,29 @@ with models.DAG(
         env["TAP_GA4_PROPERTY_ID"] = id
         env["TAP_GA4_START_DATE"] =ga4_start_date_str
         env["TAP_GA4_END_DATE"] = today_date_str
-        return env      
+        return env  
+    env=get_meltano_env()
+    ga4_list = {env["TAP_GA4_PROPERTY_ID_WAITOA"]:'waitoa',env["TAP_GA4_PROPERTY_ID__INGHAMS"]:'inghams'}
+    for key,label in ga4_list.items():
+        kube_ga4 = KubernetesPodOperator(
+            name=f"inghams-{label}-ga4-to-bigquery",
+            task_id=f"inghams-{label}-ga4_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery",f"dbt-bigquery:ga4_{label}_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ga4(key,label
+            )
+        )
+
+with models.DAG(
+    dag_id="inghams-meltano-extraction-transformation-dbt",
+    schedule_interval="0 6 * * *",
+    default_args=default_args,
+) as dag:
+    
     def set_env_vars_hivestack(id,label):
         env = get_meltano_env()
         env["BQ_DATASET"] = f"hivestack_raw__{label}"
@@ -151,21 +172,7 @@ with models.DAG(
 
 
     env = get_meltano_env()
-    ga4_list = {env["TAP_GA4_PROPERTY_ID_WAITOA"]:'waitoa'}
-    for key,label in ga4_list.items():
-        kube_ga4 = KubernetesPodOperator(
-            name=f"inghams-{label}-ga4-to-bigquery",
-            task_id=f"inghams-{label}-ga4_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery",f"dbt-bigquery:ga4_{label}_models"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_ga4(key,label
-            )
-        )
-        kube_ga4
+
     tiktok_list = {env["TIKTOK_WAITOA_ADVERTISER_ID"]:'waitoa'}
     for key,label in tiktok_list.items():
         kube_tiktok = KubernetesPodOperator(
@@ -181,7 +188,7 @@ with models.DAG(
             )
         )
         kube_downstream_dependencies.append(kube_tiktok)
-    hive_list = {env["HIVESTACK_WAITOA_ID"]:'waitoa'}
+    hive_list = {env["HIVESTACK_WAITOA_ID"]:'waitoa',env["HIVESTACK_INGHAMS_ID"]:'inghams'}
     for key,label in hive_list.items():
 
         kube_hivestack = KubernetesPodOperator(
@@ -197,7 +204,7 @@ with models.DAG(
         )
         kube_downstream_dependencies.append(kube_hivestack)
 
-    facebook_list = {env["FACEBOOK_WAITOA_ID"]:'waitoa'}
+    facebook_list = {env["FACEBOOK_WAITOA_ID"]:'waitoa',env["FACEBOOK_INGHAMS_ID"]:'inghams'}
     for key,label in facebook_list.items():
         kube_facebook = KubernetesPodOperator(
             name=f"inghams-{label}-facebook-to-bigquery",
@@ -213,7 +220,7 @@ with models.DAG(
             get_logs =  True
         )
         kube_downstream_dependencies.append(kube_facebook)
-    dv360_list = {env["DV360_WAITOA_ADVERTISER_ID"]:'waitoa'}
+    dv360_list = {env["DV360_WAITOA_ADVERTISER_ID"]:'waitoa',env["DV360_INGHAMS_ADVERTISER_ID"]:'inghams'}
     for key,label in dv360_list.items():
         kube_dv360 = KubernetesPodOperator(
             name="inghams-dv360-to-bigquery",
@@ -229,7 +236,7 @@ with models.DAG(
             get_logs =  True
         )
         kube_downstream_dependencies.append(kube_dv360)
-    ttd_list = {env["TTD_WAITOA_ID"]:'waitoa'}
+    ttd_list = {env["TTD_WAITOA_ID"]:'waitoa',env["TTD_INGHAMS_ID"]:'inghams'}
     for key,label in ttd_list.items():
         kube_ttd = KubernetesPodOperator(
             name="inghams-ttd-to-bigquery",
@@ -283,8 +290,8 @@ with models.DAG(
             #base_container_name=f"meltano-{label}-dash",
         )
         
-    
+
 
 
     kube_downstream_dependencies >> kube_dash
-    kube_dash >> kube_dash_union
+    kube_dash >> kube_dash_union 

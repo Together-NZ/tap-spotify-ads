@@ -110,7 +110,7 @@ WITH deduplicated_data AS (
 
 filtered_creatives as (
   SELECT * except(sessionManualAdContent),
-  CASE WHEN LOWER(sessionManualAdContent) like '%aia%' THEN SPLIT(sessionManualAdContent,'_')[OFFSET(ARRAY_LENGTH(SPLIT(sessionManualAdContent,'_'))-1)]
+  CASE WHEN LOWER(sessionManualAdContent) like '%wai%' THEN SPLIT(sessionManualAdContent,'_')[OFFSET(ARRAY_LENGTH(SPLIT(sessionManualAdContent,'_'))-1)]
   else sessionManualAdContent
   end as sessionManualAdContent
   from deduplicated_data

@@ -85,7 +85,7 @@ plugins:
 
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
-    pip_url: -e /Users/peter/work/tap-linkedin-ads
+    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git
     executable: tap-linkedin-ads
     capabilities:
     - state
@@ -98,7 +98,7 @@ plugins:
       refresh_token: ${TAP_LINKEDIN_ADS_REFRESH_TOKEN}
       client_id: ${TAP_LINKEDIN_ADS_CLIENT_ID}
       client_secret: ${TAP_LINKEDIN_ADS_CLIENT_SECRET}
-      accounts: '503820360'
+      accounts: 503820360'
       user_agent: agent
       start_date: ${START_DATE}
       _catalog_path: ./catalog.json

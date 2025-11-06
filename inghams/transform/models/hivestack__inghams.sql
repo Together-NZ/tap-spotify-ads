@@ -19,7 +19,7 @@ SELECT
       PARTITION BY CAST(JSON_VALUE(data, '$.campaign_id') AS INT64), CAST(JSON_VALUE(data, '$.line_item_id') AS INT64),JSON_VALUE(data, '$.datetime'),
       JSON_VALUE(data, '$.creative'),CAST(JSON_VALUE(data, '$.plays') AS INT64)
   ) as row_num ,
-  FROM `inghams-main.hivestack_waitoa_raw.waitoa_report`),
+  FROM `inghams-main.hivestack_raw__inghams.inghams_report`),
   deduplicate_data AS (
     SELECT date,campaign_name,campaign_id,city,creative_name,line_item,line_item_id,concentration,impressions,plays,progress,media_cost,
     row_num FROM basic where row_num = 1

@@ -101,11 +101,17 @@ plugins:
     pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
     commands:
       cm360_waitoa_models:
-        args: run --select cm360_waitoa_seralized cm360_waitoa_direct_buy
+        args: run --select cm360_seralized__waitoa cm360_direct_buy__waitoa
+      cm360_inghams_models:
+        args: run --select cm360_seralized__inghams cm360_direct_buy__inghams
       dv360_waitoa_models:
-        args: run --select dv360_waitoa_standard dv360_waitoa_youtube
+        args: run --select dv360_standard__waitoa dv360_youtube__waitoa
+      dv360_inghams_models:
+        args: run --select dv360_standard__inghams dv360_youtube__inghams
       facebook_waitoa_models:
-        args: run --select facebook_waitoa
+        args: run --select facebook__waitoa
+      facebook_inghams_models:
+        args: run --select facebook__inghams
       ttd_waitoa_models:
         args: run --select ttd_waitoa_transformed
       hivestack_waitoa_models:

@@ -4,7 +4,7 @@
 WITH dash_table AS (
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_played AS video_views,
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
-    FROM `inghams-main.facebook_transformed__waitoa.facebook_waitoa`
+    FROM `inghams-main.facebook_transformed__waitoa.facebook__waitoa`
 
     UNION ALL
 
@@ -29,13 +29,16 @@ WITH dash_table AS (
            campaign_name,publisher, campaign_descr, 
            creative_descr AS creative_descr, -- Convert array to string
            date,
-    FROM `inghams-main.hivestack_transformed__waitoa.hivestack_waitoa`
+    FROM `inghams-main.hivestack_transformed__waitoa.hivestack__waitoa`
 
     UNION ALL
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_25_completion as video_views,
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
-    FROM `inghams-main.dv360_transformed__waitoa.dv360_waitoa_standard`
-
+    FROM `inghams-main.dv360_transformed__waitoa.dv360_standard__waitoa`
+    UNION ALL 
+        SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_25_completion as video_views,
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+    FROM `inghams-main.dv360_transformed__waitoa.dv360_youtube__waitoa`
     UNION ALL
     select media_cost,impressions, clicks,creative_name, audience_name, ad_format, ad_format_detail, 
         CAST(0 AS INT64) AS video_completion,
@@ -45,7 +48,13 @@ WITH dash_table AS (
         CAST(0 AS INT64) AS video_views,
     campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date,
 
-from `inghams-main.cm360_transformed__waitoa.cm360_waitoa_direct_buy`
+from `inghams-main.cm360_transformed__waitoa.cm360_direct_buy__waitoa`
+    UNION ALL
+    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_views,
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+    FROM `inghams-main.ttd_transformed__waitoa.ttd__waitoa`
+
+
 ),
 with_channel AS (
 SELECT * EXCEPT (publisher,channel), 
