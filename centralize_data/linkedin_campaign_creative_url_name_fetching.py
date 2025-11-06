@@ -35,7 +35,7 @@ def enrich_row(row):
     return row
 
 def main():
-    Parsed_campaign_creative_click_url_name.initialise_access_token("AQXPzQF48o4mZ_W05E-21QtWuKIf3Es0haMi-QKRj_ktzaBFW1Gy5mHdRcSYCtwwNLqis_8E4lNSW3zPd70NWIAA3tqRPdJxa1PNnfcH4lXhZYVi6M7ZiMx-Bq03uye0RA8JdM5MvlqNUIVRDUPCMCa-0aEU4z-YPRsYPgU5xuvg2MU0tjvwU4l5WsPWPuSW_3_cVrSMx5wKuZtTxwR4LQRDihvCVx3G0fWfT_A_Kng7-8d6J7gSeh6_IO5HnmmYJo9tf1gbqXiVVrJ1efF9zfefPLa7S32RLolI7X7znipyey38IXB1rlGhwBOnnl9FmT9MZqsYS7JcZgykWi8BnA7j_2JTdQ")
+    Parsed_campaign_creative_click_url_name.initialise_access_token("LINKEDIN_ACCESS_TOKEN")
     # Step 1: Read from BigQuery
     query = """
         SELECT distinct SPLIT(json_value(data,'$.account'),':')[OFFSET(3)] AS advertiser_account_id,

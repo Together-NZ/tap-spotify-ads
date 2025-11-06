@@ -113,9 +113,13 @@ plugins:
       facebook_inghams_models:
         args: run --select facebook__inghams
       ttd_waitoa_models:
-        args: run --select ttd_waitoa_transformed
+        args: run --select ttd__waitoa
+      ttd_inghams_models:
+        args: run --select ttd__inghams
       hivestack_waitoa_models:
-        args: run --select hivestack_waitoa
+        args: run --select hivestack__waitoa
+      hivestack_inghams_models:
+        args: run --select hivestack__inghams
       tiktok_waitoa_models:
         args: run --select tiktok__waitoa
       ga4_waitoa_models:

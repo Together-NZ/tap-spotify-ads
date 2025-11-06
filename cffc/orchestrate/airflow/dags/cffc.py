@@ -234,7 +234,7 @@ with models.DAG(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
             env_vars=set_env_vars_dv360(label),
-            base_container_name=f"meltano-cffc-dv360",
+            get_logs=True
         )
         label_kube_list.setdefault(label, []).append(kube_dv360)
         kube_ttd = KubernetesPodOperator(

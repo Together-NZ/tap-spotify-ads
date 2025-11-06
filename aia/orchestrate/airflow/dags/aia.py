@@ -37,15 +37,9 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
-    "start_date": yesterday
-}
-dv360_args = {
-    "retries": 2,
-    "retry_delay": datetime.timedelta(minutes=3),
     "start_date": yesterday,
-    "catchup": False,
-    "concurrency": 1,
-    "max_active_runs": 1
+    'email': ["tayaza@wearetogether.co.nz","keivn@wearetogether.co.nz"],
+    'email_on_failure': True
 }
 
 # Setting timezone for DAG's start date
@@ -138,7 +132,9 @@ with models.DAG(
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
-            env_vars=set_env_vars_ga4()),
+            env_vars=set_env_vars_ga4()
+            ),
+        
 
     kube_google_ads = KubernetesPodOperator(
         name="aia-google-ads-to-bigquery",
@@ -149,7 +145,7 @@ with models.DAG(
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_google_ads(),
+        env_vars=set_env_vars_google_ads()
         
         
     )
@@ -162,7 +158,7 @@ with models.DAG(
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_dash(),
+        env_vars=set_env_vars_dash()
     )
     env = get_meltano_env()
     search_list = {}
@@ -198,7 +194,7 @@ with models.DAG(
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_dash_search(),
+        env_vars=set_env_vars_dash_search()
         
         
     )
@@ -213,8 +209,7 @@ with models.DAG(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         trigger_rule = 'all_done',
-        env_vars=set_env_vars_dash(),
-        
+        env_vars=set_env_vars_dash()
         
         )
     for index in key_list:
@@ -346,7 +341,7 @@ with models.DAG(
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_linkedin(),
+        env_vars=set_env_vars_linkedin()
     )
     env = get_meltano_env()
     kube_dash_union  = KubernetesPodOperator(
@@ -358,7 +353,7 @@ with models.DAG(
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_dash(),
+        env_vars=set_env_vars_dash()
     )
         
 
@@ -373,7 +368,7 @@ with models.DAG(
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_tiktok(),
+        env_vars=set_env_vars_tiktok()
         
   
     )
@@ -386,8 +381,7 @@ with models.DAG(
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_outbrain(),
-       
+        env_vars=set_env_vars_outbrain()
     )
     kube_facebook = KubernetesPodOperator(
         name="aia-facebook-to-bigquery",
@@ -398,8 +392,7 @@ with models.DAG(
                 container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_facebook(),
-        #base_container_name= "meltano-aia-facebook"
+        env_vars=set_env_vars_facebook()
     )
     kube_dv360 = KubernetesPodOperator(
         name="aia-dv360-to-bigquery",

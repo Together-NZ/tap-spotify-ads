@@ -38,7 +38,7 @@ default_args = {
     "concurrency": 1,
     "catchup": False,
     "start_date": yesterday,
-    'email': ["tayaza@wearetogether.co.nz"],
+    'email': ["tayaza@wearetogether.co.nz","keivn@wearetogether.co.nz"],
     'email_on_failure': True
 }
 dv360_args = {

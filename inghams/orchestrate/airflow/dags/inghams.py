@@ -89,11 +89,11 @@ with models.DAG(
         env["TAP_GA4_END_DATE"] = today_date_str
         return env  
     env=get_meltano_env()
-    ga4_list = {env["TAP_GA4_PROPERTY_ID_WAITOA"]:'waitoa',env["TAP_GA4_PROPERTY_ID__INGHAMS"]:'inghams'}
+    ga4_list = {env["TAP_GA4_PROPERTY_ID_WAITOA"]:'waitoa',env["TAP_GA4_PROPERTY_ID_INGHAMS"]:'inghams'}
     for key,label in ga4_list.items():
         kube_ga4 = KubernetesPodOperator(
-            name=f"inghams-{label}-ga4-to-bigquery",
-            task_id=f"inghams-{label}-ga4_to_bigquery",
+            name=f"{label}-ga4-to-bigquery",
+            task_id=f"{label}-ga4_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery",f"dbt-bigquery:ga4_{label}_models"],
@@ -176,8 +176,8 @@ with models.DAG(
     tiktok_list = {env["TIKTOK_WAITOA_ADVERTISER_ID"]:'waitoa'}
     for key,label in tiktok_list.items():
         kube_tiktok = KubernetesPodOperator(
-            name=f"inghams-{label}-tiktok-to-bigquery",
-            task_id=f"inghams-{label}-tiktok_to_bigquery",
+            name=f"{label}-tiktok-to-bigquery",
+            task_id=f"{label}-tiktok_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery",f"dbt-bigquery:tiktok_{label}_models"],
@@ -192,8 +192,8 @@ with models.DAG(
     for key,label in hive_list.items():
 
         kube_hivestack = KubernetesPodOperator(
-            name=f"inghams-{label}-hivestack-to-bigquery",
-            task_id=f"inghams-{label}-hivestack_to_bigquery",
+            name=f"{label}-hivestack-to-bigquery",
+            task_id=f"{label}-hivestack_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=["--environment=prod", "run", "tap-hivestack", "target-bigquery",f"dbt-bigquery:hivestack_{label}_models"],
@@ -223,8 +223,8 @@ with models.DAG(
     dv360_list = {env["DV360_WAITOA_ADVERTISER_ID"]:'waitoa',env["DV360_INGHAMS_ADVERTISER_ID"]:'inghams'}
     for key,label in dv360_list.items():
         kube_dv360 = KubernetesPodOperator(
-            name="inghams-dv360-to-bigquery",
-            task_id="inghams-dv360_to_bigquery",
+            name=f"{label}-dv360-to-bigquery",
+            task_id=f"{label}-dv360_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=["--environment=prod", "run", "tap-dv360", "target-bigquery",f"dbt-bigquery:dv360_{label}_models"],
@@ -239,8 +239,8 @@ with models.DAG(
     ttd_list = {env["TTD_WAITOA_ID"]:'waitoa',env["TTD_INGHAMS_ID"]:'inghams'}
     for key,label in ttd_list.items():
         kube_ttd = KubernetesPodOperator(
-            name="inghams-ttd-to-bigquery",
-            task_id="inghams-ttd_to_bigquery",
+            name=f"{label}-ttd-to-bigquery",
+            task_id=f"{label}-ttd_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=["--environment=prod", "run", "tap-ttd", "target-bigquery",f"dbt-bigquery:ttd_{label}_models"],
@@ -253,8 +253,8 @@ with models.DAG(
         )
         kube_downstream_dependencies.append(kube_ttd)
         kube_cm360 = KubernetesPodOperator(
-            name=f"inghams-{label}-cm360-transformation",
-            task_id = f"inghams-{label}-cm360_transformation",
+            name=f"{label}-cm360-transformation",
+            task_id = f"{label}-cm360_transformation",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=["--environment=prod", "invoke", f"dbt-bigquery:cm360_{label}_models"],
