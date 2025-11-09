@@ -96,15 +96,23 @@ WITH deduplicated_data AS (
         JSON_VALUE(data, '$.sessionSourceMedium'),
         JSON_VALUE(data, '$.sessionCampaignName'),
         JSON_VALUE(data, '$.sessionManualAdContent'),
-        JSON_VALUE(data, '$.eventName')
+        JSON_VALUE(data, '$.eventName'),
+        JSON_VALUE(data, '$.eventCount'),
+        JSON_VALUE(data, '$.eventValue')
       ORDER BY _sdc_extracted_at DESC
     ) AS row_num
 
   FROM 
     `cffc-main`.`ga4_raw__cffc`.`goal`
 
+),
+filtered_creatives as (
+  SELECT * except(sessionManualAdContent),
+  CASE WHEN LOWER(sessionManualAdContent) like '%ing%' THEN SPLIT(sessionManualAdContent,'_')[OFFSET(ARRAY_LENGTH(SPLIT(sessionManualAdContent,'_'))-1)]
+  else sessionManualAdContent
+  end as sessionManualAdContent
+  from deduplicated_data
 )
-
 -- Select only the latest row for each unique combination of keys
 SELECT
   date,
@@ -125,5 +133,5 @@ SELECT
   _sdc_sequence,
   _sdc_table_version,
   site_name
-FROM deduplicated_data
+FROM filtered_creatives
 WHERE row_num = 1

@@ -183,7 +183,7 @@ with models.DAG(
             task_id=f"cffc-linkedin_to_bigquery_{label}",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select",f"linkedin__{label}"],
+            arguments=["--environment=prod", "invoke",f"dbt-bigquery:linkedin_{label}_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
