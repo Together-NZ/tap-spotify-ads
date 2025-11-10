@@ -105,13 +105,6 @@ WITH deduplicated_data AS (
   FROM 
     `cffc-main`.`ga4_raw__smart_sorted`.`goal`
 
-),
-filtered_creatives as (
-  SELECT * except(sessionManualAdContent),
-  CASE WHEN LOWER(sessionManualAdContent) like '%ing%' THEN SPLIT(sessionManualAdContent,'_')[OFFSET(ARRAY_LENGTH(SPLIT(sessionManualAdContent,'_'))-1)]
-  else sessionManualAdContent
-  end as sessionManualAdContent
-  from deduplicated_data
 )
 
 -- Select only the latest row for each unique combination of keys
@@ -134,5 +127,5 @@ SELECT
   _sdc_sequence,
   _sdc_table_version,
   site_name
-FROM filtered_creatives
+FROM deduplicated_data
 WHERE row_num = 1

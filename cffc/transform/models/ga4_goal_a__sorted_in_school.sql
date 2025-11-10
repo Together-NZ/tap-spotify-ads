@@ -108,7 +108,7 @@ WITH deduplicated_data AS (
 ),
 filtered_creatives as (
   SELECT * except(sessionManualAdContent),
-  CASE WHEN LOWER(sessionManualAdContent) like '%ing%' THEN SPLIT(sessionManualAdContent,'_')[OFFSET(ARRAY_LENGTH(SPLIT(sessionManualAdContent,'_'))-1)]
+  CASE WHEN LOWER(sessionManualAdContent) like '%cff%' THEN SPLIT(sessionManualAdContent,'_')[OFFSET(ARRAY_LENGTH(SPLIT(sessionManualAdContent,'_'))-1)]
   else sessionManualAdContent
   end as sessionManualAdContent
   from deduplicated_data
@@ -134,5 +134,5 @@ SELECT
   _sdc_sequence,
   _sdc_table_version,
   site_name
-FROM deduplicated_data
+FROM filtered_creatives
 WHERE row_num = 1

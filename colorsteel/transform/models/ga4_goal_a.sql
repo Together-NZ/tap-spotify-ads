@@ -102,6 +102,13 @@ WITH deduplicated_data AS (
   FROM 
     `colorsteel-main`.`ga4_raw`.`goal`
 
+),
+filtered_creatives as (
+  SELECT * except(sessionManualAdContent),
+  CASE WHEN LOWER(sessionManualAdContent) like '%cs%' THEN SPLIT(sessionManualAdContent,'_')[OFFSET(ARRAY_LENGTH(SPLIT(sessionManualAdContent,'_'))-1)]
+  else sessionManualAdContent
+  end as sessionManualAdContent
+  from deduplicated_data
 )
 
 -- Select only the latest row for each unique combination of keys
@@ -124,5 +131,5 @@ SELECT
   _sdc_sequence,
   _sdc_table_version,
   site_name
-FROM deduplicated_data
+FROM filtered_creatives
 WHERE row_num = 1
