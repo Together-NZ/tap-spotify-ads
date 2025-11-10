@@ -102,7 +102,15 @@ WITH deduplicated_data AS (
   FROM 
     `moe-main`.`ga4_raw__education`.`goal`
 
-)
+),
+
+filtered_creatives as (
+  SELECT * except(sessionManualAdContent),
+  CASE WHEN LOWER(sessionManualAdContent) like '%moe%' THEN SPLIT(sessionManualAdContent,'_')[OFFSET(ARRAY_LENGTH(SPLIT(sessionManualAdContent,'_'))-1)]
+  else sessionManualAdContent
+  end as sessionManualAdContent
+  from deduplicated_data
+),
 
 
 -- Select only the latest row for each unique combination of keys
