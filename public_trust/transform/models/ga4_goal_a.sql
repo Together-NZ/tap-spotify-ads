@@ -103,7 +103,15 @@ WITH deduplicated_data AS (
   FROM 
     `public-trust-main`.`ga4_raw`.`goal`
 
-)
+),
+
+filtered_creatives as (
+  SELECT * except(sessionManualAdContent),
+  CASE WHEN LOWER(sessionManualAdContent) like '%pbt%' THEN SPLIT(sessionManualAdContent,'_')[OFFSET(ARRAY_LENGTH(SPLIT(sessionManualAdContent,'_'))-1)]
+  else sessionManualAdContent
+  end as sessionManualAdContent
+  from deduplicated_data
+),
 
 -- Select only the latest row for each unique combination of keys
 SELECT
