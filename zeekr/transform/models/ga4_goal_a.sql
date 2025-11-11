@@ -114,7 +114,7 @@ WITH deduplicated_data AS (
   else sessionManualAdContent
   end as sessionManualAdContent
   from deduplicated_data
-),
+)
 
 -- Select only the latest row for each unique combination of keys
 SELECT
