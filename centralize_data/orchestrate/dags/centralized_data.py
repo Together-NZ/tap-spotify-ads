@@ -38,15 +38,6 @@ default_args = {
     "catchup": False,
     "start_date": yesterday
 }
-dv360_args = {
-    "retries": 2,
-    "retry_delay": datetime.timedelta(minutes=3),
-    "start_date": yesterday,
-    "catchup": False,
-    "concurrency": 1,
-    "max_active_runs": 1
-}
-
 # Setting timezone for DAG's start date
 start_date = datetime.datetime(2024, 1, 1, tzinfo=local_tz)
 start_date_str = start_date.strftime("%Y-%m-%d")
@@ -85,6 +76,12 @@ with models.DAG(
     schedule_interval="0 0 * * *",
     default_args=default_args,
 ) as dag:
+    def set_env_vars_search():
+        env=get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'together-internal'
+        env["DBT_BIGQUERY_DATASET"] = 'google_ads_campaign_location'
+        return env
     def set_env_vars_mapping():
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
@@ -152,7 +149,17 @@ with models.DAG(
         ),
         env_vars=set_env_vars_linkedin(),
     )
-
+    kube_google_ads_search_location=KubernetesPodOperator(
+        name="google-ads-search-location",
+        task_id="google_ads_search_location",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery","run","--select","google_ads_search_geo_target"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_search(),
+    )
     kube_cm360 = KubernetesPodOperator(
         name="cm360-to-bigquery",
         task_id="cm360_to_bigquery",
