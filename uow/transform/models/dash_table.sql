@@ -374,11 +374,6 @@ CASE WHEN
     WHEN REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%communication%' THEN 'Communication'
     WHEN (REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%comp%') and (REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%sci%')
     THEN 'Computer Science'
-    WHEN (lower(REPLACE(creative_name, '"', '')) LIKE lower(('%Become a leader in Education by studying one of our Masters degrees in Education.%')) 
-    OR lower(REPLACE(creative_name, '"', '')) LIKE lower(('%ECE%')) OR lower(REPLACE(creative_name, '"', '')) LIKE lower(('%educ%')) 
-    OR lower(REPLACE(creative_name, '"', '')) LIKE lower(('%Start your teaching journey in 2023 Teach the subjects you love. Apply now at the University of Waikato%')) 
-    OR lower(REPLACE(creative_name, '"', '')) LIKE lower(('%Study to become a teacher and step into a new career in as little as a year.%'))) 
-    THEN 'Education'
     WHEN REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%engineering%' THEN 'Engineering'
     when REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%environment%' and LOWER(REPLACE(creative_name,'"','')) NOT LIKE '%planning%' THEN 'Environment'
     WHEN REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%environment%' and LOWER(REPLACE(creative_name,'"','')) LIKE '%planning%' THEN 'Environment Planning'
@@ -400,6 +395,11 @@ CASE WHEN
     OR lower(REPLACE(creative_name, '"', '')) LIKE lower(('%Study to become a teacher and step into a new career in as little as a year.%'))) ) and 
     (LOWER(REPLACE(creative_name,'"','')) LIKE '%secondary%' or LOWER(REPLACE(creative_name,'"','')) LIKE '%secndary%')
     THEN 'Secondary Education'
+    WHEN (lower(REPLACE(creative_name, '"', '')) LIKE lower(('%Become a leader in Education by studying one of our Masters degrees in Education.%')) 
+    OR lower(REPLACE(creative_name, '"', '')) LIKE lower(('%ECE%')) OR lower(REPLACE(creative_name, '"', '')) LIKE lower(('%educ%')) 
+    OR lower(REPLACE(creative_name, '"', '')) LIKE lower(('%Start your teaching journey in 2023 Teach the subjects you love. Apply now at the University of Waikato%')) 
+    OR lower(REPLACE(creative_name, '"', '')) LIKE lower(('%Study to become a teacher and step into a new career in as little as a year.%'))) 
+    THEN 'Education'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%sport%' THEN 'Sports'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%midwifery%' THEN 'Midwifery'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%outdoor%' THEN 'Outdoor'
@@ -411,9 +411,7 @@ CASE WHEN
     when REGEXP_REPLACE(lower(replace(creative_name,'"','')), r'\s+', '') like '%forthepeople%' THEN 'For The People'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%profession%' and LOWER(REPLACE(creative_name,'"','')) like '%accounting%' THEN 'Professional Accounting'
     else 
-       case when array_length(split(creative_name,'_')) >=8 then split(creative_name,'_')[offset(7)]
-       else creative_name
-       end
+       (creative_name,'_')[offset(0)]
     END AS creative_descr
 
  FROM campaign_base camb LEFT JOIN deduplicate_raw ON LOWER(deduplicate_raw.campaign_name_raw) = LOWER(camb.campaign_name_raw)
