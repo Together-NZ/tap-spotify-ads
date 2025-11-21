@@ -41,6 +41,8 @@ plugins:
       start_date: ${START_DATE}
       _catalog_path: ./catalog.json
     select:
+    - campaigns.*
+    - creatives.*
     - ad_analytics_by_creative.*
     - ad_analytics_by_campaign.*
   
@@ -126,7 +128,7 @@ plugins:
       reddit_models:
         args: run --select reddit
       ttd_models: run --select ttd_transformed
-      linkedin_models: run --select linkedin
+      linkedin_models: run --select linkedin_no_creative linkedin
       hivestack_models: run --select hivestack
       cm360_models: run --select cm360_seralized cm360_direct_buy
       dash_models: run --select dash_table
