@@ -25,7 +25,7 @@ NULL AS video_50_completion,
 NULL AS video_25_completion,
 NULL AS video_75_completion,
 null as video_views,
-CASE WHEN 'INTENT' IN (select distinct funnel from `cffc-main.dash_table__cffc.dash_table__cffc`) then 'INTENT'
+CASE WHEN 'INTENT' IN (select distinct funnel from `cffc-main.dash_table__retirement_commission.dash_table__retirement_commission`) then 'INTENT'
 ELSE 'OTHER' END as funnel,
 null as campaign_descr,
 null as creative_descr
