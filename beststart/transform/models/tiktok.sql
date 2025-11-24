@@ -2,11 +2,11 @@
     materialized='table',
 ) }}
 WITH ad_campaign AS (SELECT DISTINCT 
-JSON_VALUE(data,'$.ad_id') as ad_id,
-JSON_VALUE(data,'$.ad_name') as ad_name,
-JSON_VALUE(data,'$.ad_text') as ad_text,
-JSON_VALUE(data,'$.campaign_name') as campaign_name,
-JSON_VALUE(data,'$.adgroup_name') as adgroup_name
+trim(JSON_VALUE(data,'$.ad_id')) as ad_id,
+trim(JSON_VALUE(data,'$.ad_name')) as ad_name,
+trim(JSON_VALUE(data,'$.ad_text')) as ad_text,
+trim(JSON_VALUE(data,'$.campaign_name')) as campaign_name,
+trim(JSON_VALUE(data,'$.adgroup_name')) as adgroup_name
 FROM `best-start-main.tiktok_raw.ads` ),
 ad_data AS (
   SELECT 

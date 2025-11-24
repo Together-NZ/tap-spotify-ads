@@ -3,7 +3,7 @@
 ) }}
 WITH ad_campaign AS (SELECT DISTINCT 
 JSON_VALUE(data,'$.ad_id') as ad_id,
-JSON_VALUE(data,'$.ad_name') as ad_name,
+trim(JSON_VALUE(data,'$.ad_name')) as ad_name,
 JSON_VALUE(data,'$.ad_text') as ad_text,
 JSON_VALUE(data,'$.campaign_name') as campaign_name,
 JSON_VALUE(data,'$.adgroup_name') as adgroup_name
@@ -50,14 +50,14 @@ SELECT
   SUM(ad_v.video_views) as video_views,
   ad.ad_id as ad_id,
   ad.date
-FROM deduplicate_ad as ad JOIN deduplicate_ad_video as ad_v on ad.ad_id = ad_v.ad_id 
+FROM deduplicate_ad as ad LEFT JOIN deduplicate_ad_video as ad_v on ad.ad_id = ad_v.ad_id 
 AND ad.date = ad_v.date
 GROUP BY date, ad_id),
 final as (
 SELECT ad_stat_id.* EXCEPT(ad_id),
 ad_campaign.* FROM ad_stat_id LEFT JOIN ad_campaign ON SAFE_CAST(ad_stat_id.ad_id AS INT64) = SAFE_CAST(ad_campaign.ad_id AS INT64)
 )
-SELECT * EXCEPT(date,ad_name), DATE(PARSE_DATETIME('%F %H:%M:%S',date)) AS date,
+SELECT  * EXCEPT(date,ad_name), DATE(PARSE_DATETIME('%F %H:%M:%S',date)) AS date,
 ad_name as creative_name,
     'Tiktok' AS publisher,
     REGEXP_EXTRACT(adgroup_name, r'PLATFORM_([^_]+)') AS audience_name,
