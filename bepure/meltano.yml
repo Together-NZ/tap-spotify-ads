@@ -21,6 +21,16 @@ plugins:
     - ad_sets.*
     - ads.*
     - campaigns.*
+  - name: tap-ttd
+    namespace: tap-ttd
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git
+    executable: tap-ttd
+    config:
+      api_key: ${TAP_TTD_API_KEY}
+      start_date: ${START_DATE}
+      end_date:
+      manual: false
+      advertiser_id: on3qsjc
   - name: tap-ga4
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
@@ -83,6 +93,8 @@ plugins:
       project: bepure-main
       method: oauth
     commands:
+      ttd_bepure_models:
+        args: run --select ttd__bepure
       cm360_models:
         args: run --select cm360_seralized cm360_direct_buy
       dv360_models:

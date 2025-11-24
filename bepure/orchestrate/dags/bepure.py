@@ -250,7 +250,15 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'bepure-main'
         env["DBT_BIGQUERY_DATASET"] = 'dv360_transformed'
         return env
-
+    def set_env_vars_ttd(label):
+        env = get_meltano_env()
+        env["BQ_DATASET"]="ttd_raw"
+        env["BQ_METHOD"]="batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'bepure-main'
+        env["DBT_BIGQUERY_DATASET"] = f'ttd_transformed__{label}'
+        return env
+    
     def set_env_vars_dash_search(label):
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
@@ -317,7 +325,21 @@ with models.DAG(
         env_vars=set_env_vars_dv360(),
         #base_container_name=f"meltano-bepure-dv360",
     )
-    list = ['bepure','eve_wellness_au','eve_wellness']
+    list = ['bepure']
+    for label in list:
+        kube_ttd=KubernetesPodOperator(
+            name=f"{label}-bepure-ttd-to-bigquery",
+            task_id=f"{label}-bepure-ttd_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            trigger_rule='all_done',
+            arguments=["--environment=prod", "invoke",f"dbt-bigquery:ttd_{label}_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ttd(label),
+            #base_container_name=f"meltano-bepure-ttd",
+        )
   
 
 
@@ -341,7 +363,7 @@ with models.DAG(
             if label != 'bepure':
                 task >> kube_dash
             else:
-                 [kube_dv360,kube_cm360,task] >> kube_dash
+                 [kube_dv360,kube_cm360,kube_ttd,task] >> kube_dash
 
         kube_dash_search = KubernetesPodOperator(
             name=f"{label}-dash-search-to-bigquery",
