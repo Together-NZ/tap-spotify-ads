@@ -9,6 +9,13 @@ state_backend:
   uri: gs://contact-main-meltano-state-staging
 plugins:
   extractors:
+  - name: tap-hivestack
+    namespace: tap-hivestack
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git
+    executable: tap-hivestack
+    config:
+        api_key: ${TAP_HIVESTACK_API_KEY}
+        report_id: '82075' 
   - name: tap-ttd
     namespace: tap-ttd
     pip_url: git+https://github.com/Together-NZ/tap-ttd.git
@@ -61,6 +68,7 @@ plugins:
     - ad_sets.*
     - ads.*
     - campaigns.*
+    - custom_conversions.*
   loaders:
   - name: target-bigquery
     variant: z3z1ma
@@ -117,6 +125,12 @@ plugins:
         args: run --select tiktok__mobile
       tiktok_broadband_models:
         args: run --select tiktok__broadband
+      hivestack_mobile_models:
+        args: run --select hivestack__mobile
+      hivestack_energy_models:
+        args: run --select hivestack__energy
+      hivestack_broadband_models:
+        args: run --select hivestack__broadband
       ttd_energy_models:
         args: run --select ttd_transformed__energy
       ttd_mobile_models:

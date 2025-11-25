@@ -6,6 +6,22 @@ with dash_table AS (
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
     FROM `contact-energy-main.dv360_transformed__energy.dv360_youtube__energy`
     UNION all
+    SELECT media_cost, impressions, CAST(0 AS INT64) AS clicks, 
+           creative_name,   -- Convert array to string
+           audience_name AS audience_name, -- Convert array to string
+           ad_format AS ad_format,         -- Convert array to string
+           ad_format_detail AS ad_format_detail, 
+            CAST(0 AS INT64) AS video_completion,
+            CAST(0 AS INT64) AS video_25_completion,
+            CAST(0 AS INT64) AS video_50_completion,
+            CAST(0 AS INT64) AS video_75_completion,
+            CAST(0 AS INT64) AS video_views,
+           
+           campaign_name,publisher, campaign_descr, 
+           creative_descr AS creative_descr, -- Convert array to string
+           date,
+    FROM `contact-energy-main.hivestack_transformed__energy.hivestack__energy`
+    UNION ALL
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
     FROM `contact-energy-main.dv360_transformed__energy.dv360_standard__energy`

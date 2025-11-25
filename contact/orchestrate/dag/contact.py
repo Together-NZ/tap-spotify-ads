@@ -116,6 +116,7 @@ with models.DAG(
     ga4_types = ['goal','ecommerce']
     search_list = ["mobile","broadband","energy"]
     for brand in search_list:
+
         kube_google_ads_search = KubernetesPodOperator(
             name=f"contact-{brand}-google-ads-search-to-bigquery",
             task_id=f"contact-{brand}_google_ads_search_to_bigquery",
@@ -279,6 +280,14 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'contact-energy-main'
         env["DBT_BIGQUERY_DATASET"] = f'dash_table__{label}'
         return env
+    def set_env_vars_hivestack(label):
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "hivestack_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'contact-energy-main'
+        env["DBT_BIGQUERY_DATASET"] = f'hivestack_transformed__{label}'
+        return env
     def set_env_vars_dv360(label):
         env = get_meltano_env()
         env["BQ_DATASET"] = "dv360_raw"
@@ -292,6 +301,20 @@ with models.DAG(
 
     
     for brand in brands:
+        kube_hivestack = KubernetesPodOperator(
+            name=f"contact-{brand}-hivestack-to-bigquery",
+            task_id=f"contact-{brand}_hivestack_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run","tap-hivestack", "target-bigquery", f"dbt-bigquery:hivestack_{brand}_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_hivestack(brand),
+            get_logs=True,
+            is_delete_operator_pod=True,
+        )
+        queue.setdefault(brand, []).append(kube_hivestack)
         kube_cm360 = KubernetesPodOperator(
             name=f"contact-{brand}-cm360-to-bigquery",
             task_id=f"contact-{brand}_cm360_to_bigquery",
