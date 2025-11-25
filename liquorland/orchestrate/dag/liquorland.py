@@ -70,6 +70,14 @@ with models.DAG(
     schedule_interval="0 5 * * *",
     default_args=default_args
 ) as dag:
+    def set_env_vars_hivestack():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "hivestack_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'liquorland-main'
+        env["DBT_BIGQUERY_DATASET"] = 'hivestack_transformed'
+        return env
     def set_env_vars_ttd():
         env = get_meltano_env()
         env["BQ_DATASET"] = "ttd_raw"
@@ -123,7 +131,17 @@ with models.DAG(
             env_vars=set_env_vars_dash()
         
             )
-
+    kube_hivestack = KubernetesPodOperator(
+            name="liquorland-hivestack-to-bigquery",
+            task_id="liquorland-hivestack_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run","tap-hivestack","target-bigquery","dbt-bigquery:hivestack_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_hivestack()
+    )
     kube_facebook=KubernetesPodOperator(
             name="liquorland-facebook-to-bigquery",
             task_id="liquorland-facebook_to_bigquery",
@@ -157,7 +175,7 @@ with models.DAG(
             ),
             env_vars=set_env_vars_ttd()
     )
-    [kube_facebook,kube_cm360,kube_ttd] >> kube_dash >> kube_dash_union
+    [kube_facebook,kube_cm360,kube_ttd,kube_hivestack] >> kube_dash >> kube_dash_union
     
 with models.DAG(
     dag_id="liquorland-meltano-google_ads",

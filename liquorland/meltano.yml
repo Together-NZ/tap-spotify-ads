@@ -9,6 +9,13 @@ state_backend:
   uri: gs://liquorland-main-meltano-state-staging
 plugins:
   extractors:
+  - name: tap-hivestack
+    namespace: tap-hivestack
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git
+    executable: tap-hivestack
+    config:
+      api_key: ${TAP_HIVESTACK_API_KEY}
+      report_id: '82078'
   - name: tap-ttd
     namespace: tap-ttd
     pip_url: git+https://github.com/Together-NZ/tap-ttd.git
