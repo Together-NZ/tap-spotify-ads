@@ -34,7 +34,7 @@ WITH deduplicated_data AS (
               OR LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%mailout%' 
               OR (LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%automated%' 
                   AND LOWER(JSON_VALUE(data, '$.sessionCampaignName')) LIKE '%email%') THEN 'email'
-        WHEN (LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%facebook%'\
+        WHEN (LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%facebook%'
               OR LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%meta%' 
               OR LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%instagram%' 
               OR LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%social%')
