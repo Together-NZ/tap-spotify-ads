@@ -139,7 +139,7 @@ plugins:
       snapchat_models:
         args: run --select +snapchat
       linkedin_models:
-        args: run --select +linkedin
+        args: run --select +linkedin_no_creative +linkedin
       tiktok_models:
         args: run --select +tiktok
       ttd_models:
