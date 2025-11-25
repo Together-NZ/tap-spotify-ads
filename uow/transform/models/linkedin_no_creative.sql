@@ -27,6 +27,7 @@ WITH daily_stats AS (SELECT
 
 
   JSON_VALUE(data, '$.creative_id') AS creative_id,
+  --ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.creative_id'),  JSON_VALUE(data, '$.start_at')) AS row_num1
 FROM
   `uowaikato-main.linkedin_raw.ad_analytics_by_creative`),
 creative_campaign_link AS (
