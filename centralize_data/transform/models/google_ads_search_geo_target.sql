@@ -8,7 +8,7 @@ WITH reference AS (
 geo_location AS (
     SELECT * FROM `together-internal.google_ads_geo_target_location_macthing.geoTargetConstant_location`
 )
-select ref.* from reference as ref left join geo_location as geo on geo.geoTargetConstant.resourceName = ref.segments_geo_target_most_specific_location
+select ref.* ,geo.geoTargetConstant.name from reference as ref left join geo_location as geo on geo.geoTargetConstant.resourceName = ref.segments_geo_target_most_specific_location
 
 {% if is_incremental() %}
 
