@@ -17,8 +17,10 @@ WITH ranked_data AS (
         SAFE_CAST(SAFE_CAST(JSON_VALUE(data, '$.clicks') AS FLOAT64) AS INT64) AS clicks, 
         SAFE_CAST(SAFE_CAST(JSON_VALUE(data, '$.impressions') AS FLOAT64) AS INT64) AS impressions, 
         JSON_VALUE(data, '$.ctr') AS ctr,
+        JSON_VALUE(data, '$.optimization_goal') AS optimization_goal,
         SAFE_CAST(JSON_VALUE(data, '$.spend') AS FLOAT64) AS spend,
         JSON_VALUE(data, '$.date_start') AS date_start,
+        JSON_VALUE(data,'$.reach') AS reach,
         JSON_VALUE(data, '$.date_stop') AS date_stop,
         JSON_EXTRACT(data, '$.video_p25_watched_actions') AS video_p25_actions,
         JSON_EXTRACT(data, '$.video_p50_watched_actions') AS video_p50_actions,
@@ -36,7 +38,7 @@ WITH ranked_data AS (
                 _sdc_extracted_at DESC
         ) AS row_number
     FROM
-        `aia-nz-main.facebook_raw.ads_insights_action_video_type`
+        `aia-nz-main.facebook_raw.ads_insights`
 ),
 deduplicated_data AS (
     SELECT *
@@ -45,6 +47,11 @@ deduplicated_data AS (
 ),
 conversion_array AS (
     SELECT conversion_array, ad_id FROM deduplicated_data
+),
+conversion_metrics AS (
+    SELECT * 
+    FROM deduplicated_data
+
 ),
 flattened_video_actions AS (
     SELECT
