@@ -1,13 +1,16 @@
 {{ config(
     materialized='table',
 ) }}
-WITH ad_campaign AS (SELECT DISTINCT 
-JSON_VALUE(data,'$.ad_id') as ad_id,
+WITH ad_campaign_duplicate AS (SELECT 
+trim(JSON_VALUE(data,'$.ad_id')) as ad_id,
 trim(JSON_VALUE(data,'$.ad_name')) as ad_name,
-JSON_VALUE(data,'$.ad_text') as ad_text,
-JSON_VALUE(data,'$.campaign_name') as campaign_name,
-JSON_VALUE(data,'$.adgroup_name') as adgroup_name
+trim(JSON_VALUE(data,'$.campaign_name')) as campaign_name,
+trim(JSON_VALUE(data,'$.adgroup_name')) as adgroup_name,
+ROW_NUMBER() OVER (PARTITION BY trim(JSON_VALUE(data,'$.ad_id')) ORDER BY trim(JSON_VALUE(data,'$.modify_time')) DESC) as row_num
 FROM `aia-nz-main.tiktok_raw.ads` ),
+ad_campaign AS (
+  SELECT * FROM ad_campaign_duplicate WHERE row_num = 1
+),
 ad_data AS (
   SELECT 
     SAFE_CAST(JSON_VALUE(data, '$.ad_id') AS INT64) AS ad_id,
