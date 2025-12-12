@@ -36,23 +36,8 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
-    "start_date": yesterday
+    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
 }
-dv360_args = {
-    "retries": 2,
-    "retry_delay": datetime.timedelta(minutes=3),
-    "start_date": yesterday,
-    "catchup": False,
-    "concurrency": 1,
-    "max_active_runs": 1
-}
-today = datetime.datetime.now(local_tz)
-# Setting timezone for DAG's start date
-start_date = datetime.datetime(2024, 1, 1, tzinfo=local_tz)
-start_date_str = start_date.strftime("%Y-%m-%d")
-start_date_str = yesterday.strftime("%Y-%m-%d")
-end_date = today.strftime("%Y-%m-%d")
-ga4_start_date_str = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 
 
 def get_meltano_env():
@@ -61,10 +46,15 @@ def get_meltano_env():
     meltano_env_common = Variable.get("meltano_common_developer_main",deserialize_json=True)
     meltano_env_ga4 = Variable.get("meltano_analytics_ga4_main",deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+    start_date_str = yesterday.strftime("%Y-%m-%d")
+
     meltano_env["START_DATE"] = start_date_str
     meltano_env["BQ_METHOD"] = "batch_job"
-    meltano_env_copy = deepcopy(meltano_env)
-    return meltano_env_copy
+
+    return deepcopy(meltano_env)
+def get_ga4_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 with models.DAG(
     dag_id="geely-meltano-extraction-transformation-dbt",
     schedule_interval="0 5 * * *",
@@ -86,6 +76,14 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'geely-main'
         env["DBT_BIGQUERY_DATASET"] = 'facebook_transformed'
         return env  
+    def set_env_vars_linkedin():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "linkedin_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'geely-main'
+        env["DBT_BIGQUERY_DATASET"] = 'linkedin_transformed'
+        return env
     def set_env_vars_cm360():
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
@@ -98,7 +96,18 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'geely-main'
         env["DBT_BIGQUERY_DATASET"] = 'dash_table'
         return env
-
+    kube_linkedin = KubernetesPodOperator(
+            name="geely-linkedin-to-bigquery",
+            task_id="geely-linkedin_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "invoke","dbt-bigquery:linkedin_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_linkedin(),
+            get_logs=True
+    )
     kube_cm360 = KubernetesPodOperator(
             name="geely-cm360-to-bigquery",
             task_id="geely-cm360_to_bigquery",
@@ -192,7 +201,7 @@ with models.DAG(
             )
             developer_creds.refresh(Request())
             env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-            env["TAP_GA4_START_DATE"] = ga4_start_date_str
+            env["TAP_GA4_START_DATE"] = get_ga4_start_date()
             return env
 
     def set_env_vars_dash():
