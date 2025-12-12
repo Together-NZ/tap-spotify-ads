@@ -36,23 +36,8 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
-    "start_date": yesterday
+    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
 }
-dv360_args = {
-    "retries": 2,
-    "retry_delay": datetime.timedelta(minutes=3),
-    "start_date": yesterday,
-    "catchup": False,
-    "concurrency": 1,
-    "max_active_runs": 1
-}
-today = datetime.datetime.now(local_tz)
-# Setting timezone for DAG's start date
-start_date = datetime.datetime(2024, 1, 1, tzinfo=local_tz)
-start_date_str = start_date.strftime("%Y-%m-%d")
-start_date_str = yesterday.strftime("%Y-%m-%d")
-end_date = today.strftime("%Y-%m-%d")
-ga4_start_date_str = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 
 
 def get_meltano_env():
@@ -61,10 +46,15 @@ def get_meltano_env():
     meltano_env_common = Variable.get("meltano_common_developer_main",deserialize_json=True)
     meltano_env_ga4 = Variable.get("meltano_analytics_ga4_main",deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+    start_date_str = yesterday.strftime("%Y-%m-%d")
+
     meltano_env["START_DATE"] = start_date_str
     meltano_env["BQ_METHOD"] = "batch_job"
-    meltano_env_copy = deepcopy(meltano_env)
-    return meltano_env_copy
+
+    return deepcopy(meltano_env)
+def get_ga4_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 with models.DAG(
     dag_id="polestar-meltano-extraction-transformation-dbt",
     schedule_interval="0 5 * * *",
@@ -84,6 +74,14 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'polestar-main'
         env["DBT_BIGQUERY_DATASET"] = 'facebook_transformed'
         return env  
+    def set_env_vars_linkedin():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "linkedin_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'polestar-main'
+        env["DBT_BIGQUERY_DATASET"] = 'linkedin_transformed'
+        return env
     def set_env_vars_dash():
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
@@ -92,8 +90,8 @@ with models.DAG(
         return env
 
     kube_dash = KubernetesPodOperator(
-            name="geely-dash-to-bigquery",
-            task_id="geely-dash_to_bigquery",
+            name="polestar-dash-to-bigquery",
+            task_id="polestar-dash_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             trigger_rule='all_done',
@@ -105,9 +103,21 @@ with models.DAG(
             
         
             )
+    kube_linkedin_ads=KubernetesPodOperator(
+            name="polestar-linkedin-ads-to-bigquery",
+            task_id="polestar-linkedin_ads_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run","tap-linkedin-ads","target-bigquery","dbt-bigquery:linkedin_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_linkedin(),
+            get_logs=True
+    )
     kube_facebook=KubernetesPodOperator(
-            name="geely-facebook-to-bigquery",
-            task_id="geely-facebook_to_bigquery",
+            name="polestar-facebook-to-bigquery",
+            task_id="polestar-facebook_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=["--environment=prod", "run","tap-facebook","target-bigquery","dbt-bigquery:facebook_models"],
@@ -118,8 +128,8 @@ with models.DAG(
             get_logs=True
             )
     kube_cm360=KubernetesPodOperator(
-            name="geely-cm360-to-bigquery",
-            task_id="geely-cm360_to_bigquery",
+            name="polestar-cm360-to-bigquery",
+            task_id="polestar-cm360_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=["--environment=prod", "invoke","dbt-bigquery:cm360_models"],
@@ -140,7 +150,7 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(),
         )
-    [kube_facebook,kube_cm360] >> kube_dash >> kube_dash_union
+    [kube_facebook,kube_cm360,kube_linkedin_ads] >> kube_dash >> kube_dash_union
     
 with models.DAG(
     dag_id="polestar-meltano-google_ads",
@@ -190,7 +200,7 @@ with models.DAG(
             )
             developer_creds.refresh(Request())
             env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-            env["TAP_GA4_START_DATE"] = ga4_start_date_str
+            env["TAP_GA4_START_DATE"] = get_ga4_start_date()
             return env
         
     kube_ga4 = KubernetesPodOperator(

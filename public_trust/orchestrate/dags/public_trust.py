@@ -30,24 +30,23 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
-    "start_date": yesterday
+    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
 }
 
-# Setting timezone for DAG's start date
-start_date = datetime.datetime(2024, 1, 1, tzinfo=local_tz)
-start_date_str = start_date.strftime("%Y-%m-%d")
-start_date_str = yesterday.strftime("%Y-%m-%d")
-end_date = today.strftime("%Y-%m-%d")
-ga4_start_date_str = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 def get_meltano_env():
     # Update meltano_env with dynamic dates
     meltano_env_unique = Variable.get("meltano_public_trust_main", deserialize_json=True)
     meltano_env_common = Variable.get("meltano_common_secret",deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique}
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+    start_date_str = yesterday.strftime("%Y-%m-%d")
+
     meltano_env["START_DATE"] = start_date_str
     meltano_env["BQ_METHOD"] = "batch_job"
-    meltano_env_copy = deepcopy(meltano_env)
-    return meltano_env_copy
+
+    return deepcopy(meltano_env)
+def get_ga4_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 
 with models.DAG(
     dag_id="public-trust-meltano-extraction-transformation-dbt",
@@ -119,8 +118,7 @@ with models.DAG(
         )
         developer_creds.refresh(Request())
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-        env["TAP_GA4_START_DATE"] = ga4_start_date_str
-        env["TAP_GA4_END_DATE"] = end_date
+        env["TAP_GA4_START_DATE"] = get_ga4_start_date()
         return env
     set_env_task_cm360 = PythonOperator(
         task_id="set_env_cm360",
