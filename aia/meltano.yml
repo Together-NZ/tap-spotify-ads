@@ -5,18 +5,20 @@ environments:
 - name: dev
 - name: staging
 - name: prod
-state_backend:
-  uri: gs://aia-nz-main-meltano-state-staging
+#state_backend:
+#  uri: gs://aia-nz-main-meltano-state-staging
 plugins:
   extractors:
   - name: tap-facebook
+
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
     config:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights_*.*
+    - ads_insights
+    
     - ad_account.*
     - ad_sets.*
     - ads.*

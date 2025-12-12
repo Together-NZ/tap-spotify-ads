@@ -16,7 +16,7 @@ plugins:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights_*.*
+    - ads_insights
     - ad_account.*
     - ad_sets.*
     - ads.*
@@ -52,10 +52,10 @@ plugins:
     - stream-maps
     config:
       start_date: ${START_DATE}
-      advertiser_id: ${DV360_ADVERTISER_ID}
+      advertiser_id: '680385018'
       query_standard: query_standard.json
       query_youtube: query_youtube.json
-      service_account: ${TAP_DV360_SERVICE_ACCOUNT} 
+      service_account: together-meltano@together-internal.iam.gserviceaccount.com
   - name: tap-hivestack
     namespace: tap-hivestack
     pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git

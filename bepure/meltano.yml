@@ -16,7 +16,7 @@ plugins:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights_*.*
+    - ads_insights
     - ad_account.*
     - ad_sets.*
     - ads.*
