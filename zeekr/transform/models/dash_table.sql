@@ -31,7 +31,7 @@ with dash_table AS (
 ),
 with_channel AS (
 SELECT * EXCEPT (publisher,channel), 
-dt.publisher,
+dc.publisher,
 dc.channel
 
 FROM dash_table as dt join `together-internal.channel.publisher_channel` as dc
