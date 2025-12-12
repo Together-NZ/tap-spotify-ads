@@ -36,34 +36,23 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
-    "start_date": yesterday
+    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
 }
-dv360_args = {
-    "retries": 2,
-    "retry_delay": datetime.timedelta(minutes=3),
-    "start_date": yesterday,
-    "catchup": False,
-    "concurrency": 1,
-    "max_active_runs": 1
-}
-today = datetime.datetime.now(local_tz)
-# Setting timezone for DAG's start date
-start_date = datetime.datetime(2024, 1, 1, tzinfo=local_tz)
-start_date_str = start_date.strftime("%Y-%m-%d")
-start_date_str = yesterday.strftime("%Y-%m-%d")
-end_date = today.strftime("%Y-%m-%d")
-ga4_start_date_str = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
-
 
 def get_meltano_env():
     # Update meltano_env with dynamic dates
     meltano_env_unique = Variable.get("meltano_volvo_main", deserialize_json=True)
     meltano_env_common = Variable.get("meltano_common_secret",deserialize_json=True)
     meltano_env = meltano_env_unique
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+    start_date_str = yesterday.strftime("%Y-%m-%d")
+
     meltano_env["START_DATE"] = start_date_str
     meltano_env["BQ_METHOD"] = "batch_job"
-    meltano_env_copy = deepcopy(meltano_env)
-    return meltano_env_copy
+
+    return deepcopy(meltano_env)
+def get_ga4_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 
 with models.DAG(
     dag_id="volvo-meltano-extraction-transformation-dbt",
@@ -113,8 +102,16 @@ with models.DAG(
         developer_creds.refresh(Request())
         
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-        env["TAP_GA4_START_DATE"] = ga4_start_date_str
+        env["TAP_GA4_START_DATE"] = get_ga4_start_date()
         env["TAP_GA4_PROPERTY_ID"] = env[f'{value}_TAP_GA4_PROPERTY_ID']
+        return env
+    def set_env_vars_linkedin(label):
+        env = get_meltano_env()
+        env["BQ_DATASET"] = f"linkedin_raw__{label}"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'volvo-main'
+        env["DBT_BIGQUERY_DATASET"] = f'linkedin_transformed__{label}'
         return env
     def set_env_vars_dv360(label):
         env = get_meltano_env()
@@ -164,6 +161,18 @@ with models.DAG(
 
     brands =['volvo']
     for brand in brands:
+        kube_linkedin=KubernetesPodOperator(
+            name=f"{brand}-linkedin-to-bigquery",
+            task_id=f"{brand}-linkedin_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run", "tap-linkedin-ads", "target-bigquery",f"dbt-bigquery:linkedin_{brand}_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_linkedin(brand),
+            get_logs=True
+        )
         kube_hivestack=KubernetesPodOperator(
             name=f"{brand}-hivestack-to-bigquery",
             task_id=f"{brand}-hivestack_to_bigquery",
@@ -214,7 +223,7 @@ with models.DAG(
             
         
         )
-    brands=['volvo','polestar','geely']
+    brands=['volvo']
     for brand in brands:
         
         kube_google_ads_search = KubernetesPodOperator(
@@ -323,5 +332,5 @@ with models.DAG(
 
         [kube_google_ads_search]>>kube_dash_search
 
-        [kube_facebook,kube_dv360,kube_cm360,kube_ttd,kube_google_ads,kube_hivestack,kube_google_ads_demand] >> kube_dash
+        [kube_facebook,kube_dv360,kube_cm360,kube_linkedin,kube_ttd,kube_google_ads,kube_hivestack,kube_google_ads_demand] >> kube_dash
         kube_dash>>kube_dash_search >> kube_dash_union >> kube_ga4

@@ -37,24 +37,12 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
-    "start_date": yesterday,
+    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz),
     'email': ["tayaza@wearetogether.co.nz","keivn@wearetogether.co.nz"],
     'email_on_failure': True
 }
-dv360_args = {
-    "retries": 2,
-    "retry_delay": datetime.timedelta(minutes=3),
-    "start_date": yesterday,
-    "catchup": False,
-    "concurrency": 1,
-    "max_active_runs": 1
-}
 
-# Setting timezone for DAG's start date
-start_date = datetime.datetime(2024, 1, 1, tzinfo=local_tz)
-start_date_str = start_date.strftime("%Y-%m-%d")
-start_date_str = yesterday.strftime("%Y-%m-%d")
-ga4_start_date_str = ga4_start_date.strftime("%Y-%m-%d")
+
 def load_secrets_from_secret_manager(secret_prefix: str, project_id: str):
     client = secretmanager.SecretManagerServiceClient()
     parent = f"projects/{project_id}"
@@ -78,10 +66,15 @@ def load_secrets_from_secret_manager(secret_prefix: str, project_id: str):
 def get_meltano_env():
     # Update meltano_env with dynamic dates
     meltano_env = Variable.get("meltano_uowaikato_main", deserialize_json=True)
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+    start_date_str = yesterday.strftime("%Y-%m-%d")
+    #meltano_env["TAP_TIKTOK_START_DATE"]=start_date_str
     meltano_env["START_DATE"] = start_date_str
     meltano_env["BQ_METHOD"] = "batch_job"
-    meltano_env_copy = deepcopy(meltano_env)
-    return meltano_env_copy
+
+    return deepcopy(meltano_env)
+def get_ga4_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 
 with models.DAG(
     dag_id="uowaikato-meltano-extraction-transformation-dbt",
@@ -95,6 +88,8 @@ with models.DAG(
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
         env["DBT_BIGQUERY_DATASET"] = 'tiktok_transformed'
+        env["TAP_TIKTOK_START_DATE"] = (datetime.datetime.now(local_tz) - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+
         return env
     def set_env_vars_facebook():
         env = get_meltano_env()
@@ -163,7 +158,7 @@ with models.DAG(
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
         env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'  
-        env["TAP_GA4_START_DATE"] = ga4_start_date_str    
+        env["TAP_GA4_START_DATE"] = get_ga4_start_date() 
         developer_creds = Credentials(
             None,
             refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
@@ -242,12 +237,13 @@ with models.DAG(
         task_id="uow-tiktok_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","dbt-bigquery:tiktok_models"],
+        arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","--full-refresh","dbt-bigquery:tiktok_models"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_tiktok(),
-        base_container_name=f"meltano-uow-tiktok",
+        
+        get_logs=True
     )
     
     kube_facebook = KubernetesPodOperator(
