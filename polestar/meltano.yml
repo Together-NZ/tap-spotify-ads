@@ -18,6 +18,25 @@ plugins:
       keep_empty_rows: true
       select:
       - goal
+  - name: tap-linkedin-ads
+    namespace: tap-linkedin-ads
+    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git
+    executable: tap-linkedin-ads
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      access_token: ${TAP_LINKEDIN_ADS_ACCESS_TOKEN}
+      refresh_token: ${TAP_LINKEDIN_ADS_REFRESH_TOKEN}
+      client_id: ${TAP_LINKEDIN_ADS_CLIENT_ID}
+      client_secret: ${TAP_LINKEDIN_ADS_CLIENT_SECRET}
+      accounts: '517064774'
+      user_agent: agent
+      start_date: ${START_DATE}
+      _catalog_path: ./catalog.json
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
@@ -25,7 +44,7 @@ plugins:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights_*.*
+    - ads_insights
     - ad_account.*
     - ad_sets.*
     - ads.*
@@ -67,6 +86,8 @@ plugins:
       location: australia-southeast1
       method: oauth
     commands:
+      linkedin_models:
+        args: run --select +linkedin_no_creative +linkedin
       ga4_models:
         args: run --select ga4_goal_a ga4_goal_channel
       cm360_models:

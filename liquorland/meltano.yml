@@ -58,7 +58,7 @@ plugins:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights_*.*
+    - ads_insights
     - ad_account.*
     - ad_sets.*
     - ads.*
@@ -101,6 +101,8 @@ plugins:
         args: run --select ttd
       cm360_models:
         args: run --select cm360_direct_buy
+      hivestack_models:
+        args: run --select hivestack
   files:
   - name: files-airflow
     variant: meltano
