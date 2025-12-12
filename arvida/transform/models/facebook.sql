@@ -13,8 +13,8 @@ WITH ranked_data AS (
         JSON_VALUE(data, '$.adset_name') AS adset_name,
         JSON_VALUE(data, '$.campaign_id') AS campaign_id,
         JSON_EXTRACT_ARRAY(data, '$.conversions') AS conversion_array,
-        SAFE_CAST(JSON_VALUE(data, '$.clicks') AS INT64) AS clicks, 
-        SAFE_CAST(JSON_VALUE(data, '$.impressions') AS INT64) AS impressions, 
+        SAFE_CAST(JSON_VALUE(data, '$.clicks') AS FLOAT64) AS clicks, 
+        SAFE_CAST(JSON_VALUE(data, '$.impressions') AS FLOAT64) AS impressions, 
         JSON_VALUE(data, '$.ctr') AS ctr,
         SAFE_CAST(JSON_VALUE(data, '$.spend') AS FLOAT64) AS spend,
         JSON_VALUE(data, '$.date_start') AS date_start,
@@ -35,7 +35,7 @@ WITH ranked_data AS (
                 _sdc_extracted_at DESC
         ) AS row_number
     FROM
-        `arvida-main.facebook_raw.ads_insights_action_video_type`
+        `arvida-main.facebook_raw.ads_insights`
 ),
 deduplicated_data AS (
     SELECT *
@@ -121,32 +121,32 @@ parsed_video_actions AS (
             JSON_VALUE(
                 video_play_array[0],
                 '$.value'
-            ) AS INT64
+            ) AS FLOAT64
         ) AS last_video_played,
         video_play_array,
         CAST(
             JSON_VALUE(
                 video_p25_array[OFFSET(ARRAY_LENGTH(video_p25_array) - 1)],
                 '$.value'
-            ) AS INT64
+            ) AS FLOAT64
         ) AS last_video_p25,
         CAST(
             JSON_VALUE(
                 video_p50_array[OFFSET(ARRAY_LENGTH(video_p50_array) - 1)],
                 '$.value'
-            ) AS INT64
+            ) AS FLOAT64
         ) AS last_video_p50,
         CAST(
             JSON_VALUE(
                 video_p75_array[OFFSET(ARRAY_LENGTH(video_p75_array) - 1)],
                 '$.value'
-            ) AS INT64
+            ) AS FLOAT64
         ) AS last_video_p75,
         CAST(
             JSON_VALUE(
                 video_p100_array[OFFSET(ARRAY_LENGTH(video_p100_array) - 1)],
                 '$.value'
-            ) AS INT64
+            ) AS FLOAT64
         ) AS last_video_p100
     FROM flattened_video_actions
 ),

@@ -36,7 +36,7 @@ WITH ranked_data AS (
                 _sdc_extracted_at DESC
         ) AS row_number
     FROM
-        `ballance-main.facebook_raw__brand.ads_insights_action_video_type`
+        `ballance-main.facebook_raw__brand.ads_insights`
 ),
 deduplicated_data AS (
     SELECT *
