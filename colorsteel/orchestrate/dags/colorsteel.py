@@ -31,38 +31,30 @@ log.setLevel(logging.INFO)
 all_tasks = []
 per_label_task = {}
 local_tz = pendulum.timezone("Pacific/Auckland")
-yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+
 default_args = {
     "retries": 3,
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
-    "start_date": yesterday
-}
-dv360_args = {
-    "retries": 2,
-    "retry_delay": datetime.timedelta(minutes=3),
-    "start_date": yesterday,
-    "catchup": False,
-    "concurrency": 1,
-    "max_active_runs": 1
+    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
 }
 
-# Setting timezone for DAG's start date
-start_date = datetime.datetime(2024, 1, 1, tzinfo=local_tz)
-start_date_str = start_date.strftime("%Y-%m-%d")
-start_date_str = yesterday.strftime("%Y-%m-%d")
-today = datetime.datetime.now(local_tz).strftime("%Y-%m-%d")
-ga4_start_date_str = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+
 def get_meltano_env():
     # Update meltano_env with dynamic dates
     meltano_env_unique = Variable.get("meltano_colorsteel_main", deserialize_json=True)
     meltano_env_common = Variable.get("meltano_common_secret",deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique}
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+    start_date_str = yesterday.strftime("%Y-%m-%d")
+    meltano_env["TAP_PINTEREST_ADS_END_DATE"] = datetime.datetime.now(local_tz).strftime("%Y-%m-%d")
     meltano_env["START_DATE"] = start_date_str
     meltano_env["BQ_METHOD"] = "batch_job"
-    meltano_env_copy = deepcopy(meltano_env)
-    return meltano_env_copy
+
+    return deepcopy(meltano_env)
+def get_ga4_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 
 with models.DAG(
     dag_id="colorsteel-meltano-extraction-transformation-dbt",
@@ -89,10 +81,11 @@ with models.DAG(
         env = get_meltano_env()
         env["BQ_DATASET"] = "pinterest_raw"
         env["BQ_METHOD"] = "batch_job"
-        env["TAP_PINTEREST_ADS_END_DATE"] = today
+        #env["TAP_PINTEREST_ADS_END_DATE"] = datetime.datetime.now(local_tz).strftime("%Y-%m-%d")
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'colorsteel-main'
         env["DBT_BIGQUERY_DATASET"] = 'pinterest_transformed'
+        #print(env["TAP_PINTEREST_ADS_END_DATE"],env["START_DATE"])
         return env
     def set_env_vars_dv360():
         env = get_meltano_env()
@@ -118,7 +111,7 @@ with models.DAG(
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'colorsteel-main'
         env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'  
-        env["TAP_GA4_START_DATE"] = ga4_start_date_str    
+        env["TAP_GA4_START_DATE"] = get_ga4_start_date() 
         developer_creds = Credentials(
             None,
             refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
@@ -270,7 +263,7 @@ with models.DAG(
             task_id="colorsteel-pinterest_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "run","tap-pinterest-ads","target-bigquery","dbt-bigquery:pinterest_models"],
+            arguments=["--environment=prod", "run","tap-pinterest-ads","target-bigquery","--full-refresh","dbt-bigquery:pinterest_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
@@ -279,7 +272,8 @@ with models.DAG(
             get_logs = True
     )
 
-    set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd
+    set_env_task_cm360 >> kube_cm360 
+    set_env_task_ttd >> kube_ttd
     set_env_task_ga4 >> kube_ga4
     set_env_task_facebook >> kube_facebook
     set_env_task_pinterest >> kube_pinterest
