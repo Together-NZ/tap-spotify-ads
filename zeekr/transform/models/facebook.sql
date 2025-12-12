@@ -35,7 +35,7 @@ WITH ranked_data AS (
                 _sdc_extracted_at DESC
         ) AS row_number
     FROM
-        `zeekr-main.facebook_raw.ads_insights_action_video_type`
+        `zeekr-main.facebook_raw.ads_insights`
 ),
 deduplicated_data AS (
     SELECT *
