@@ -30,11 +30,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
     config:
-      reports: ${GA4_REPORTS}
+      reports: ./report.json
       start_date: '2024-01-01'
       keep_empty_rows: true
       select:
-      - ${GA4_GOAL}
+      - goal
   - name: tap-dv360
     namespace: tap-dv360
     pip_url: git+https://github.com/Together-NZ/tap-dv360.git
@@ -63,12 +63,11 @@ plugins:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights_*.*
+    - ads_insights
     - ad_account.*
     - ad_sets.*
     - ads.*
     - campaigns.*
-    - custom_conversions.*
   loaders:
   - name: target-bigquery
     variant: z3z1ma
