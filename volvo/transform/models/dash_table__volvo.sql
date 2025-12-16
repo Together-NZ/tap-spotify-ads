@@ -11,6 +11,10 @@ WITH dash_table AS (
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
     FROM `volvo-main.dv360_transformed__volvo.dv360_youtube__volvo`
     UNION ALL
+        SELECT media_cost, impressions, clicks,creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+    FROM `volvo-main.linkedin_transformed__volvo.linkedin__volvo`
+    UNION ALL
 
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
@@ -88,7 +92,7 @@ from `volvo-main.cm360_transformed__volvo.cm360_direct_buy__volvo`
 ),
 with_channel AS (
 SELECT * EXCEPT (publisher,channel), 
-dt.publisher,
+dc.publisher,
 dc.channel
 
 FROM dash_table as dt join `together-internal.channel.publisher_channel` as dc

@@ -33,6 +33,7 @@ local_tz = pendulum.timezone("Pacific/Auckland")
 yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
 default_args = {
     "retries": 3,
+    "retry_delay": datetime.timedelta(hours=5),
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
