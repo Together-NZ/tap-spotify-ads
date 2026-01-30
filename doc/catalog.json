@@ -1,0 +1,736 @@
+{
+  "streams":[
+    {
+      "tap_stream_id":"dv360_standard",
+      "replication_key":"Date",
+      "replication_method":"INCREMENTAL",
+      "key_properties":[
+        "query_id"
+      ],
+      "schema":{
+        "properties":{
+          "Date":{
+            "description":"Date of the data in YYYY/MM/DD format",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Creative":{
+            "description":"Creative name or identifier",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Advertiser Currency":{
+            "description":"Currency used by the advertiser",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Insertion Order":{
+            "description":"Name of the insertion order",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Insertion Order ID":{
+            "description":"Unique ID of the insertion order",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Insertion Order Status":{
+            "description":"Status of the insertion order (e.g., Active)",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Line Item":{
+            "description":"Name of the line item",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Line Item ID":{
+            "description":"Unique ID of the line item",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Floodlight Activity Name":{
+            "description":"Name of the floodlight activity",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Floodlight Activity ID":{
+            "description":"Unique ID of the floodlight activity",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Clicks":{
+            "description":"Number of clicks",
+            "type":[
+              "integer",
+              "null"
+            ]
+          },
+          "Post-Click Conversions":{
+            "description":"Number of post-click conversions",
+            "type":[
+              "number",
+              "null"
+            ]
+          },
+          "Impressions":{
+            "description":"Number of impressions",
+            "type":[
+              "integer",
+              "null"
+            ]
+          },
+          "Post-View Conversions":{
+            "description":"Number of post-view conversions",
+            "type":[
+              "number",
+              "null"
+            ]
+          },
+          "Total Conversions":{
+            "description":"Total number of conversions",
+            "type":[
+              "number",
+              "null"
+            ]
+          },
+          "First-Quartile Views (Video)":{
+            "description":"Number of video views reaching the first quartile",
+            "type":[
+              "integer",
+              "null"
+            ]
+          },
+          "Midpoint Views (Video)":{
+            "description":"Number of video views reaching the midpoint",
+            "type":[
+              "integer",
+              "null"
+            ]
+          },
+          "Third-Quartile Views (Video)":{
+            "description":"Number of video views reaching the third quartile",
+            "type":[
+              "integer",
+              "null"
+            ]
+          },
+          "Complete Views (Video)":{
+            "description":"Number of completed video views",
+            "type":[
+              "integer",
+              "null"
+            ]
+          },
+          "Revenue (Adv Currency)":{
+            "description":"Revenue in advertiser currency",
+            "type":[
+              "number",
+              "null"
+            ]
+          },
+          "CM360 Post-Click Revenue":{
+            "description":"Revenue from post-click events in CM360",
+            "type":[
+              "number",
+              "null"
+            ]
+          },
+          "CM360 Post-View Revenue":{
+            "description":"Revenue from post-view events in CM360",
+            "type":[
+              "number",
+              "null"
+            ]
+          },
+          "Video Plays (Video)":{
+            "description":"Number of video plays",
+            "type":[
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type":"object"
+      },
+      "stream":"dv360_standard",
+      "metadata":[
+        {
+          "breadcrumb":[
+            "properties",
+            "Date"
+          ],
+          "metadata":{
+            "inclusion":"automatic"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Creative"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Advertiser Currency"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Insertion Order"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Insertion Order ID"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Insertion Order Status"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Line Item"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Line Item ID"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Floodlight Activity Name"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Floodlight Activity ID"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Clicks"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Post-Click Conversions"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Impressions"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Post-View Conversions"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Total Conversions"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "First-Quartile Views (Video)"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Midpoint Views (Video)"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Third-Quartile Views (Video)"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Complete Views (Video)"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Revenue (Adv Currency)"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "CM360 Post-Click Revenue"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "CM360 Post-View Revenue"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Video Plays (Video)"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[],
+          "metadata":{
+            "inclusion":"available",
+            "selected":true,
+            "selected-by-default":true,
+            "table-key-properties":[
+              "query_id"
+            ],
+            "valid-replication-keys":[
+              "Date"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "tap_stream_id":"dv360_youtube",
+      "replication_key":"Date",
+      "replication_method":"INCREMENTAL",
+      "key_properties":[
+        "query_id"
+      ],
+      "schema":{
+        "properties":{
+          "Date":{
+            "description":"Date of the data in YYYY/MM/DD format",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "YouTube Ad":{
+            "description":"Name of the YouTube ad",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Advertiser Currency":{
+            "description":"Currency used by the advertiser",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Insertion Order":{
+            "description":"Name of the insertion order",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Insertion Order ID":{
+            "description":"ID of the insertion order",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Insertion Order Status":{
+            "description":"Status of the insertion order (e.g., Active, Paused)",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "YouTube Ad Group":{
+            "description":"Name of the YouTube ad group",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "YouTube Ad Group ID":{
+            "description":"ID of the YouTube ad group",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Line Item":{
+            "description":"Name of the line item",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Line Item ID":{
+            "description":"ID of the line item",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Clicks":{
+            "description":"Number of clicks on the ads",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Impressions":{
+            "description":"Number of impressions for the ads",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "First-Quartile Views (Video)":{
+            "description":"Number of video views that reached the first quartile",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Midpoint Views (Video)":{
+            "description":"Number of video views that reached the midpoint",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Third-Quartile Views (Video)":{
+            "description":"Number of video views that reached the third quartile",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Complete Views (Video)":{
+            "description":"Number of video completions",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Revenue (Adv Currency)":{
+            "description":"Revenue generated in the advertiser's currency",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "Advertiser":{
+            "description":"Name of the advertiser",
+            "type":[
+              "string",
+              "null"
+            ]
+          },
+          "TrueView":{
+            "description":"True view",
+            "type":[
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type":"object"
+      },
+      "stream":"dv360_youtube",
+      "metadata":[
+        {
+          "breadcrumb":[
+            "properties",
+            "Date"
+          ],
+          "metadata":{
+            "inclusion":"automatic"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "YouTube Ad"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Advertiser Currency"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Insertion Order"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Insertion Order ID"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Insertion Order Status"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "YouTube Ad Group"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "YouTube Ad Group ID"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Line Item"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Line Item ID"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Clicks"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Impressions"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "First-Quartile Views (Video)"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Midpoint Views (Video)"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Third-Quartile Views (Video)"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Complete Views (Video)"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Revenue (Adv Currency)"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "Advertiser"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[
+            "properties",
+            "TrueView"
+          ],
+          "metadata":{
+            "inclusion":"available"
+          }
+        },
+        {
+          "breadcrumb":[],
+          "metadata":{
+            "inclusion":"available",
+            "selected":true,
+            "selected-by-default":true,
+            "table-key-properties":[
+              "query_id"
+            ],
+            "valid-replication-keys":[
+              "Date"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
