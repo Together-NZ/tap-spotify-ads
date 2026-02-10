@@ -102,6 +102,8 @@ plugins:
       location: australia-southeast1
       method: oauth
     commands:
+      ttd_models:
+        args: run --select ttd
       ga4_models:
         args: run --select ga4_goal_a ga4_goal_channel
       facebook_models:

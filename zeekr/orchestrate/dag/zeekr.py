@@ -38,6 +38,7 @@ default_args = {
     "catchup": False,
     "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz),
     "email_on_failure": True,
+    'retry_delay': timedelta(minutes=30)
 }
 
 
@@ -47,7 +48,7 @@ def get_meltano_env():
     meltano_env_common = Variable.get("meltano_common_developer_main",deserialize_json=True)
     meltano_env_ga4 = Variable.get("meltano_developer_ga4_main",deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
-    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=3)
     start_date_str = yesterday.strftime("%Y-%m-%d")
 
     meltano_env["START_DATE"] = start_date_str
@@ -55,6 +56,9 @@ def get_meltano_env():
 
     return deepcopy(meltano_env)
 def get_ga4_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+
+def get_ttd_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 with models.DAG(
     dag_id="zeekr-meltano-extraction-transformation-dbt",
@@ -91,7 +95,27 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'zeekr-main'
         env["DBT_BIGQUERY_DATASET"] = 'dash_table'
         return env
-    
+    def set_env_vars_ttd():
+        env=get_meltano_env()
+        env["BQ_DATASET"] = "ttd_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'zeekr-main'
+        env["DBT_BIGQUERY_DATASET"] = 'ttd_transformed'
+        env["TAP_TTD_START_DATE"] = get_ttd_start_date()
+        return env
+    kube_ttd=KubernetesPodOperator(
+            name="zeekr-ttd-to-bigquery",
+            task_id="zeekr-ttd_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run","tap-ttd","target-bigquery","dbt-bigquery:ttd_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ttd(),
+            execution_timeout=timedelta(minutes=60)
+    )
     kube_facebook = KubernetesPodOperator(
             name="zeekr-facebook-to-bigquery",
             task_id="zeekr-facebook_to_bigquery",
@@ -108,7 +132,7 @@ with models.DAG(
             task_id="zeekr-linkedin_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "invoke","dbt-bigquery:linkedin_models"],
+            arguments=["--environment=prod", "run","tap-linkedin-ads","target-bigquery","dbt-bigquery:linkedin_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
@@ -150,7 +174,7 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(),
         )
-    [kube_facebook,kube_linkedin] >> kube_dash >> kube_dash_search >> kube_dash_union
+    [kube_facebook,kube_linkedin] >> kube_ttd,kube_dash >> kube_dash_search >> kube_dash_union
 with models.DAG(
     dag_id="zeekr-meltano-google_ads",
     schedule_interval="30 13 * * *",

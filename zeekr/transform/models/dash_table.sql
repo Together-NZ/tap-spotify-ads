@@ -25,6 +25,10 @@ with dash_table AS (
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
     FROM `zeekr-main.facebook_transformed.facebook`
     UNION ALL
+    SELECT media_cost, impressions, clicks,creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_views,
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+    FROM `zeekr-main.ttd_transformed.ttd`
+    UNION ALL
     SELECT media_cost, impressions,  clicks,creative_name,audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_views,
             campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
     FROM `zeekr-main.linkedin_transformed.linkedin`
