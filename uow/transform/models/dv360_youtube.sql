@@ -28,8 +28,9 @@ WITH parsed_data AS (
                 JSON_VALUE(data, "$.Insertion Order ID"),
                 JSON_VALUE(data, "$.Line Item ID"),
                 JSON_VALUE(data, "$.YouTube Ad")
+                --safe_cast(TRUNC(SAFE_CAST(JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS FLOAT64))as int64)
             ORDER BY 
-                CAST(JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS FLOAT64) DESC -- Keep the record with the highest revenue
+                _sdc_extracted_at DESC -- Keep the record with the highest revenue
         ) AS row_num
     FROM
         `uowaikato-main.dv360_raw.dv360_youtube` where LOWER(JSON_VALUE(data, "$.Insertion Order")) LIKE '%uow%'
@@ -67,4 +68,4 @@ SELECT
 FROM
     parsed_data
 WHERE
-    row_num = 1 and lower(campaign_name) like '%uow%'
+    lower(campaign_name) like '%uow%' and row_num=1

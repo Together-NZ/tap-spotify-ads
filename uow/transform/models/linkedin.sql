@@ -6,14 +6,19 @@ SELECT creative.creative_name ,
 base.*
 
 
-FROM {{ref ('linkedin_no_creative')}} AS base LEFT JOIN 
+FROM {{ref ('linkedin_no_creative')}} AS base JOIN 
  `together-internal.linkedin_transformed.linkedin_naming` AS creative
 ON SAFE_CAST(creative.creative_id AS STRING) = base.creative_id
+),
+modified_social_boosting AS (
+  SELECT * EXCEPT(creative_name),
+  CASE WHEN creative_name is NULL THEN campaign_name 
+  ELSE creative_name END AS creative_name FROM final
 )
 select *, 
 SPLIT(campaign_name,'_')[OFFSET(1)] AS campaign_descr,
 CASE 
-  WHEN ARRAY_LENGTH(SPLIT(campaign_name, '_')) >= 7 THEN SPLIT(campaign_name, '_')[OFFSET(7)] 
+  WHEN ARRAY_LENGTH(SPLIT(campaign_name, '_')) >= 8 THEN SPLIT(campaign_name, '_')[OFFSET(7)] 
   ELSE NULL
 END AS audience_name,
 CASE 
@@ -43,4 +48,4 @@ CASE
   ELSE NULL
 END AS creative_descr,
 'Linkedin' as publisher
-FROM final
+FROM modified_social_boosting

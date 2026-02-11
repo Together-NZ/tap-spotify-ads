@@ -1,7 +1,7 @@
 {{ config(
     materialized='table',
 ) }}
-WITH final_result as (
+
 SELECT SAFE_CAST(metrics_value_per_conversion AS FLOAT64) AS metrics_value_per_conversion,
 SAFE_CAST(funnel as string) as funnel,
 SAFE_CAST(segments_conversion_action AS STRING) AS segments_conversion_action,
@@ -67,13 +67,5 @@ SAFE_CAST(video_25_completion AS FLOAT64) AS video_25_completion,
 SAFE_CAST(video_75_completion AS FLOAT64) AS video_75_completion,
 SAFE_CAST(video_views AS INT64) AS video_views,
 SAFE_CAST(campaign_descr AS STRING) AS campaign_descr,
-SAFE_CAST(creative_descr AS STRING) AS creative_descr FROM `uowaikato-main.dash_table.dash_table` )
-SELECT
-  -- Replace publisher from table2 if matched, else keep original
-  COALESCE(t2.present, t1.publisher) AS publisher,
-  t1.*
-EXCEPT(publisher) -- exclude original publisher to avoid duplicate columns
+SAFE_CAST(creative_descr AS STRING) AS creative_descr FROM `uowaikato-main.dash_table.dash_table` 
 
-FROM final_result AS t1
-LEFT JOIN `together-internal.publisher_naming.publisher_naming` AS t2
-  ON LOWER(t1.publisher) = LOWER(t2.publisher)

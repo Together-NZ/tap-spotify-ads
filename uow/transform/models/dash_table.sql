@@ -380,7 +380,16 @@ CASE WHEN
     WHEN REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%globalstudies%' THEN 'Global Studies'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%health%' THEN 'Health'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%law%' THEN 'Law'
-    WHEN REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%lifestyle%' THEN 'LifeStyle'
+    WHEN REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%lifestyle%' AND REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '')
+    LIKE '%frisbee%' THEN 'LifeStyle Frisbee'
+    WHEN REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%lifestyle%' AND REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '')
+    LIKE '%home%' THEN 'LifeStyle Home'
+    WHEN REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%lifestyle%' AND (REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '')
+    LIKE '%tabletennis%' OR REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%tt%') THEN 'LifeStyle TableTennis'
+    WHEN REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%lifestyle%' AND REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%pa%' THEN 'LifeStyle Shot PA'
+    WHEN REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%lifestyle%' AND REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '')
+    LIKE '%tga%' AND REGEXP_REPLACE(LOWER(REPLACE(creative_name,'"','')), r'\s+', '') LIKE '%harbour%' THEN 'LifeStyle TGA Harbour'
+    
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%management%' THEN 'Management'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%maori%' THEN 'Maori'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%ncea%' THEN 'NCEA'
@@ -388,6 +397,7 @@ CASE WHEN
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%pharmacy%' THEN 'Pharmacy'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%psych%' THEN 'Psychology'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%scholarship%' THEN 'Scholarship'
+    WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%social%' AND LOWER(REPLACE(creative_name,'"','')) LIKE '%science%' THEN 'Social Science'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%science%' AND LOWER(REPLACE(creative_name,'"','')) NOT LIKE '%comp%' THEN 'Science'
     WHEN ((lower(REPLACE(creative_name, '"', '')) LIKE lower(('%Become a leader in Education by studying one of our Masters degrees in Education.%')) 
     OR lower(REPLACE(creative_name, '"', '')) LIKE lower(('%ECE%')) OR lower(REPLACE(creative_name, '"', '')) LIKE lower(('%educ%')) 
@@ -405,7 +415,6 @@ CASE WHEN
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%outdoor%' THEN 'Outdoor'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%nurs%' THEN 'Nursing'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%onshore%' THEN 'Onshore'
-    WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%social%' AND LOWER(REPLACE(creative_name,'"','')) LIKE '%science%' THEN 'Social Science'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%indoor%' THEN 'Indoors'
     when lower(replace(creative_name,'"','')) like '%english%' then 'English'
     when REGEXP_REPLACE(lower(replace(creative_name,'"','')), r'\s+', '') like '%forthepeople%' THEN 'For The People'
