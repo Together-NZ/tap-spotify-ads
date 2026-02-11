@@ -37,7 +37,8 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
-    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz),
+    "start_date": datetime.datetime(2025, 12, 15, tzinfo=local_tz),
+    'retry_delay': timedelta(minutes=30),
     'email': ["tayaza@wearetogether.co.nz","keivn@wearetogether.co.nz"],
     'email_on_failure': True
 }
@@ -76,11 +77,22 @@ def get_meltano_env():
 def get_ga4_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 
+def get_ttd_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
+
+def get_meta_start_date():
+    return (
+        datetime.datetime.now(datetime.timezone.utc)
+        - datetime.timedelta(days=15)
+    ).replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def get_linkedin_start_date():
+    return datetime.datetime.now(local_tz) - datetime.timedelta(days=30)
 with models.DAG(
-    dag_id="uowaikato-meltano-extraction-transformation-dbt",
-    schedule_interval="0 4 * * *",
+    dag_id="uowaikato-meltano-google-ads",
+    schedule_interval="10 14 * * *",
     default_args=default_args,
-) as dag:
+) as google_dag:
     def set_env_vars_tiktok():
         env = get_meltano_env()
         env["BQ_DATASET"] = "tiktok_raw"
@@ -91,59 +103,11 @@ with models.DAG(
         env["TAP_TIKTOK_START_DATE"] = (datetime.datetime.now(local_tz) - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 
         return env
-    def set_env_vars_facebook():
-        env = get_meltano_env()
-        env["BQ_DATASET"] = "facebook_raw"
-        env["BQ_METHOD"] = "batch_job"
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
-        env["DBT_BIGQUERY_DATASET"] = 'facebook_transformed'
-        return env
-    def set_env_vars_snapchat():
-        env = get_meltano_env()
-        env["BQ_DATASET"] = "snapchat_raw"
-        env["BQ_METHOD"] = "batch_job"
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
-        env["DBT_BIGQUERY_DATASET"] = 'snapchat_transformed'
-        return env
-    def set_env_vars_dv360():
-        env = get_meltano_env()
-        env["BQ_DATASET"] = "dv360_raw"
-        env["BQ_METHOD"] = "batch_job"
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
-        env["DBT_BIGQUERY_DATASET"] = 'dv360_transformed'
-        return env
-    def set_env_vars_cm360():
-        env = get_meltano_env()
-        env["BQ_DATASET"] = "cm360_raw"
-        env["BQ_METHOD"] = "batch_job"
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
-        env["DBT_BIGQUERY_DATASET"] = 'cm360_transformed'
-        return env
-    def set_env_vars_ttd():
-        env = get_meltano_env()
-        env["BQ_DATASET"] = "ttd_raw"
-        env["BQ_METHOD"] = "batch_job"
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
-        env["DBT_BIGQUERY_DATASET"] = 'ttd_transformed'
-        return env
     def set_env_vars_google_ads():
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
         env["DBT_BIGQUERY_DATASET"] = 'google_ads_transformed'
-        return env
-    def set_env_vars_linkedin():
-        env = get_meltano_env()
-        env["BQ_DATASET"] = "linkedin_raw"
-        env["BQ_METHOD"] = "batch_job"
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
-        env["DBT_BIGQUERY_DATASET"] = 'linkedin_transformed'
         return env
     def set_env_vars_dash():
         env = get_meltano_env()
@@ -177,46 +141,9 @@ with models.DAG(
         task_id="set_env_tiktok",
         python_callable=set_env_vars_tiktok,
     )
-    set_env_task_facebook = PythonOperator(
-        task_id="set_env_facebook",
-        python_callable=set_env_vars_facebook,
-    )
-    set_env_task_linkedin = PythonOperator(
-        task_id="set_env_linkedin",
-        python_callable=set_env_vars_linkedin,
-    )
-    set_env_task_snapchat = PythonOperator(
-        task_id="set_env_snapchat",
-        python_callable=set_env_vars_snapchat,
-    )
-    set_env_task_dv360 = PythonOperator(
-        task_id="set_env_dv360",
-        python_callable=set_env_vars_dv360,
-    )
-    set_env_task_cm360 = PythonOperator(
-        task_id="set_env_cm360",
-        python_callable=set_env_vars_cm360,
-    )
-    set_env_task_ttd = PythonOperator(
-        task_id="set_env_ttd",
-        python_callable=set_env_vars_ttd,
-    )
     set_env_task_google_ads = PythonOperator(
         task_id="set_env_google_ads",
         python_callable=set_env_vars_google_ads,
-    )
-    kube_linkedin = KubernetesPodOperator(
-        email_on_failure=True,
-        name="uow-linkedin-to-bigquery",
-        task_id="uow-linkedin_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments = [
-             "--environment=prod", "run","tap-linkedin-ads","target-bigquery",
-            "dbt-bigquery:linkedin_models"
-        ],
-        env_vars=set_env_vars_linkedin(),
-        get_logs=True
     )
     kube_ga4 = KubernetesPodOperator(
         email_on_failure=True,
@@ -245,6 +172,155 @@ with models.DAG(
         
         get_logs=True
     )
+    kube_google_ads = KubernetesPodOperator(
+        email_on_failure=True,
+        name="uow-google-ads-to-bigquery",
+        task_id="uow-google_ads_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", "google_ads"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_google_ads(),
+        base_container_name=f"meltano-uow-google-ads",
+    )
+    kube_dash = KubernetesPodOperator(
+        email_on_failure=True,
+        name="uow-dash-to-bigquery",
+        task_id="uow-dash_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_table"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        trigger_rule="all_done",
+        env_vars=set_env_vars_dash(),
+        
+        )
+    kube_dash_union = KubernetesPodOperator(
+        email_on_failure=True,
+        name="uow-dash-union-to-bigquery",
+        task_id="uow-dash_union_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash(),
+        
+        )
+    set_env_task_ga4 >> kube_ga4
+    set_env_task_tiktok >> kube_tiktok
+    set_env_task_google_ads >> kube_google_ads
+    [kube_tiktok,kube_google_ads] >> kube_dash >> kube_dash_union >> kube_ga4
+with models.DAG(
+    dag_id="uowaikato-meltano-extraction-transformation-dbt",
+    schedule_interval="0 4 * * *",
+    default_args=default_args,
+) as dag:
+
+    def set_env_vars_facebook():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "facebook_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
+        env["DBT_BIGQUERY_DATASET"] = 'facebook_transformed'
+        env["TAP_FACEBOOK_AIRBYTE_CONFIG_START_DATE"]=get_meta_start_date()
+        return env
+    def set_env_vars_snapchat():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "snapchat_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
+        env["DBT_BIGQUERY_DATASET"] = 'snapchat_transformed'
+        return env
+    def set_env_vars_dv360():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "dv360_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
+        env["DBT_BIGQUERY_DATASET"] = 'dv360_transformed'
+        return env
+    def set_env_vars_cm360():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "cm360_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
+        env["DBT_BIGQUERY_DATASET"] = 'cm360_transformed'
+        return env
+    def set_env_vars_ttd():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "ttd_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
+        env["DBT_BIGQUERY_DATASET"] = 'ttd_transformed'
+        env["TAP_TTD_START_DATE"] =get_ttd_start_date()
+        return env
+
+    def set_env_vars_linkedin():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "linkedin_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
+        env["DBT_BIGQUERY_DATASET"] = 'linkedin_transformed'
+        env['TAP_LINKEDIN_ADS_START_DATE'] = get_linkedin_start_date()
+        return env
+    def set_env_vars_dash():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
+        env["DBT_BIGQUERY_DATASET"] = 'dash_table'
+        return env
+
+
+    set_env_task_facebook = PythonOperator(
+        task_id="set_env_facebook",
+        python_callable=set_env_vars_facebook,
+    )
+    set_env_task_linkedin = PythonOperator(
+        task_id="set_env_linkedin",
+        python_callable=set_env_vars_linkedin,
+    )
+    set_env_task_snapchat = PythonOperator(
+        task_id="set_env_snapchat",
+        python_callable=set_env_vars_snapchat,
+    )
+    set_env_task_dv360 = PythonOperator(
+        task_id="set_env_dv360",
+        python_callable=set_env_vars_dv360,
+    )
+    set_env_task_cm360 = PythonOperator(
+        task_id="set_env_cm360",
+        python_callable=set_env_vars_cm360,
+    )
+    set_env_task_ttd = PythonOperator(
+        task_id="set_env_ttd",
+        python_callable=set_env_vars_ttd,
+    )
+
+    kube_linkedin = KubernetesPodOperator(
+        email_on_failure=True,
+        name="uow-linkedin-to-bigquery",
+        task_id="uow-linkedin_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments = [
+             "--environment=prod", "run","tap-linkedin-ads","target-bigquery",
+            "dbt-bigquery:linkedin_models"
+        ],
+        env_vars=set_env_vars_linkedin(),
+        get_logs=True
+    )
+ 
     
     kube_facebook = KubernetesPodOperator(
         email_on_failure=True,
@@ -265,7 +341,7 @@ with models.DAG(
         task_id="uow-snapchat_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-snapchat-ads", "target-bigquery","dbt-bigquery:snapchat_models"],
+        arguments=["--environment=prod", "run", "tap-snapchat-ads", "target-bigquery","--full-refresh","dbt-bigquery:snapchat_models"],
                 container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
@@ -309,20 +385,8 @@ with models.DAG(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_ttd(),
-        get_logs=True
-    )
-    kube_google_ads = KubernetesPodOperator(
-        email_on_failure=True,
-        name="uow-google-ads-to-bigquery",
-        task_id="uow-google_ads_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", "google_ads"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_google_ads(),
-        base_container_name=f"meltano-uow-google-ads",
+        get_logs=True,
+        execution_timeout=timedelta(minutes=80)
     )
 
     kube_dash = KubernetesPodOperator(
@@ -354,13 +418,10 @@ with models.DAG(
         )
     
 
-    set_env_task_tiktok >> kube_tiktok
     set_env_task_facebook >> kube_facebook
     set_env_task_snapchat >> kube_snapchat 
     set_env_task_dv360 >> kube_dv360
     set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd 
-    set_env_task_ga4 >> kube_ga4
-    set_env_task_google_ads >> kube_google_ads
     set_env_task_linkedin >> kube_linkedin
-    [kube_tiktok,kube_facebook,kube_snapchat,kube_dv360,kube_cm360,kube_ttd,kube_google_ads,kube_linkedin] >> kube_dash
+    [kube_facebook,kube_snapchat,kube_dv360,kube_cm360,kube_ttd,kube_linkedin] >> kube_dash
     kube_dash >> kube_dash_union
