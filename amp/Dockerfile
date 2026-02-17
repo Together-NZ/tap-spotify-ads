@@ -42,6 +42,12 @@ RUN pip install \
     pandas \
     pyarrow
 
+# Ensure plugin venvs have pip + pkg_resources (setuptools)
+RUN for v in /project/.meltano/*/*/venv/bin/python; do \
+"$v" -m ensurepip --upgrade || true; \
+"$v" -m pip install -U "setuptools<81" || true; \
+done
+
 # Entrypoint for container
 ENTRYPOINT ["meltano"]
 
