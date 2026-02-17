@@ -36,6 +36,7 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
+    'retry_delay': datetime.timedelta(minutes=30),
     "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
 }
 
@@ -45,7 +46,7 @@ def get_meltano_env():
     meltano_env_common = Variable.get("meltano_common_secret",deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique}
 
-    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
     start_date_str = yesterday.strftime("%Y-%m-%d")
 
     meltano_env["START_DATE"] = start_date_str
@@ -53,6 +54,8 @@ def get_meltano_env():
 
     return deepcopy(meltano_env)
 def get_ga4_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+def get_ttd_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 with models.DAG(
     dag_id="amp-meltano-google-ads",
@@ -234,6 +237,7 @@ with models.DAG(
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'amp-main'
         env["DBT_BIGQUERY_DATASET"] = 'ttd_transformed'
+        env["TAP_TTD_START_DATE"] = get_ttd_start_date()
         #env["TAP_TTD_ADVERTISER_ID"] = id
         return env
     def set_env_vars_reddit():
@@ -412,6 +416,7 @@ with models.DAG(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
             env_vars=set_env_vars_ttd(),
+            execution_timeout=timedelta(minutes=60),
             #base_container_name=f"meltano-{label}-ttd",
             get_logs = True
     )
