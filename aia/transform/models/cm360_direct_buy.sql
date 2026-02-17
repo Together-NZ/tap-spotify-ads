@@ -59,7 +59,7 @@ WITH cm360reference AS (
     WHERE 
         LOWER(JSON_VALUE(JSON_EXTRACT(data, "$.advertiser"))) = 'aia'
         -- filter the site name from the cm360 dataset
-        AND LOWER(JSON_VALUE(JSON_EXTRACT(data, "$.site"))) NOT IN ('the trade desk', 'ttd', 'facebook', 'twitch', 'programmatic', 'dart', 'google ads', 'sem')
+        AND LOWER(JSON_VALUE(JSON_EXTRACT(data, "$.site"))) NOT IN ('the trade desk', 'ttd','dv360', 'meta','facebook','dv_360', 'twitch', 'programmatic', 'dart', 'google ads', 'sem')
 
 )
 
