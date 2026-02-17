@@ -16,11 +16,12 @@ plugins:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights
+
     - ad_account.*
     - ad_sets.*
     - ads.*
     - campaigns.*
+    - custom_conversions.*
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
     pip_url: git+https://github.com/Together-NZ/tap-linkedin.git
@@ -42,10 +43,9 @@ plugins:
       _catalog_path: ./catalog.json
     select:
     - campaigns.*
+    - campaign_groups.*
     - creatives.*
     - ad_analytics_by_creative.*
-    - ad_analytics_by_campaign.*
-  
   - name: tap-ttd
     namespace: tap-ttd
     pip_url: git+https://github.com/Together-NZ/tap-ttd.git
@@ -107,7 +107,7 @@ plugins:
         lower: true
         snake_case: true
       fail_fast: false
-      method: ${BQ_METHOD}
+      method: storage_write_api
       bucket: australia-southeast1-meltan-00c049c-bigquery-staging
   transformers:
   - name: dbt-bigquery
