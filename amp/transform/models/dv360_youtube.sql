@@ -8,7 +8,7 @@ WITH parsed_data AS (
         JSON_VALUE(data, "$.Advertiser Currency") AS advertiser_currency,
         JSON_VALUE(data, "$.Clicks") AS clicks,
         JSON_EXTRACT_SCALAR(data, "$['Complete Views (Video)']") AS complete_views_video,
-        FORMAT_DATE('%Y-%m-%d', PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))) AS date, -- Convert date format
+        FORMAT_DATE('%Y-%m-%d', safe.PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))) AS date, -- Convert date format
         JSON_EXTRACT_SCALAR(data, "$['First-Quartile Views (Video)']") AS first_quartile_views_video,
         JSON_VALUE(data, "$.Impressions") AS impressions,
         JSON_VALUE(data, "$.Insertion Order") AS campaign_name,
@@ -20,17 +20,20 @@ WITH parsed_data AS (
         JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS media_cost,
         JSON_EXTRACT_SCALAR(data, "$['Third-Quartile Views (Video)']") AS third_quartile_views_video,
         JSON_VALUE(data, "$.YouTube Ad") AS creative_name,
+        JSON_VALUE(data, "$.YouTube Ad ID") AS creative_id,
         JSON_VALUE(data, "$.YouTube Ad Group") AS youtube_ad_group,
         JSON_VALUE(data, "$.YouTube Ad Group ID") AS youtube_ad_group_id,
         ROW_NUMBER() OVER (
             PARTITION BY 
-                FORMAT_DATE('%Y-%m-%d', PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))), -- Use converted date
+                FORMAT_DATE('%Y-%m-%d', safe.PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))), -- Use converted date
                 JSON_VALUE(data, "$.Insertion Order ID"),
                 JSON_VALUE(data, "$.Line Item ID"),
-                JSON_VALUE(data, "$.YouTube Ad")
+                JSON_VALUE(data, "$.YouTube Ad ID"),
+                JSON_VALUE(data, "$.YouTube Ad"),
+                JSON_VALUE(data, "$.YouTube Ad Group ID")
                 --safe_cast(TRUNC(SAFE_CAST(JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS FLOAT64))as int64)
             ORDER BY 
-                _sdc_extracted_at DESC -- Keep the record with the highest revenue
+                JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") DESC -- Keep the record with the highest revenue
         ) AS row_num
     FROM
         `amp-main.dv360_raw.dv360_youtube`

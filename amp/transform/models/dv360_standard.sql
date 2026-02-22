@@ -10,7 +10,7 @@ WITH dedupllicate_data AS (
         SAFE_CAST(JSON_VALUE(data, "$.Clicks") AS INT64) as clicks,
         SAFE_CAST(JSON_EXTRACT_SCALAR(data, "$['Complete Views (Video)']") AS INT64) AS video_completion,
         JSON_VALUE(data, "$.Creative") AS creative_name,
-        FORMAT_DATE('%Y-%m-%d', PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))) AS date, -- Convert date format
+        FORMAT_DATE('%Y-%m-%d', safe.PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))) AS date, -- Convert date format
         SAFE_CAST(JSON_EXTRACT_SCALAR(data, "$['First-Quartile Views (Video)']") AS INT64) AS video_25_completion,
         JSON_VALUE(data, "$.Floodlight Activity ID") AS floodlight_activity_id,
         JSON_VALUE(data, "$.Floodlight Activity Name") AS floodlight_activity_name,
@@ -28,7 +28,7 @@ WITH dedupllicate_data AS (
         JSON_VALUE(data, "$.Total Conversions") AS total_conversions,
         ROW_NUMBER() OVER (
             PARTITION BY 
-                FORMAT_DATE('%Y-%m-%d', PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))), -- Use converted date
+                FORMAT_DATE('%Y-%m-%d', safe.PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))), -- Use converted date
                 JSON_VALUE(data, "$.Insertion Order ID"),
                 JSON_VALUE(data, "$.Line Item ID"),
                 JSON_VALUE(data, "$.Creative")

@@ -21,6 +21,7 @@ plugins:
     - ad_sets.*
     - ads.*
     - campaigns.*
+    
     - custom_conversions.*
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
