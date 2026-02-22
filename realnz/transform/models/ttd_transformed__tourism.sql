@@ -25,6 +25,7 @@ WITH parsed_data AS (
         CAST(REPLACE(JSON_VALUE(JSON_EXTRACT(data, "$['Total Bid Amount (Partner Currency)']")), ',', '.') AS FLOAT64) AS total_bid_amount_partner_currency,
         CAST(JSON_VALUE(JSON_EXTRACT(data, "$.Impressions")) AS INT64) AS impressions,
         CAST(JSON_VALUE(JSON_EXTRACT(data, "$.Clicks")) AS INT64) AS clicks,
+        _sdc_extracted_at,
         CAST(REPLACE(JSON_VALUE(JSON_EXTRACT(data, "$['TTD Cost (Adv Currency)']")), ',', '.') AS FLOAT64) AS ttd_cost_adv_currency,
         CAST(REPLACE(JSON_VALUE(JSON_EXTRACT(data, "$['TTD Cost (Partner Currency)']")), ',', '.') AS FLOAT64) AS ttd_cost_partner_currency,
         CAST(REPLACE(JSON_VALUE(JSON_EXTRACT(data, "$['Partner Cost (Adv Currency)']")), ',', '.') AS FLOAT64) AS partner_cost_adv_currency,
@@ -97,7 +98,9 @@ ranked_data AS (
         ROW_NUMBER() OVER (
             PARTITION BY
                 Date, partner_id, advertiser_id, campaign_id, ad_group_id, ad_format, creative_id, 
-                advertiser, campaign_name, ad_group, creative, deal_id, ad_server_creative_placement_id
+                advertiser,deal_id, ad_server_creative_placement_id
+            ORDER BY 
+                _sdc_extracted_at DESC
         ) AS row_num
     FROM
         parsed_data

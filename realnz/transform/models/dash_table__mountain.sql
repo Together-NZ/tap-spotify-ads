@@ -25,9 +25,13 @@ WITH dash_table AS (
 
 from `real-nz-main.cm360_transformed__mountain.cm360_direct_buy__mountain`
     UNION ALL
+    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_views,
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+    FROM `real-nz-main.ttd_transformed__mountain.ttd_transformed__mountain`
+    UNION ALL
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_views as video_views,
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
-    FROM `real-nz-main.tiktok_transformed__mountain.tiktok__mountain`
+    FROM `real-nz-main.tiktok_transformed__mountain.tiktok__mountain` WHERE LOWER(campaign_name) LIKE '%mtn%'
         UNION ALL
        SELECT media_cost, impressions,clicks,
        ad_name AS  creative_name,  
@@ -66,7 +70,7 @@ from `real-nz-main.cm360_transformed__mountain.cm360_direct_buy__mountain`
 ),
 with_channel AS (
 SELECT * EXCEPT (publisher,channel), 
-dt.publisher,
+dc.publisher,
 dc.channel
 
 

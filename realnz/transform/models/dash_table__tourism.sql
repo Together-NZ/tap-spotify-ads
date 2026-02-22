@@ -64,6 +64,10 @@ from `real-nz-main.cm360_transformed__tourism.cm360_direct_buy__tourism`
 
     FROM `real-nz-main.google_ads_search_transformed__tourism.google_ads_demand__tourism`
     UNION ALL  
+    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_views as video_views,
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+    FROM `real-nz-main.tiktok_transformed__mountain.tiktok__mountain` WHERE LOWER(campaign_name) LIKE '%rlnz%'
+    UNION ALL
     SELECT media_cost, impressions, clicks, 
            ARRAY_TO_STRING(ad_name, ', ') AS creative_name,   -- Convert array to string
            ARRAY_TO_STRING(audience_name, ', ') AS audience_name, -- Convert array to string
@@ -85,7 +89,7 @@ from `real-nz-main.cm360_transformed__tourism.cm360_direct_buy__tourism`
 ),
 with_channel AS (
 SELECT * EXCEPT (publisher,channel), 
-dt.publisher,
+dc.publisher,
 dc.channel
 
 

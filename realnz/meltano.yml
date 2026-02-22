@@ -9,7 +9,6 @@ state_backend:
   uri: gs://realnz-main-meltano-state-staging
 plugins:
   extractors:
-  # university of waikato:
   - name: tap-ttd
     namespace: tap-ttd
     pip_url: git+https://github.com/Together-NZ/tap-ttd.git
@@ -19,7 +18,7 @@ plugins:
       start_date: ${START_DATE}
       end_date: 
       manual: false
-      advertiser_id: 2gge6vz
+      advertiser_id: ${TAP_TTD_ADVERTISER_ID}
 
   - name: tap-dv360
     namespace: tap-dv360
@@ -53,7 +52,6 @@ plugins:
         start_date: ${START_DATE}T00:00:00Z
     select:
     - ads_insights
-    
     - ad_account.*
     - ad_sets.*
     - ads.*
@@ -145,6 +143,9 @@ plugins:
         description: Run the DV360 ads model
       ttd_tourism_models:
         args: run --select +ttd_transformed__tourism
+        description: Run the TTD ads model
+      ttd_mountain_models:
+        args: run --select +ttd_transformed__mountain
         description: Run the TTD ads model
 elt:
   buffer_size: 52428800
