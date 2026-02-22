@@ -5,6 +5,7 @@ WITH parsed_data AS (
     SELECT
         FORMAT_DATE('%Y-%m-%d', PARSE_DATE('%d/%m/%Y', JSON_VALUE(JSON_EXTRACT(data, "$.Date")))) AS date,
         JSON_VALUE(JSON_EXTRACT(data, "$.Partner ID")) AS partner_id,
+        _sdc_extracted_at,
         JSON_VALUE(JSON_EXTRACT(data, "$.Advertiser ID")) AS advertiser_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.Campaign ID")) AS campaign_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.Ad Group ID")) AS ad_group_id,
@@ -25,7 +26,6 @@ WITH parsed_data AS (
         CAST(REPLACE(JSON_VALUE(JSON_EXTRACT(data, "$['Total Bid Amount (Partner Currency)']")), ',', '.') AS FLOAT64) AS total_bid_amount_partner_currency,
         CAST(JSON_VALUE(JSON_EXTRACT(data, "$.Impressions")) AS INT64) AS impressions,
         CAST(JSON_VALUE(JSON_EXTRACT(data, "$.Clicks")) AS INT64) AS clicks,
-        _sdc_extracted_at,
         CAST(REPLACE(JSON_VALUE(JSON_EXTRACT(data, "$['TTD Cost (Adv Currency)']")), ',', '.') AS FLOAT64) AS ttd_cost_adv_currency,
         CAST(REPLACE(JSON_VALUE(JSON_EXTRACT(data, "$['TTD Cost (Partner Currency)']")), ',', '.') AS FLOAT64) AS ttd_cost_partner_currency,
         CAST(REPLACE(JSON_VALUE(JSON_EXTRACT(data, "$['Partner Cost (Adv Currency)']")), ',', '.') AS FLOAT64) AS partner_cost_adv_currency,
@@ -90,7 +90,7 @@ WITH parsed_data AS (
         CAST(JSON_VALUE(JSON_EXTRACT(data, "$['06 - Time Weighted Decay Conversion Revenue']")) AS FLOAT64) AS Time_Weighted_Decay_Conversion_Revenue_06
 
     FROM
-        `real-nz-main.ttd_raw__tourism.standard_streams`
+        `real-nz-main.ttd_raw__mountain.standard_streams`
 ),
 ranked_data AS (
     SELECT
@@ -98,7 +98,7 @@ ranked_data AS (
         ROW_NUMBER() OVER (
             PARTITION BY
                 Date, partner_id, advertiser_id, campaign_id, ad_group_id, ad_format, creative_id, 
-                advertiser,deal_id, ad_server_creative_placement_id
+                advertiser,  deal_id, ad_server_creative_placement_id
             ORDER BY 
                 _sdc_extracted_at DESC
         ) AS row_num

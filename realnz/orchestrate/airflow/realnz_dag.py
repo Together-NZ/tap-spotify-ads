@@ -26,6 +26,7 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
+    'retry_delay': datetime.timedelta(minutes=30),
     "start_date": dt(2025, 1, 1, tzinfo=local_tz),
 }
 
@@ -34,7 +35,7 @@ def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_realnz_main", deserialize_json=True)
     meltano_env_common = Variable.get("meltano_common_secret", deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique}
-    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=3)
     start_date_str = yesterday.strftime("%Y-%m-%d")
 
     meltano_env["START_DATE"] = start_date_str
@@ -43,7 +44,14 @@ def get_meltano_env():
     return deepcopy(meltano_env)
 def get_ga4_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+def get_ttd_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 
+def get_meta_start_date():
+    return (
+        datetime.datetime.now(datetime.timezone.utc)
+        - datetime.timedelta(days=3)
+    ).replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
 def set_env_vars_hivestack(_id, label):
     env = get_meltano_env()
     env["BQ_DATASET"] = f"hivestack_raw__{label}"
@@ -90,6 +98,7 @@ def set_env_vars_facebook(account_id, value):
     env["DBT_BIGQUERY_DATASET"] = f"facebook_transformed__{value}"
     env["TAP_FACEBOOK_ACCOUNT_ID"] = account_id
     env["TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_ID"] = account_id
+    env["TAP_FACEBOOK_AIRBYTE_CONFIG_START_DATE"]=get_meta_start_date()
     return env
 
 def set_env_vars_cm360(value):
@@ -117,6 +126,7 @@ def set_env_vars_ttd(key, value):
     env["DBT_BIGQUERY_PROJECT"] = "real-nz-main"
     env["DBT_BIGQUERY_DATASET"] = f"ttd_transformed__{value}"
     env["TAP_TTD_ADVERTISER_ID"] = key
+    env["TAP_TTD_START_DATE"] = get_ttd_start_date()
     return env
 
 def set_env_vars_google_ads(value):
@@ -169,6 +179,17 @@ with models.DAG(
     kube_dash_union_by_label = {}
     ga4_type_list = ["ecommerce", "goal"]
     per_label_tasks_search = {}   # upstreams per label for dash_search
+    tiktok_list = {env["TAP_TIKTOK_ADVERTISER_ID_MOUNTAIN"]: "mountain"}
+    for key, label in tiktok_list.items():
+        kube_tiktok = KubernetesPodOperator(
+            name=f"realnz-tiktok-to-bigquery-{label}",
+            task_id=f"realnz_tiktok_to_bigquery_{label}",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","--full-refresh", f"dbt-bigquery:tiktok_{label}_models"],
+            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
+            env_vars=set_env_vars_tiktok(key, label),
+        )
     list = ["mountain", "tourism"]
     for label in list:
         kube_google_ads_search = KubernetesPodOperator(
@@ -221,6 +242,8 @@ with models.DAG(
             container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
             env_vars=set_env_vars_dash(label),
         )
+        if label=="mountain":
+            kube_tiktok >> kube_dash
         kube_google_ads_demand >> kube_dash
         kube_dash_by_label[label] = kube_dash
         kube_dash_union_by_label[label] = kube_dash_union
@@ -297,17 +320,6 @@ with models.DAG(
             env_vars=set_env_vars_hivestack(key, label),
         )
         per_label_tasks.setdefault(label, []).append(kube_hivestack)
-    tiktok_list = {env["TAP_TIKTOK_ADVERTISER_ID_MOUNTAIN"]: "mountain"}
-    for key, label in tiktok_list.items():
-        kube_tiktok = KubernetesPodOperator(
-            name=f"realnz-tiktok-to-bigquery-{label}",
-            task_id=f"realnz_tiktok_to_bigquery_{label}",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","--full-refresh", f"dbt-bigquery:tiktok_{label}_models"],
-            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-            env_vars=set_env_vars_tiktok(key, label),
-        )
         #per_label_tasks.setdefault(label, []).append(kube_tiktok)
     # Facebook + CM360 (+ optional TTD for tourism)
     facebook_list = {env["TAP_FACEBOOK_ACCOUNT_ID_MOUNTAIN"]: "mountain",
@@ -336,7 +348,7 @@ with models.DAG(
         per_label_tasks.setdefault(label, []).append(kube_cm360)
 
         if label == "tourism":
-            ttd_list = {env["TAP_TTD_TOURISM"]: "tourism"}
+            ttd_list = {env["TAP_TTD_TOURISM"]: "tourism",env["TAP_TTD_MOUNTAIN"]: "mountain"}
             for key2, label2 in ttd_list.items():
                 kube_ttd = KubernetesPodOperator(
                     name=f"realnz-ttd-to-bigquery-{label2}",
@@ -346,6 +358,7 @@ with models.DAG(
                     arguments=["--environment=prod", "run", "tap-ttd", "target-bigquery", f"dbt-bigquery:ttd_{label2}_models"],
                     container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
                     env_vars=set_env_vars_ttd(key2, label2),
+                    execution_timeout=timedelta(minutes=60)
                 )
                 kube_cm360 >> kube_ttd
                 per_label_tasks.setdefault(label2, []).append(kube_ttd)
@@ -400,8 +413,6 @@ with models.DAG(
         # non-GA4 sources -> dash
         for upstream_task in per_label_tasks.get(label, []):
             upstream_task >>  kube_dash
-        if label=="mountain":
-            kube_tiktok >> kube_dash
         kube_dash_by_label[label] = kube_dash
         kube_dash_union_by_label[label] = kube_dash_union
         dash_union_tasks.append(kube_dash_union)

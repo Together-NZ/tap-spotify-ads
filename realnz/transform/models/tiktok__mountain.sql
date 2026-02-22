@@ -1,17 +1,19 @@
 {{ config(
     materialized='table',
 ) }}
-WITH ad_campaign AS (SELECT DISTINCT 
+WITH ad_campaign_duplicate AS (SELECT 
 trim(JSON_VALUE(data,'$.ad_id')) as ad_id,
-TRIM(JSON_VALUE(data,'$.ad_name')) as ad_name,
-trim(JSON_VALUE(data,'$.ad_text')) as ad_text,
-trim(JSON_VALUE(data,'$.campaign_id')) as campaign_id,
-trim(JSON_VALUE(data,'$.adgroup_name')) as adgroup_name
+trim(JSON_VALUE(data,'$.ad_name')) as ad_name,
+trim(JSON_VALUE(data,'$.campaign_name')) as campaign_name,
+trim(JSON_VALUE(data,'$.adgroup_name')) as adgroup_name,
+ROW_NUMBER() OVER (PARTITION BY trim(JSON_VALUE(data,'$.ad_id')) ORDER BY trim(JSON_VALUE(data,'$.modify_time')) DESC) as row_num
 FROM `real-nz-main.tiktok_raw__mountain.ads` ),
+ad_campaign AS (
+  SELECT * FROM ad_campaign_duplicate WHERE row_num = 1
+),
 ad_data AS (
   SELECT 
     SAFE_CAST(JSON_VALUE(data, '$.ad_id') AS INT64) AS ad_id,
-    JSON_VALUE(data,'$.ad_name') AS ad_name,
     SAFE_CAST(JSON_VALUE(data,'$.spend') AS FLOAT64) AS media_cost,
     SAFE_CAST(JSON_VALUE(data, '$.impressions') AS INT64) AS impressions,
     SAFE_CAST(JSON_VALUE(data, '$.clicks') AS INT64) AS clicks,
@@ -21,16 +23,6 @@ ad_data AS (
 ),
 deduplicate_ad as (
   select * from ad_data where row_num = 1
-),
-campaign_data AS (
-  SELECT JSON_VALUE(data, '$.campaign_name') as campaign_name,
-  JSON_VALUE(data,'$.campaign_id') as campaign_id,
-  JSON_VALUE(data,'$.modified_time') as modified_time,
-  ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.campaign_id') ORDER BY JSON_VALUE(data,'$.modified_time') desc) as row_num
-  FROM `real-nz-main.tiktok_raw__mountain.campaigns`
-),
-deduplicate_campaign_data AS (
-  SELECT * EXCEPT(row_num) FROM campaign_data WHERE row_num = 1
 ),
 ad_video AS (
   SELECT 
@@ -61,16 +53,14 @@ SELECT
   SUM(ad_v.video_views) as video_views,
   ad.ad_id as ad_id,
   ad.date
-FROM deduplicate_ad as ad JOIN deduplicate_ad_video as ad_v on ad.ad_id = ad_v.ad_id 
+FROM deduplicate_ad as ad LEFT JOIN deduplicate_ad_video as ad_v on ad.ad_id = ad_v.ad_id 
 AND ad.date = ad_v.date
 GROUP BY date, ad_id),
 final as (
 SELECT ad_stat_id.* EXCEPT(ad_id),
-ad_campaign.* except(campaign_id) ,
-deduplicate_campaign_data.* FROM ad_stat_id LEFT JOIN ad_campaign ON SAFE_CAST(ad_stat_id.ad_id AS INT64) = SAFE_CAST(ad_campaign.ad_id AS INT64)
-LEFT JOIN deduplicate_campaign_data ON ad_campaign.campaign_id = deduplicate_campaign_data.campaign_id
+ad_campaign.* FROM ad_stat_id LEFT JOIN ad_campaign ON SAFE_CAST(ad_stat_id.ad_id AS INT64) = SAFE_CAST(ad_campaign.ad_id AS INT64)
 )
-SELECT * EXCEPT(date,ad_name), DATE(PARSE_DATETIME('%F %H:%M:%S',date)) AS date,
+SELECT  * EXCEPT(date,ad_name), DATE(PARSE_DATETIME('%F %H:%M:%S',date)) AS date,
 ad_name as creative_name,
     'Tiktok' AS publisher,
     REGEXP_EXTRACT(adgroup_name, r'PLATFORM_([^_]+)') AS audience_name,
@@ -96,4 +86,3 @@ ad_name as creative_name,
     SPLIT(campaign_name,'_')[OFFSET(1)] AS campaign_descr
 FROM 
     final
-
