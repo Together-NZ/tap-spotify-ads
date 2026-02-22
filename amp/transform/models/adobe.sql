@@ -124,5 +124,6 @@ ON lower(sub.publisher) = lower(channel.publisher)
 
 SELECT * EXCEPT(Date,channel,campaign_name), Date as date,
 CASE WHEN publisher = 'Direct' THEN 'Direct' ELSE channel END AS channel,
+'None' AS funnel,
 CASE WHEN campaign_name is null or campaign_name = '' then 'Other' ELSE campaign_name END AS campaign_name,
 CASE WHEN publisher = 'Direct' THEN 'Direct' WHEN campaign_name is null or campaign_name = '' THEN 'Other'ELSE campaign_name END AS campaign_name_selection FROM publisher_channel
