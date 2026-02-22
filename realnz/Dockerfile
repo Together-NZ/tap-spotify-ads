@@ -1,5 +1,5 @@
 # Base Meltano image
-FROM meltano/meltano:latest
+FROM meltano/meltano:v3-python3.10
 
 # Enable SSH agent forwarding
 # Required for cloning private GitHub repos via SSH
@@ -40,7 +40,11 @@ RUN pip install \
     google-cloud-storage \
     pandas \
     pyarrow
-
+# Ensure plugin venvs have pip + pkg_resources (setuptools)
+RUN for v in /project/.meltano/*/*/venv/bin/python; do \
+"$v" -m ensurepip --upgrade || true; \
+"$v" -m pip install -U "setuptools<81" || true; \
+done
 # Entrypoint for container
 ENTRYPOINT ["meltano"]
 
