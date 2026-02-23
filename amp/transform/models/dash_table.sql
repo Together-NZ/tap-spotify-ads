@@ -3,12 +3,12 @@
 ) }}
 WITH dash_table AS (
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date, NULL AS conversions
     FROM `amp-main.ttd_transformed.ttd_transformed`
 
     UNION ALL
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,NULL AS conversions
     FROM `amp-main.linkedin_transformed.linkedin`
     UNION ALL
     SELECT media_cost, impressions, CAST(0 AS INT64) AS clicks, 
@@ -24,12 +24,12 @@ WITH dash_table AS (
            
            campaign_name,publisher, campaign_descr, 
            creative_descr AS creative_descr, -- Convert array to string
-           date,
+           date, NULL as conversions
     FROM `amp-main.hivestack_transformed.hivestack`
 
     UNION ALL
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_played AS video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,conversions AS conversions
     FROM `amp-main.facebook_transformed.facebook`
 
     UNION ALL
@@ -39,7 +39,7 @@ WITH dash_table AS (
         CAST(0 AS INT64) AS video_50_completion,
         CAST(0 AS INT64) AS video_75_completion,
         CAST(0 AS INT64) AS video_views,
-    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date,
+    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date, NULL as conversions
 
 from `amp-main.cm360_transformed.cm360_direct_buy`
        UNION ALL     
@@ -49,16 +49,16 @@ from `amp-main.cm360_transformed.cm360_direct_buy`
         CAST(0 AS INT64) AS video_50_completion,
         CAST(0 AS INT64) AS video_75_completion,
         CAST(0 AS INT64) AS video_views,
-    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date,
+    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date, NULL as conversions
 FROM `amp-main.reddit_transformed.reddit`
     UNION ALL
 
     SELECT media_cost, impressions, clicks, creative_name,audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,NULL AS conversions
     FROM `amp-main.dv360_transformed.dv360_standard` WHERE LOWER(campaign_name) not like '%yt%'
     UNION ALL
     SELECT media_cost, impressions, clicks, creative_name,audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,NULL AS conversions
     FROM `amp-main.dv360_transformed.dv360_youtube`
     UNION ALL 
                SELECT media_cost, impressions,clicks,
@@ -75,7 +75,7 @@ FROM `amp-main.reddit_transformed.reddit`
            
            campaign_name,publisher, campaign_descr, 
             creative_descr,  -- Convert array to string
-           date,
+           date, NULL AS conversions
 
     FROM `amp-main.google_ads_search_transformed.google_ads_demand`
 ),

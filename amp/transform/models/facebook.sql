@@ -80,6 +80,35 @@ conversion_naming_tag as (
     FROM conversion_spec
 
 ),
+custom_conversion_mapping_adset AS (
+   SELECT  json_value(data,'$.promoted_object.pixel_rule') AS mapping_rule,json_VALUE(data,'$.name') AS adset_name,JSON_VALUE(data,'$.id') AS adset_id,ROW_NUMBER() OVER(PARTITION BY JSON_VALUE(data,'$.campaign_id'),JSON_VALUE(data,'$.id') ORDER BY
+JSON_VALUE(data,'$.updated_time'))AS row_num FROM `amp-main.facebook_raw.ad_sets`  WHERE json_extract(data,'$.promoted_object.pixel_rule') IS NOT NULL
+),
+distinct_custom_conversion_mapping_rule AS (
+    SELECT mapping_rule,adset_id FROM custom_conversion_mapping_adset WHERE row_num = 1
+),
+custom_conversion_ads AS (
+    SELECT DISTINCT ad_id,adset_id FROM flattened_video_actions WHERE adset_id IN ( SELECT adset_id FROM custom_conversion_mapping_adset WHERE row_num = 1)
+),
+custom_conversion_stats AS (
+    SELECT DISTINCT JSON_VALUE(data,'$.id') AS custom_conversion_id,JSON_VALUE(data,'$.name') AS custom_conversion_name ,JSON_VALUE(data,'$.rule') AS custom_conversion_mapping_rule FROM `amp-main.facebook_raw.custom_conversions`
+),
+custom_conversion_adset_mapping AS (
+    SELECT cm.adset_id,custom_conversion_name,custom_conversion_id FROM distinct_custom_conversion_mapping_rule AS cm LEFT JOIN custom_conversion_stats AS cs 
+    ON cm.mapping_rule = cs.custom_conversion_mapping_rule
+),
+mapped_custom_conversion_to_ads AS (
+    SELECT DISTINCT ad_id,csa.adset_id,custom_conversion_name,custom_conversion_id FROM custom_conversion_ads AS csa LEFT JOIN custom_conversion_adset_mapping AS csm ON csa.adset_id = csm.adset_id
+),
+conversion_naming_tag_with_custom_events as (
+    SELECT DISTINCT cn.ad_id,ad_name,
+    CASE WHEN cn.ad_id IN (SELECT DISTINCT ad_id FROM mapped_custom_conversion_to_ads) THEN custom_conversion_id
+    ELSE ARRAY_TO_STRING(conversion_tag,'') END AS conversion_tag
+    FROM conversion_naming_tag as cn LEFT JOIN mapped_custom_conversion_to_ads AS ca
+    ON cn.ad_id=ca.ad_id
+
+
+),
 parsed_video_actions AS (
  SELECT
     date_start,
@@ -90,9 +119,16 @@ parsed_video_actions AS (
     campaign_id,
     impressions,
     SAFE_CAST((
-        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
-        FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
-        WHERE JSON_VALUE(entry, '$.action_type') like CONCAT(ARRAY_TO_STRING(conversion_tag,','))
+    SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+    FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
+    WHERE (
+        REGEXP_CONTAINS(conversion_tag, r'\d')
+        AND JSON_VALUE(entry, '$.action_type') LIKE CONCAT('%', conversion_tag, '%')
+    )
+    OR (
+        NOT REGEXP_CONTAINS(conversion_tag, r'\d')
+        AND JSON_VALUE(entry, '$.action_type') LIKE conversion_tag
+    )
     ) AS INT64) AS conversion,
     -- ACTIONS (sum all matching entries)
     SAFE_CAST((
@@ -157,9 +193,10 @@ parsed_video_actions AS (
         FROM UNNEST(video_p100_array) AS v
     ) AS INT64) AS last_video_p100
 
-FROM flattened_video_actions AS va LEFT JOIN conversion_naming_tag AS cnt ON va.ad_id = cnt.ad_id
+FROM flattened_video_actions AS va LEFT JOIN conversion_naming_tag_with_custom_events AS cnt ON va.ad_id = cnt.ad_id
     
 ),
+
 
 
 summed_data AS (
