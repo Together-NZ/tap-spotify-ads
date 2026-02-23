@@ -32,7 +32,7 @@ WITH ranked_data AS (
                 JSON_VALUE(data, '$.ad_id'),
                 JSON_VALUE(data, '$.date_start')
             ORDER BY 
-                _sdc_extracted_at DESC
+                JSON_VALUE(data,'$.update_time') DESC
         ) AS row_number
     FROM
         `amp-main.facebook_raw.ads_insights`
