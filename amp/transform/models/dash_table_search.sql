@@ -32,6 +32,7 @@ or lower(campaign_name) like '%car%' or lower(campaign_name) like '%home%' or lo
 THEN 'General Insurance'
 ELSE 'Wealth'
 END AS sub_brands,
+NULL AS conversions,
 NULL AS ad_format_detail,
 NULL AS audience_name,
 NULL AS video_completion,
