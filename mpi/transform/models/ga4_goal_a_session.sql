@@ -14,7 +14,7 @@ WITH deduplicated_data AS (
 
     JSON_VALUE(data,'$.sessionSourceMedium') AS sessionSourceMediumraw,
     json_value(data,'$.sessions') AS sessions,
-    JSON_VALUE(data,'$.engagedSessions') AS engagedSession,
+    SAFE_CAST(JSON_VALUE(data,'$.engagedSessions') AS INT64) AS engagedSession,
     JSON_VALUE(data, '$.userEngagementDuration') AS userEngagementDuration,
     JSON_VALUE(data, '$.averageSessionDuration') AS averageSessionDuration,
     _sdc_extracted_at,
