@@ -34,6 +34,7 @@ CASE WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_')) >9 THEN SPLIT(campaign_name,'_'
 CASE WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_')) >9 THEN SPLIT(campaign_name,'_')[OFFSET(2)] ELSE 'Other' END AS ad_format,
 'Other' as ad_format_detail,
 'Outbrain' as publisher,
+'Outbrain' as platform,
 'Other' as creative_descr,
 'Other' as media_format,
 ad_name as creative_name
