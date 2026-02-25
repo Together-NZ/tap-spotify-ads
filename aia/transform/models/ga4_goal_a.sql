@@ -35,7 +35,7 @@ WITH deduplicated_data AS (
               OR (LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%automated%' 
                   AND LOWER(JSON_VALUE(data, '$.sessionCampaignName')) LIKE '%email%') THEN 'email'
         WHEN (LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%facebook%' 
-              OR LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%meta%' 
+              OR LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%meta%'
               OR LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%instagram%' 
               OR LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%social%')
               AND (LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%cpm%' 
@@ -99,8 +99,8 @@ WITH deduplicated_data AS (
         JSON_VALUE(data, '$.sessionCampaignName'),
         JSON_VALUE(data, '$.sessionManualAdContent'),
         JSON_VALUE(data, '$.eventName'),
-        JSON_VALUE(data, '$.eventCount'),
-        JSON_VALUE(data, '$.eventValue')
+        JSON_VALUE(data, '$.eventValue'),
+        json_value(data,'$.eventCount')
       ORDER BY _sdc_extracted_at DESC
     ) AS row_num
 

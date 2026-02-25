@@ -32,11 +32,10 @@ WITH dedupllicate_data AS (
                 JSON_VALUE(data, "$.Insertion Order ID"),
                 JSON_VALUE(data, "$.Line Item ID"),
                 JSON_VALUE(data, "$.Creative")
-            ORDER BY 
-                CAST(JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS FLOAT64) DESC -- Keep the record with the highest revenue
+            ORDER BY CAST(JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS FLOAT64) DESC -- Keep the record with the highest revenue
         ) AS row_num
     FROM
-        `aia-nz-main.dv360_raw.dv360_standard`
+        `aia-nz-main.dv360_test.dv360_standard`
 ),final AS (
 SELECT * ,
     CASE 

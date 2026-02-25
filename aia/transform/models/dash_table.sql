@@ -3,23 +3,23 @@
 ) }}
 WITH dash_table AS (
     SELECT media_cost, impressions, creative_name,clicks, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,'TTD' AS platform
     FROM `aia-nz-main.ttd_transformed.ttd_transformed`
 
     UNION ALL
 
     SELECT media_cost, impressions, creative_name,clicks, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,'DV360' AS platform
     FROM `aia-nz-main.dv360_transformed.dv360_standard` WHERE LOWER(campaign_name) not like '%yt%'
     UNION ALL
     SELECT media_cost, impressions, creative_name,clicks, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,'DV360' AS platform
     FROM `aia-nz-main.dv360_transformed.dv360_youtube`
     UNION ALL
 
     SELECT media_cost, impressions, creative_name,clicks, audience_name, ad_format, ad_format_detail, video_completion
            ,video_25_completion,video_50_completion,video_75_completion, video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,'TikTok' AS platform
     FROM `aia-nz-main.tiktok_transformed.tiktok`
 
     UNION ALL
@@ -40,18 +40,18 @@ WITH dash_table AS (
            
            campaign_name,publisher, campaign_descr, 
            ARRAY_TO_STRING(creative_descr, ', ') AS creative_descr,  -- Convert array to string
-           date,
+           date, 'Google Ads' AS platform
 
     FROM `aia-nz-main.google_ads_dv_transformed.google_ads_dv`
 
     UNION ALL
     SELECT media_cost, impressions, creative_name,clicks, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_played AS video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,'Meta' AS platform
     FROM `aia-nz-main.facebook_transformed.facebook`
 
     UNION ALL
     SELECT media_cost, impressions, creative_name,clicks,  audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,'LinkedIn' AS platform
     FROM `aia-nz-main.linkedin_transformed.linkedin`
     UNION ALL 
     SELECT media_cost, impressions,
@@ -68,7 +68,7 @@ WITH dash_table AS (
            
            campaign_name,publisher, campaign_descr, 
             creative_descr,  -- Convert array to string
-           date,
+           date, 'Google Ads' AS platform
 
 
     FROM `aia-nz-main.google_ads_search_transformed__brand.google_ads_demand__brand`
@@ -88,7 +88,7 @@ WITH dash_table AS (
            
            campaign_name,publisher, campaign_descr, 
             creative_descr,  -- Convert array to string
-           date,
+           date, 'Google Ads' AS platform
 
 
     FROM `aia-nz-main.google_ads_search_transformed__marketing.google_ads_demand__marketing`
@@ -104,7 +104,7 @@ WITH dash_table AS (
        SAFE_CAST(0 AS INT64) AS video_50_completion,
        SAFE_CAST(0 AS INT64) AS video_75_completion,
        SAFE_CAST(0 AS INT64) AS video_views,
-    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date,
+    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date, 'Outbrain' AS platform
     from `aia-nz-main.outbrain_transformed.outbrain`
     UNION ALL
     select media_cost,impressions,creative_name,clicks, audience_name, ad_format, ad_format_detail, 
@@ -113,7 +113,7 @@ WITH dash_table AS (
         SAFE_CAST(0 AS INT64) AS video_50_completion,
         SAFE_CAST(0 AS INT64) AS video_75_completion,
         SAFE_CAST(0 AS INT64) AS video_views,
-    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date
+    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date,'CM360' AS platform
 
 from `aia-nz-main.cm360_transformed.cm360_direct_buy`
 ),

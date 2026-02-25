@@ -20,6 +20,7 @@ WITH parsed_data AS (
         JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS media_cost,
         JSON_EXTRACT_SCALAR(data, "$['Third-Quartile Views (Video)']") AS third_quartile_views_video,
         JSON_VALUE(data, "$.YouTube Ad") AS creative_name,
+        JSON_VALUE(data, "$.YouTube Ad ID") AS creative_id,
         JSON_VALUE(data, "$.YouTube Ad Group") AS youtube_ad_group,
         JSON_VALUE(data, "$.YouTube Ad Group ID") AS youtube_ad_group_id,
         ROW_NUMBER() OVER (
@@ -27,10 +28,11 @@ WITH parsed_data AS (
                 FORMAT_DATE('%Y-%m-%d', PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))), -- Use converted date
                 JSON_VALUE(data, "$.Insertion Order ID"),
                 JSON_VALUE(data, "$.Line Item ID"),
+                JSON_VALUE(data, "$.YouTube Ad ID"),
                 JSON_VALUE(data, "$.YouTube Ad"),
-                safe_cast(TRUNC(SAFE_CAST(JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS FLOAT64))as int64)
+                JSON_VALUE(data, "$.YouTube Ad Group ID")
             ORDER BY 
-                CAST(JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS FLOAT64) DESC -- Keep the record with the highest revenue
+                _sdc_extracted_at DESC -- Keep the record with the highest revenue
         ) AS row_num
     FROM
         `aia-nz-main.dv360_raw.dv360_youtube`
@@ -47,6 +49,7 @@ SELECT
     campaign_id,
     campaign_status,
     line_item,
+    'DV360' as platform,
     line_item_id,
     SAFE_CAST(midpoint_views_video AS INT64) AS video_50_completion,
     SAFE_CAST(media_cost AS FLOAT64) AS media_cost,
@@ -54,6 +57,7 @@ SELECT
     creative_name,
     youtube_ad_group,
     youtube_ad_group_id,
+    creative_id,
     --REGEXP_EXTRACT(line_item, r'PLATFORM_([^_]+)') AS audience_name,
     'YouTube' AS publisher,
     'Youtube Video' AS media_format,
