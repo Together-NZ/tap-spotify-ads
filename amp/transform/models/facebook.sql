@@ -16,13 +16,16 @@ WITH ranked_data AS (
         SAFE_CAST(JSON_VALUE(data, '$.clicks') AS INT64) AS clicks, 
         SAFE_CAST(JSON_VALUE(data, '$.impressions') AS INT64) AS impressions, 
         JSON_VALUE(data, '$.ctr') AS ctr,
+        SAFE_CAST(JSON_VALUE(data,'$.frequency') AS FLOAT64) AS frequency,
         SAFE_CAST(JSON_VALUE(data, '$.spend') AS FLOAT64) AS spend,
+        SAFE_CAST(JSON_VALUE(data,'$.reach') AS INT64) AS reach,
         JSON_VALUE(data, '$.date_start') AS date_start,
         JSON_VALUE(data, '$.date_stop') AS date_stop,
         JSON_EXTRACT(data, '$.video_p25_watched_actions') AS video_p25_actions,
         JSON_EXTRACT(data, '$.video_p50_watched_actions') AS video_p50_actions,
         JSON_EXTRACT(data, '$.video_p75_watched_actions') AS video_p75_actions,
         JSON_EXTRACT(data, '$.video_p100_watched_actions') AS video_p100_actions,
+        JSON_EXTRACT(data, '$.video_15_sec_watched_actions') AS video_15_sec_watched_actions,
         JSON_EXTRACT(data, '$.video_play_actions') AS video_play_actions_array,
         JSON_EXTRACT(data, '$.actions') AS video_view_actions_array,
         JSON_EXTRACT(data, '$.actions') AS actions,
@@ -32,7 +35,7 @@ WITH ranked_data AS (
                 JSON_VALUE(data, '$.ad_id'),
                 JSON_VALUE(data, '$.date_start')
             ORDER BY 
-                JSON_VALUE(data,'$.update_time') DESC
+                _sdc_extracted_at DESC
         ) AS row_number
     FROM
         `amp-main.facebook_raw.ads_insights`
@@ -55,81 +58,104 @@ flattened_video_actions AS (
         clicks,
         spend,
         campaign_id,
+        reach,
+        frequency,
         impressions,
         actions,
         JSON_EXTRACT_ARRAY(video_play_actions_array) AS video_play_array,
         JSON_EXTRACT_ARRAY(video_p25_actions) AS video_p25_array,
         JSON_EXTRACT_ARRAY(video_p50_actions) AS video_p50_array,
         JSON_EXTRACT_ARRAY(video_p75_actions) AS video_p75_array,
+        JSON_EXTRACT_ARRAY(video_15_sec_watched_actions) AS video_15_sec_watched_actions,
         JSON_EXTRACT_ARRAY(deduplicated_data.video_p100_actions) AS video_p100_array
     FROM deduplicated_data
 ),
-conversion_spec AS (
-  SELECT distinct 
-    JSON_VALUE(data, '$.id')   AS ad_id,
-    JSON_VALUE(data, '$.name') AS ad_name,
-    JSON_VALUE_ARRAY(cs, '$."action.type"') AS action_types,
-    JSON_VALUE_ARRAY(cs, '$.conversion_id') AS conversion_ids
-  FROM `amp-main.facebook_raw.ads`,
-  UNNEST(JSON_QUERY_ARRAY(data, '$.conversion_specs')) AS cs
+latest_ad_sets_goal AS (
+  SELECT adset_name,
+  adset_id,adset_tracking_goal
+        FROM ( SELECT
+          JSON_VALUE(data,'$.name') AS adset_name,
+          JSON_VALUE(data,'$.id') AS adset_id,
+          JSON_EXTRACT(data,'$.promoted_object') AS adset_tracking_goal,
+        ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.id') ORDER BY JSON_VALUE(data,'$.updated_time') DESC) AS row_num
+        FROM `amp-main.facebook_raw.ad_sets`
+        )
+        WHERE row_num=1
 ),
-conversion_naming_tag as (
-    SELECT DISTINCT ad_id,ad_name,
-    CASE WHEN conversion_ids IS NULL THEN action_types 
-    ELSE conversion_ids END AS conversion_tag
-    FROM conversion_spec
-
-),
-custom_conversion_mapping_adset AS (
-   SELECT  json_value(data,'$.promoted_object.pixel_rule') AS mapping_rule,json_VALUE(data,'$.name') AS adset_name,JSON_VALUE(data,'$.id') AS adset_id,ROW_NUMBER() OVER(PARTITION BY JSON_VALUE(data,'$.campaign_id'),JSON_VALUE(data,'$.id') ORDER BY
-JSON_VALUE(data,'$.updated_time'))AS row_num FROM `amp-main.facebook_raw.ad_sets`  WHERE json_extract(data,'$.promoted_object.pixel_rule') IS NOT NULL
-),
-distinct_custom_conversion_mapping_rule AS (
-    SELECT mapping_rule,adset_id FROM custom_conversion_mapping_adset WHERE row_num = 1
-),
-custom_conversion_ads AS (
-    SELECT DISTINCT ad_id,adset_id FROM flattened_video_actions WHERE adset_id IN ( SELECT adset_id FROM custom_conversion_mapping_adset WHERE row_num = 1)
+adset_id_with_custom_object AS (
+  SELECT adset_id,adset_tracking_goal,JSON_VALUE(adset_tracking_goal,'$.pixel_rule') AS custom_mapping_rule FROM latest_ad_sets_goal WHERE JSON_VALUE(adset_tracking_goal,'$.pixel_rule') IS NOT NULL
 ),
 custom_conversion_stats AS (
-    SELECT DISTINCT JSON_VALUE(data,'$.id') AS custom_conversion_id,JSON_VALUE(data,'$.name') AS custom_conversion_name ,JSON_VALUE(data,'$.rule') AS custom_conversion_mapping_rule FROM `amp-main.facebook_raw.custom_conversions`
+  SELECT DISTINCT JSON_VALUE(data,'$.id') AS conversion_id,JSON_VALUE(data,'$.name') AS conversion_name,JSON_VALUE(data,'$.rule') AS custom_mapping_rule FROM 
+  `amp-main.facebook_raw.custom_conversions`
 ),
-custom_conversion_adset_mapping AS (
-    SELECT cm.adset_id,custom_conversion_name,custom_conversion_id FROM distinct_custom_conversion_mapping_rule AS cm LEFT JOIN custom_conversion_stats AS cs 
-    ON cm.mapping_rule = cs.custom_conversion_mapping_rule
+custom_conversion_id_joining AS (
+  SELECT conversion_id AS conversion_tag,adset_id FROM adset_id_with_custom_object AS ad LEFT JOIN custom_conversion_stats AS cs ON cs.custom_mapping_rule=ad.custom_mapping_rule
 ),
-mapped_custom_conversion_to_ads AS (
-    SELECT DISTINCT ad_id,csa.adset_id,custom_conversion_name,custom_conversion_id FROM custom_conversion_ads AS csa LEFT JOIN custom_conversion_adset_mapping AS csm ON csa.adset_id = csm.adset_id
+adset_id_with_other_offsite_event_type AS (
+  SELECT  LOWER(JSON_VALUE(adset_tracking_goal,'$.custom_event_type')) AS conversion_tag,adset_id FROM latest_ad_sets_goal WHERE JSON_VALUE(adset_tracking_goal,'$.custom_event_type') !='OTHER' AND adset_id NOT IN (
+    SELECT adset_id FROM custom_conversion_id_joining)
 ),
-conversion_naming_tag_with_custom_events as (
-    SELECT DISTINCT cn.ad_id,ad_name,
-    CASE WHEN cn.ad_id IN (SELECT DISTINCT ad_id FROM mapped_custom_conversion_to_ads) THEN custom_conversion_id
-    ELSE ARRAY_TO_STRING(conversion_tag,'') END AS conversion_tag
-    FROM conversion_naming_tag as cn LEFT JOIN mapped_custom_conversion_to_ads AS ca
-    ON cn.ad_id=ca.ad_id
-
-
+adset_id_with_default_tracking AS (
+  SELECT adset_id FROM latest_ad_sets_goal WHERE adset_id NOT IN (SELECT adset_id from adset_id_with_other_offsite_event_type) AND adset_id NOT IN (
+    SELECT adset_id FROM (
+      SELECT adset_id FROM adset_id_with_custom_object
+    )
+  )
+),
+default_adset_tracking_goal AS (
+  SELECT DISTINCT LOWER(JSON_VALUE(data,'$.optimization_goal')) AS conversion_tag,JSON_VALUE(data,'$.adset_id') AS adset_id FROM `amp-main.facebook_raw.ads_insights` WHERE JSON_VALUE(data,'$.adset_id') IN (SELECT adset_id FROM adset_id_with_default_tracking)
+),
+ad_to_adset AS (
+    SELECT JSON_VALUE(data,'$.id') AS ad_id,JSON_VALUE(data,'$.adset_id') AS adset_id ,
+    ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.id') ORDER BY JSON_VALUE(data,'$.updated_time') DESC) AS row_num
+    FROM `amp-main.facebook_raw.ads`
+),
+deduplicate_ad_to_adset AS (
+    SELECT * FROM ad_to_adset where row_num = 1
+),
+centralized_adset_conversion_tag AS (
+  SELECT adset_id,conversion_tag FROM default_adset_tracking_goal UNION ALL 
+  SELECT adset_id,conversion_tag FROM adset_id_with_other_offsite_event_type UNION ALL
+  SELECT adset_id,conversion_tag FROM custom_conversion_id_joining
+),
+centralized_ad_conversion_tag AS (
+  SELECT ad_id,conversion_tag FROM deduplicate_ad_to_adset
+  LEFT JOIN centralized_adset_conversion_tag AS cnt ON deduplicate_ad_to_adset.adset_id = cnt.adset_id
 ),
 parsed_video_actions AS (
  SELECT
     date_start,
     va.ad_id,
-    adset_id,
+    va.adset_id,
     spend,
     clicks,
     campaign_id,
     impressions,
-    SAFE_CAST((
-    SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
-    FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
-    WHERE (
-        REGEXP_CONTAINS(conversion_tag, r'\d')
-        AND JSON_VALUE(entry, '$.action_type') LIKE CONCAT('%', conversion_tag, '%')
-    )
-    OR (
-        NOT REGEXP_CONTAINS(conversion_tag, r'\d')
-        AND JSON_VALUE(entry, '$.action_type') LIKE conversion_tag
-    )
-    ) AS INT64) AS conversion,
+    CASE WHEN conversion_tag ='reach'
+        THEN NULL
+        WHEN conversion_tag = 'impressions'
+        THEN impressions
+        WHEN conversion_tag = 'thruplay'
+        THEN 
+            SAFE_CAST((
+                SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+                FROM UNNEST(video_15_sec_watched_actions) AS v
+            ) AS INT64)
+    ELSE
+        SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
+        WHERE (
+            REGEXP_CONTAINS(conversion_tag, r'\d')
+            AND JSON_VALUE(entry, '$.action_type') LIKE CONCAT('%', conversion_tag, '%')
+        )
+        OR (
+            NOT REGEXP_CONTAINS(conversion_tag, r'\d')
+            AND conversion_tag LIKE CONCAT('%', JSON_VALUE(entry, '$.action_type'), '%')
+        )
+        ) AS INT64) 
+    END AS conversion,
     -- ACTIONS (sum all matching entries)
     SAFE_CAST((
         SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
@@ -193,7 +219,7 @@ parsed_video_actions AS (
         FROM UNNEST(video_p100_array) AS v
     ) AS INT64) AS last_video_p100
 
-FROM flattened_video_actions AS va LEFT JOIN conversion_naming_tag_with_custom_events AS cnt ON va.ad_id = cnt.ad_id
+FROM flattened_video_actions AS va LEFT JOIN centralized_ad_conversion_tag AS cnt ON va.ad_id = cnt.ad_id
     
 ),
 
@@ -217,6 +243,7 @@ summed_data AS (
         SUM(SAFE_CAST(page_engagement AS INT64)) AS page_engagement,
         SUM(SAFE_CAST(post_reaction_engagement AS INT64)) AS engagement,
         SUM(spend) AS total_spend,
+ 
         SUM(last_video_played) AS total_video_played,
         SUM(last_video_p25) AS total_video_p25,
         SUM(last_video_p50) AS total_video_p50,
@@ -229,7 +256,7 @@ summed_data AS (
 ad_data AS (
     SELECT JSON_VALUE(data,'$.id') AS ad_id,
     JSON_VALUE(data,'$.name') AS ad_name,
-    ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.id') ORDER BY _sdc_extracted_at) AS row_num
+    ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.id') ORDER BY JSON_VALUE(data,'$.updated_time') DESC) AS row_num
     FROM `amp-main.facebook_raw.ads`
 ),
 deduplicate_ad_data AS (
@@ -238,7 +265,7 @@ deduplicate_ad_data AS (
 adset_data AS (
     select distinct json_value(data,'$.id') as adset_id,
     json_value(data,'$.name') as adset_name,
-    ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.id') ORDER BY _sdc_extracted_at) AS row_num
+    ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.id') ORDER BY JSON_VALUE(data,'$.updated_time') DESC) AS row_num
     from `amp-main.facebook_raw.ad_sets`
 ),
 deduplicate_adset_data AS (
