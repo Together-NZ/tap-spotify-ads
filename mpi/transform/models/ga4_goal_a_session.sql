@@ -11,18 +11,12 @@ WITH deduplicated_data AS (
     JSON_VALUE(data, '$.sessionCampaignName') AS sessionCampaignName,
     JSON_VALUE(data, '$.sessionCampaignName') AS campaign_name,
     JSON_VALUE(data, '$.sessionManualAdContent') AS sessionManualAdContent,
-    JSON_VALUE(data, '$.eventName') AS eventName,
-    SAFE_CAST(JSON_VALUE(data, '$.eventCount') AS INT64) AS eventCount,
-    JSON_VALUE(data, '$.eventValue') AS eventValue,
-    JSON_VALUE(data, '$.report_start_date') AS report_start_date,
-    JSON_VALUE(data, '$.report_end_date') AS report_end_date,
+
     JSON_VALUE(data,'$.sessionSourceMedium') AS sessionSourceMediumraw,
-    json_value(data,'$.hostName') AS hostName,
     json_value(data,'$.sessions') AS sessions,
-    JSON_VALUE(data,'$.engagedSession') AS engagedSession,
+    SAFE_CAST(JSON_VALUE(data,'$.engagedSessions') AS INT64) AS engagedSession,
     JSON_VALUE(data, '$.userEngagementDuration') AS userEngagementDuration,
     JSON_VALUE(data, '$.averageSessionDuration') AS averageSessionDuration,
-    JSON_VALUE(data,'$."customEvent:serviceType[screen_view]"') AS serviceType,
     _sdc_extracted_at,
     _sdc_received_at,
     _sdc_batched_at,
@@ -102,15 +96,12 @@ WITH deduplicated_data AS (
         JSON_VALUE(data, '$.sessionSourceMedium'),
         JSON_VALUE(data, '$.sessionCampaignName'),
         JSON_VALUE(data, '$.sessionManualAdContent'),
-        
-        JSON_VALUE(data, '$.eventName'),
-        json_value(data,'$.eventCount'),
-        JSON_VALUE(data,'$.eventValue')
+        JSON_VALUE(data,'$.sessions')
       ORDER BY _sdc_extracted_at DESC
     ) AS row_num
 
   FROM 
-    `mpi-main`.`ga4_raw`.`goal`
+    `mpi-main`.`ga4_raw`.`session_goal`
 
 ),
 
@@ -126,21 +117,14 @@ final_result AS (
 SELECT
   date,
   sessionSourceMedium,
-  hostName,
   sessions,
   engagedSession,
   userEngagementDuration,
   averageSessionDuration,
-  serviceType,
   sessionCampaignName,
   campaign_name,
   sessionManualAdContent,
   sessionSourceMediumraw,
-  eventName,
-  eventCount,
-  eventValue,
-  report_start_date,
-  report_end_date,
   _sdc_extracted_at,
   _sdc_received_at,
   _sdc_batched_at,

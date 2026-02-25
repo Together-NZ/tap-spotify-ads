@@ -23,11 +23,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
     config:
-      reports: report.json
+      reports: ${TAP_GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
@@ -98,8 +98,10 @@ plugins:
     commands:
       dv360_models:
         args: run --select +dv360_standard +dv360_youtube
-      ga4_models:
-        args: run --select ga4_goal_a ga4_goal_channel
+      ga4_sessions_models:
+        args: run --select ga4_goal_a_session ga4_goal_channel_session
+      ga4_goal_models:
+        args: run --select ga4_goal_a ga4_goal_channel_goal
       cm360_models:
         args: run --select cm360_direct_buy
       facebook_models:

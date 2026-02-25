@@ -1,17 +1,19 @@
 [
     {
-        "name": "goal",
+        "name": "session_goal",
         "dimensions" :[
           "date",
           "sessionSourceMedium",
           "sessionCampaignName",
           "sessionManualAdContent",
-          "sessionMedium",
-          "eventName"
+          "sessionMedium"
         ],
         "metrics":[
-          "eventCount",
-          "eventValue"
+ 
+          "sessions",
+          "engagedSessions",
+          "userEngagementDuration",
+          "averageSessionDuration"
         ]
       }
 ]
