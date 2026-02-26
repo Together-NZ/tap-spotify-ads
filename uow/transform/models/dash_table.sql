@@ -354,6 +354,8 @@ CASE WHEN
       OR lower(REPLACE(creative_name, '"', '')) = lower('UOW0042_YT_CONSIDERATION_PROG_Google_6-video_Video_Bumper')
       or lower(REPLACE(creative_name, '"', '')) like '%employability%' or lower(REPLACE(creative_name, '"', '')) like '%excellence%' 
       or lower(replace(creative_name,'"','')) like '%experience%'
+      OR LOWER(REPLACE(creative_name, '"', '')) LIKE lower(('%UOW0051_YT_AWARENESS_PROG_Google_30"-video_Video_Broadcast%'))
+      OR LOWER(REPLACE(creative_name, '"', '')) LIKE lower(('%UOW0051_YT_AWARENESS_PROG_Google_30"-video_Video_Online%'))
       OR lower(creative_name) = lower('UOW0052_SOCIAL_CONSIDERATION_PROG_Linkedin_5"-video_Video_MBA')
      THEN 'Brand Video'
      WHEN lower(REPLACE(creative_name, '"', '')) LIKE lower(('%(not set)%')) 
@@ -392,7 +394,10 @@ CASE WHEN
     
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%management%' THEN 'Management'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%maori%' THEN 'Maori'
-    WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%ncea%' THEN 'NCEA'
+    WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%ncea%' OR 
+    LOWER(REPLACE(creative_name,'"','')) LIKE '%UOW0051_SOCIAL_AWARENESS_PROG_META_29"-video_Video_Kareena Cut Throug%'
+    OR LOWER(REPLACE(creative_name,'"','')) LIKE '%UOW0051_SOCIAL_AWARENESS_PROG_Snapchat_29"-video_Video_Kareena Cut Through%' 
+    OR LOWER(REPLACE(creative_name,'"','')) LIKE '%UOW0051_SOCIAL_AWARENESS_PROG_TikTok_29"-video_Video_Kareena Cut Through%' THEN 'NCEA'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%pacific%' THEN 'Pacific'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%pharmacy%' THEN 'Pharmacy'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%psych%' THEN 'Psychology'
