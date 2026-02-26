@@ -67,7 +67,7 @@ def load_secrets_from_secret_manager(secret_prefix: str, project_id: str):
 def get_meltano_env():
     # Update meltano_env with dynamic dates
     meltano_env = Variable.get("meltano_uowaikato_main", deserialize_json=True)
-    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=4)
     start_date_str = yesterday.strftime("%Y-%m-%d")
     #meltano_env["TAP_TIKTOK_START_DATE"]=start_date_str
     meltano_env["START_DATE"] = start_date_str
