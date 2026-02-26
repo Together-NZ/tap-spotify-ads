@@ -92,6 +92,7 @@ WITH parsed_data AS (
     FROM
         `amp-main.ttd_raw.standard_streams`
 ),
+# Rank the data by the extracted_at timestamp
 ranked_data AS (
     SELECT
         *,
