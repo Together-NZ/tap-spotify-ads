@@ -9,11 +9,16 @@ on:
     branches: [ "main" ]
     paths:
       - "amp/**"
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Invoke SSH agent with ssh key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_SECRET }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
