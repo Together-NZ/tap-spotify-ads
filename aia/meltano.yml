@@ -17,19 +17,35 @@ plugins:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights
-    
     - ad_account.*
     - ad_sets.*
     - ads.*
     - campaigns.*
+    - custom_conversions.*
   - name: tap-linkedin-ads
-    variant: singer-io
-    pip_url: tap-linkedin-ads
+    namespace: tap-linkedin-ads
+    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git
+    executable: tap-linkedin-ads
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
     config:
-      accounts: '502867644'
-      user_agent: peter
+      access_token: ${TAP_LINKEDIN_ADS_ACCESS_TOKEN}
+      refresh_token: ${TAP_LINKEDIN_ADS_REFRESH_TOKEN}
+      client_id: ${TAP_LINKEDIN_ADS_CLIENT_ID}
+      client_secret: ${TAP_LINKEDIN_ADS_CLIENT_SECRET}
+      accounts: '503820360'
+      user_agent: agent
       start_date: ${START_DATE}
+      _catalog_path: ./catalog.json
+    select:
+    - campaigns.*
+    - creatives.*
+    - ad_analytics_by_creative.*
+    - ad_analytics_by_campaign.*
 
   - name: tap-ttd
     namespace: tap-ttd

@@ -7,8 +7,7 @@
           "sessionCampaignName",
           "sessionManualAdContent",
           "sessionMedium",
-          "eventName",
-          "pageLocation"
+          "eventName"
         ],
         "metrics":[
           "eventCount",

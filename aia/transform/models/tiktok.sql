@@ -80,6 +80,7 @@ ad_name as creative_name,
         THEN 'Social Display'
         ELSE 'Other'
     END AS media_format,
+    'Tiktok' AS platform,
     CASE WHEN ARRAY_LENGTH(SPLIT(ad_name,'_'))>=8 THEN SPLIT(ad_name, '_')[OFFSET(5)] ELSE 'Other' END AS ad_format_detail,
     CASE WHEN ARRAY_LENGTH(SPLIT(ad_name,'_'))>=8 THEN SPLIT(ad_name, '_')[OFFSET(6)] ELSE 'Other' END AS ad_format,
     CASE WHEN ARRAY_LENGTH(SPLIT(ad_name,'_'))>=8 THEN SPLIT(ad_name, '_')[OFFSET(7)] ELSE 'Other' END  AS creative_descr,

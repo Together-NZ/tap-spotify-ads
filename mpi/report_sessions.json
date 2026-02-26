@@ -1,0 +1,20 @@
+[
+    {
+        "name": "session_goal",
+        "dimensions" :[
+          "date",
+          "sessionSourceMedium",
+          "sessionCampaignName",
+          "sessionManualAdContent",
+          "sessionMedium"
+        ],
+        "metrics":[
+ 
+          "sessions",
+          "engagedSessions",
+          "userEngagementDuration",
+          "averageSessionDuration"
+        ]
+      }
+]
+

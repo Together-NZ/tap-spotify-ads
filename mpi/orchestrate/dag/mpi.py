@@ -192,39 +192,34 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'mpi-main'
         env["DBT_BIGQUERY_DATASET"] = 'dash_table_search'
         return env
-    def set_env_vars_ga4():
-            env = get_meltano_env()
-
-            env["BQ_DATASET"] = "ga4_raw"
-            env["BQ_METHOD"] = "gcs_stage"
-            env["DBT_BIGQUERY_METHOD"] = 'oauth'
-            env["DBT_BIGQUERY_AUTH_METHOD"] = 'oauth'
-            env["DBT_BIGQUERY_PROJECT"] = 'mpi-main'
-            env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'       
-            developer_creds = Credentials(
-                None,
-                refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
-                token_uri="https://oauth2.googleapis.com/token",
-                client_id=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_ID"],
-                client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
-            )
-            developer_creds.refresh(Request())
-            env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-            env["TAP_GA4_START_DATE"] = get_ga4_start_date()
-            return env
-        
-    kube_ga4 = KubernetesPodOperator(
-            name="mpi-ga4-to-bigquery",
-            task_id="mpi-ga4_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery","dbt-bigquery:ga4_models"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_ga4(),
-        ) 
-
+  
+    def set_env_vars_ga4(goal):
+        env = get_meltano_env()
+        #if goal == 'ecommerce':
+        if goal == 'sessions':
+            env["TAP_GA4_REPORTS"] = "./report_sessions.json"
+            env["GA4_GOAL"] = 'session_goal'
+        else:
+            env["TAP_GA4_REPORTS"] = "./report.json"
+            env["GA4_GOAL"] = 'goal'   
+        env["BQ_DATASET"] = "ga4_raw"
+        env["BQ_METHOD"] = "gcs_stage"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'mpi-main'
+        env["DBT_BIGQUERY_AUTH_METHOD"]='oauth'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'       
+        developer_creds = Credentials(
+            None,
+            refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_ID"],
+            client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
+        )
+        developer_creds.refresh(Request())
+        env["TAP_GA4_START_DATE"]  = get_ga4_start_date()
+        env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
+        return env
+ 
    
    
 
@@ -288,6 +283,34 @@ with models.DAG(
         
 
   
+    goal_list = ['sessions','goal']
+    for label in goal_list:
+        
+        kube_ga4 = KubernetesPodOperator(
+                name=f"mpi-ga4-to-bigquery-{label}",
+                task_id=f"mpi-ga4_to_bigquery_{label}",
+                namespace="composer-user-workloads",
+                image=IMAGE,
+                arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery",f"dbt-bigquery:ga4_{label}_models"],
+                container_resources=k8s_models.V1ResourceRequirements(
+                    limits={"memory": "1000M", "cpu": "500m"},
+                ),
+                env_vars=set_env_vars_ga4(goal=label),
+            ) 
+        kube_dash_union >> kube_ga4
+    kube_ga4_final=KubernetesPodOperator(
+            name="mpi-ga4-to-bigquery-final",
+            task_id="mpi-ga4_to_bigquery_final",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","ga4_goal_channel"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ga4(goal=label),
+            get_logs=True
+        )
+    kube_ga4 >> kube_ga4_final
 
     [kube_google_ads_search] >> kube_dash
-    kube_dash>>kube_dash_search >> kube_dash_union >> kube_ga4
+    kube_dash>>kube_dash_search >> kube_dash_union 

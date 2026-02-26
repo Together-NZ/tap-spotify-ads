@@ -9,6 +9,7 @@ WITH parsed_data AS (
         JSON_VALUE(JSON_EXTRACT(data, "$.Campaign ID")) AS campaign_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.Ad Group ID")) AS ad_group_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.Ad Format")) AS ad_format,
+        _sdc_extracted_at,
         JSON_VALUE(JSON_EXTRACT(data, "$.Creative ID")) AS creative_id,
         CAST(JSON_VALUE(JSON_EXTRACT(data, "$.Frequency")) AS FLOAT64) AS frequency,
         JSON_VALUE(JSON_EXTRACT(data, "$.Advertiser")) AS advertiser,
@@ -97,7 +98,9 @@ ranked_data AS (
         ROW_NUMBER() OVER (
             PARTITION BY
                 Date, partner_id, advertiser_id, campaign_id, ad_group_id, ad_format, creative_id, 
-                advertiser, campaign_name, ad_group, creative, deal_id, ad_server_creative_placement_id
+                advertiser,  deal_id, ad_server_creative_placement_id
+            ORDER BY
+                _sdc_extracted_at DESC
         ) AS row_num
     FROM
         parsed_data
@@ -161,7 +164,7 @@ from ranked_data where row_num = 1
         SUM(video_views) AS video_views,
         SUM(impressions) AS impressions,
         SUM(partner_cost_partner_currency) AS media_cost -- Aggregate Partner Cost
-    FROM final
+    FROM final where lower(campaign_name) not like '%pbt%'
     GROUP BY 
         ad_server_creative_placement_id, date, campaign_name, campaign_id, creative, creative_id, advertiser, advertiser_id,publisher,media_format,
         audience_name,ad_format,ad_format_detail,creative_descr,campaign_descr

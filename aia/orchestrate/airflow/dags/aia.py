@@ -37,7 +37,8 @@ default_args = {
     "catchup": False,
     "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz),
     'email': ["tayaza@wearetogether.co.nz","keivn@wearetogether.co.nz"],
-    'email_on_failure': True
+    'email_on_failure': True,
+    'retry_delay': timedelta(minutes=30)
 }
 
 
@@ -46,7 +47,7 @@ def get_meltano_env():
     meltano_env_common = Variable.get("meltano_common_secret", deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique}
 
-    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
     start_date_str = yesterday.strftime("%Y-%m-%d")
 
     meltano_env["START_DATE"] = start_date_str
@@ -55,12 +56,23 @@ def get_meltano_env():
     return deepcopy(meltano_env)
 def get_ga4_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+
+def get_ttd_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=14)).strftime("%Y-%m-%d")
 with models.DAG(
     dag_id = 'aia-meltano_google_ads',
-    schedule_interval="30 13 * * *",
+    schedule_interval="30 14 * * *",
     default_args=default_args,
     dagrun_timeout=timedelta(minutes=80),
 ) as dag_google_ads:
+    def set_env_vars_tiktok():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "tiktok_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'aia-nz-main'
+        env["DBT_BIGQUERY_DATASET"] = 'tiktok_transformed'
+        return env
     def set_env_vars_google_ads_search(label):
         env = get_meltano_env()
         env["BQ_DATASET"] = f"google_ads_{label}"
@@ -116,9 +128,26 @@ with models.DAG(
         task_id="set_env_ga4",
         python_callable=set_env_vars_ga4,
     )
+    set_env_task_tiktok = PythonOperator(
+        task_id="set_env_tiktok",
+        python_callable=set_env_vars_tiktok,
+    )
     set_env_task_google_ads = PythonOperator(
         task_id="set_env_google_ads",
         python_callable=set_env_vars_google_ads,
+    )
+    kube_tiktok = KubernetesPodOperator(
+        name="aia-tiktok-to-bigquery",
+        task_id="aia-tiktok_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","dbt-bigquery:tiktok_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_tiktok()
+        
+  
     )
 
     kube_ga4 = KubernetesPodOperator(
@@ -213,10 +242,12 @@ with models.DAG(
     for index in key_list:
         for task in search_list.get(index,[]):
             task >> kube_dash_search
+    set_env_task_tiktok >> kube_tiktok
     set_env_task_google_ads >> kube_google_ads >> kube_google_ads_search
     set_env_task_ga4 >> kube_ga4
+    
     kube_google_ads_search >> kube_dash_search
-    kube_dash_search >> kube_dash >> kube_dash_union >>set_env_task_ga4>>kube_ga4 
+    [kube_dash_search,kube_tiktok] >> kube_dash >> kube_dash_union >>set_env_task_ga4>>kube_ga4 
     
 with models.DAG(
     dag_id="aia-meltano-extraction-transformation-dbt",
@@ -244,14 +275,6 @@ with models.DAG(
         env["DBT_BIGQUERY_METHOD"] = 'oauth' 
         env["DBT_BIGQUERY_PROJECT"] = 'aia-nz-main'
         env["DBT_BIGQUERY_DATASET"] = 'outbrain_transformed'
-        return env
-    def set_env_vars_tiktok():
-        env = get_meltano_env()
-        env["BQ_DATASET"] = "tiktok_raw"
-        env["BQ_METHOD"] = "batch_job"
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'aia-nz-main'
-        env["DBT_BIGQUERY_DATASET"] = 'tiktok_transformed'
         return env
     def set_env_vars_facebook():
         env = get_meltano_env()
@@ -286,6 +309,7 @@ with models.DAG(
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'aia-nz-main'
         env["DBT_BIGQUERY_DATASET"] = 'ttd_transformed'
+        env["TAP_TTD_START_DATE"] = get_ttd_start_date()
         return env
 
     def set_env_vars_linkedin():
@@ -302,10 +326,6 @@ with models.DAG(
     set_env_task_outbrain = PythonOperator(
         task_id="set_env_outbrain",
         python_callable=set_env_vars_outbrain,
-    )
-    set_env_task_tiktok = PythonOperator(
-        task_id="set_env_tiktok",
-        python_callable=set_env_vars_tiktok,
     )
     set_env_task_facebook = PythonOperator(
         task_id="set_env_facebook",
@@ -357,19 +377,7 @@ with models.DAG(
 
           
         
-    kube_tiktok = KubernetesPodOperator(
-        name="aia-tiktok-to-bigquery",
-        task_id="aia-tiktok_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","dbt-bigquery:tiktok_models"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_tiktok()
-        
-  
-    )
+
     kube_outbrain = KubernetesPodOperator(
         name = "aia-outbrain-to-bigquery",
         task_id = "aia-outbrain_to_bigquery",
@@ -429,7 +437,7 @@ with models.DAG(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_ttd(),
-        
+        execution_timeout=timedelta(minutes=60)
         
     )
 
@@ -490,13 +498,13 @@ with models.DAG(
         for task in search_list.get(index,[]):
             task >> kube_dash_search
 
-    set_env_task_tiktok >> kube_tiktok
+ 
     set_env_task_facebook >> kube_facebook
     set_env_task_dv360 >> kube_dv360
     set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd 
     set_env_task_linkedin >> kube_linkedin_ads
     set_env_task_outbrain >> kube_outbrain
     kube_google_ads_search >> kube_dash_search
-    [kube_tiktok,kube_facebook,kube_dv360,kube_cm360,kube_ttd,kube_outbrain,kube_linkedin_ads] >> kube_dash
+    [kube_facebook,kube_dv360,kube_cm360,kube_ttd,kube_outbrain,kube_linkedin_ads] >> kube_dash
     kube_dash >> kube_dash_search >> kube_dash_union
     
