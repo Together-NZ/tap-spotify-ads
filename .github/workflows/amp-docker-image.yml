@@ -25,14 +25,13 @@ jobs:
     - id: auth
       uses: google-github-actions/auth@v2
       with:
-        token_format: "access_token"
         workload_identity_provider: "projects/364275589560/locations/global/workloadIdentityPools/amp-pool-unique/providers/github-resource-pool"
         service_account: "impact-ci-ci-cd-service-accoun@together-internal.iam.gserviceaccount.com"
 
-    - name: Docker login to Artifact Registry
-      run: |
-        echo "${{ steps.auth.outputs.access_token }}" | docker login \
-          -u oauth2accesstoken --password-stdin https://australia-southeast1-docker.pkg.dev
+    - uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker auth for Artifact Registry
+      run: gcloud auth configure-docker australia-southeast1-docker.pkg.dev --quiet
 
     - name: Invoke SSH agent with ssh key
       uses: webfactory/ssh-agent@v0.9.0
