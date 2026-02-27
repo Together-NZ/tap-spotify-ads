@@ -19,18 +19,21 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - id: auth
-        name: Authenticate to Google Cloud using Workload Identity Federation
-        uses: google-github-actions/auth@v2
-        with:
-  
-          workload_identity_provider: "projects/364275589560/locations/global/workloadIdentityPools/amp-pool-unique/providers/github-resource-pool"
-          service_account: "impact-ci-ci-cd-service-accoun@together-internal.iam.gserviceaccount.com"
+steps:
+    - uses: actions/checkout@v4
 
-      - uses: actions/checkout@v4
+    - id: auth
+      uses: google-github-actions/auth@v2
+      with:
+        token_format: "access_token"
+        workload_identity_provider: "projects/364275589560/locations/global/workloadIdentityPools/amp-pool-unique/providers/github-resource-pool"
+        service_account: "impact-ci-ci-cd-service-account@together-internal.iam.gserviceaccount.com"
 
-      - name: Set up Gcloud
-        uses: google-github-actions/setup-gcloud@v3
+    - name: Docker login to Artifact Registry (no gcloud)
+      run: |
+        echo "${{ steps.auth.outputs.access_token }}" | docker login \
+          -u oauth2accesstoken --password-stdin https://australia-southeast1-docker.pkg.dev
+
 
       - name: Authenticate Docker to Google Cloud
         run: gcloud auth configure-docker australia-southeast1-docker.pkg.dev --quiet
