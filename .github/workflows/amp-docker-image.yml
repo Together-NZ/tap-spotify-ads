@@ -1,10 +1,6 @@
 name: Docker Image CI
 
 on:
-  push:
-    branches: [ "main" ]
-    paths:
-      - "amp/**"
   pull_request:
     branches: [ "main" ]
     paths:
