@@ -27,7 +27,7 @@ jobs:
       with:
         token_format: "access_token"
         workload_identity_provider: "projects/364275589560/locations/global/workloadIdentityPools/amp-pool-unique/providers/github-resource-pool"
-        service_account: "impact-ci-ci-cd-service-account@together-internal.iam.gserviceaccount.com"
+        service_account: "impact-ci-ci-cd-service-accoun@together-internal.iam.gserviceaccount.com"
 
     - name: Docker login to Artifact Registry
       run: |
