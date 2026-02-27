@@ -18,8 +18,8 @@ jobs:
       contents: read
 
     runs-on: ubuntu-latest
+    
     steps:
-steps:
     - uses: actions/checkout@v4
 
     - id: auth
