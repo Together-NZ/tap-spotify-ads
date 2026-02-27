@@ -29,25 +29,21 @@ jobs:
         workload_identity_provider: "projects/364275589560/locations/global/workloadIdentityPools/amp-pool-unique/providers/github-resource-pool"
         service_account: "impact-ci-ci-cd-service-account@together-internal.iam.gserviceaccount.com"
 
-    - name: Docker login to Artifact Registry (no gcloud)
+    - name: Docker login to Artifact Registry
       run: |
         echo "${{ steps.auth.outputs.access_token }}" | docker login \
           -u oauth2accesstoken --password-stdin https://australia-southeast1-docker.pkg.dev
 
+    - name: Invoke SSH agent with ssh key
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_SECRET }}
 
-      - name: Authenticate Docker to Google Cloud
-        run: gcloud auth configure-docker australia-southeast1-docker.pkg.dev --quiet
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
 
-      - name: Invoke SSH agent with ssh key
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_SECRET }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Run docker.py
-        working-directory: amp
-        run: python docker.py
+    - name: Run docker.py
+      working-directory: amp
+      run: python docker.py
