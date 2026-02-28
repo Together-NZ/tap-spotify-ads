@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: AMP automated Docker Image CI
 
 on:
   pull_request:
@@ -47,10 +47,6 @@ jobs:
     - name: Testing DBT compiling and meltano taps
       working-directory: amp
       run: sh ci_test.sh
-      if: success()
-      else:
-        run: echo "Mletano test failed"
-        exit 1
 
     - name: Run docker.py
       working-directory: amp
