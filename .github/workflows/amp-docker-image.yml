@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: AMP automated Docker Image CI
 
 on:
   pull_request:
@@ -29,7 +29,7 @@ jobs:
         service_account: "impact-ci-ci-cd-service-account@together-internal.iam.gserviceaccount.com"
     
     - name: Invoke gcloud setup
-    - uses: google-github-actions/setup-gcloud@v2
+      uses: google-github-actions/setup-gcloud@v2
 
     - name: Configure Docker auth for Artifact Registry
       run: gcloud auth configure-docker australia-southeast1-docker.pkg.dev --quiet
@@ -47,10 +47,6 @@ jobs:
     - name: Testing DBT compiling and meltano taps
       working-directory: amp
       run: sh ci_test.sh
-      if: success()
-      else:
-        run: echo "Mletano test failed"
-        exit 1
 
     - name: Run docker.py
       working-directory: amp
