@@ -1,2 +1,2 @@
 
-# This is the pipeline for AMP test
+# This is the pipeline for AMP
