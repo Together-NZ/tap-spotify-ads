@@ -6,3 +6,4 @@ refreshtoken.py
 upload.py
 tap-reddit-catelog.json
 secret.json
+.meltano/

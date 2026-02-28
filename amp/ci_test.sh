@@ -1,9 +1,4 @@
-# Install pip and meltano
-python =m ensurepip --upgrade
 
-pip install meltano 
-
-melano install
 
 # Test the dbt-bigquery compile command
 export DBT_BIGQUERY_DATASET="test_dataset"
