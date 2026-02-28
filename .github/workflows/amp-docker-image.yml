@@ -44,6 +44,14 @@ jobs:
       with:
         python-version: "3.11"
 
+    - name: Testing DBT compiling and meltano taps
+      working-directory: amp
+      run: sh ci_test.sh
+      if: success()
+      else:
+        run: echo "Mletano test failed"
+        exit 1
+
     - name: Run docker.py
       working-directory: amp
       run: python docker.py
