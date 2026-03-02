@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": ["string", "null"] },
+    "business_id": { "type": ["string", "null"] },
+    "created_at": { "type": ["string", "null"], "format": "date-time" },
+    "updated_at": { "type": ["string", "null"], "format": "date-time" },
+    "country_code": { "type": ["string", "null"] },
+    "industry": { "type": ["string", "null"] },
+    "website": { "type": ["string", "null"] },
+    "billing_address": {
+      "type": ["object", "null"],
+      "properties": {
+        "name": { "type": ["string", "null"] },
+        "street": { "type": ["string", "null"] },
+        "city": { "type": ["string", "null"] },
+        "region": { "type": ["string", "null"] },
+        "postal_code": { "type": ["string", "null"] },
+        "tax_region": { "type": ["string", "null"] }
+      }
+    },
+    "legal_entity_name": { "type": ["string", "null"] },
+    "status": { "type": ["string", "null"] },
+    "status_reason": { "type": ["string", "null"] },
+    "name": { "type": ["string", "null"] },
+    "ad_account_role": { "type": ["string", "null"] },
+    "tax_id": { "type": ["string", "null"] },
+    "currency_code": { "type": ["string", "null"] }
+  },
+  "required": ["id"]
+}

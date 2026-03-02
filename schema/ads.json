@@ -1,0 +1,46 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": ["string", "null"] },
+    "name": { "type": ["string", "null"] },
+    "created_at": { "type": ["string", "null"], "format": "date-time" },
+    "updated_at": { "type": ["string", "null"], "format": "date-time" },
+    "start_time": { "type": ["string", "null"], "format": "date-time" },
+    "end_time": { "type": ["string", "null"], "format": "date-time" },
+    "delivery": { "type": ["string", "null"] },
+    "ad_set_id": { "type": ["string", "null"] },
+    "status": { "type": ["string", "null"] },
+    "reject_reason": { "type": ["string", "null"] },
+    "ad_preview_url": { "type": ["string", "null"] },
+    "advertiser_name": { "type": ["string", "null"] },
+    "call_to_action": {
+      "type": ["object", "null"],
+      "properties": {
+        "text": { "type": ["string", "null"] },
+        "language": { "type": ["string", "null"] },
+        "clickthrough_url": { "type": ["string", "null"] }
+      }
+    },
+    "assets": {
+      "type": ["object", "null"],
+      "properties": {
+        "asset_id": { "type": ["string", "null"] },
+        "companion_asset_id": { "type": ["string", "null"] },
+        "logo_asset_id": { "type": ["string", "null"] }
+      }
+    },
+    "tagline": { "type": ["string", "null"] },
+    "third_party_tracking": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "object",
+        "properties": {
+          "measurement_partner": { "type": ["string", "null"] },
+          "url": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "ad_account_id": { "type": ["string", "null"] }
+  },
+  "required": ["id"]
+}

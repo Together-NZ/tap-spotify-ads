@@ -1,0 +1,73 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": ["string", "null"] },
+    "name": { "type": ["string", "null"] },
+    "campaign_id": { "type": ["string", "null"] },
+    "start_time": { "type": ["string", "null"], "format": "date-time" },
+    "end_time": { "type": ["string", "null"], "format": "date-time" },
+    "created_at": { "type": ["string", "null"], "format": "date-time" },
+    "updated_at": { "type": ["string", "null"], "format": "date-time" },
+    "delivery": { "type": ["string", "null"] },
+    "status": { "type": ["string", "null"] },
+    "category": { "type": ["string", "null"] },
+    "cost_model": { "type": ["string", "null"] },
+    "asset_format": { "type": ["string", "null"] },
+    "bid_strategy": { "type": ["string", "null"] },
+    "bid_micro_amount": { "type": ["integer", "null"] },
+    "pacing": { "type": ["string", "null"] },
+    "frequency_caps": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "object",
+        "properties": {
+          "frequency_unit": { "type": ["string", "null"] },
+          "frequency_period": { "type": ["integer", "null"] },
+          "max_impressions": { "type": ["integer", "null"] }
+        }
+      }
+    },
+    "budget": {
+      "type": ["object", "null"],
+      "properties": {
+        "micro_amount": { "type": ["integer", "null"] },
+        "type": { "type": ["string", "null"] },
+        "currency": { "type": ["string", "null"] }
+      }
+    },
+    "promotion": {
+      "type": ["object", "null"],
+      "properties": {
+        "promotion_goal": { "type": ["string", "null"] },
+        "promotion_target_id": { "type": ["string", "null"] },
+        "conversion_events": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "object",
+            "properties": {
+              "tracking_event_type": { "type": ["string", "null"] },
+              "window_duration_ms": { "type": ["integer", "null"] }
+            }
+          }
+        }
+      }
+    },
+    "targets": {
+      "type": ["object", "null"],
+      "properties": {
+        "age_ranges": { "type": ["array", "null"], "items": { "type": "object", "properties": { "min": { "type": ["integer", "null"] }, "max": { "type": ["integer", "null"] } } } },
+        "genders": { "type": ["array", "null"], "items": { "type": "string" } },
+        "platforms": { "type": ["array", "null"], "items": { "type": "string" } },
+        "geo_targets": { "type": ["object", "null"] },
+        "genre_ids": { "type": ["array", "null"], "items": { "type": "string" } },
+        "interest_ids": { "type": ["array", "null"], "items": { "type": "string" } },
+        "artist_ids": { "type": ["array", "null"], "items": { "type": "string" } },
+        "podcast_episode_topic_ids": { "type": ["array", "null"], "items": { "type": "string" } },
+        "language": { "type": ["string", "null"] },
+        "playlist_ids": { "type": ["array", "null"], "items": { "type": "string" } },
+        "placements": { "type": ["array", "null"], "items": { "type": "string" } }
+      }
+    }
+  },
+  "required": ["id"]
+}

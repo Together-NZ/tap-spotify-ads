@@ -1,0 +1,64 @@
+{
+  "type": "object",
+  "properties": {
+    "entity_type": {
+      "type": ["string", "null"]
+    },
+    "entity_id": {
+      "type": ["string", "null"]
+    },
+    "entity_name": {
+      "type": ["string", "null"]
+    },
+    "entity_status": {
+      "type": ["string", "null"]
+    },
+    "start_time": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "end_time": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "stats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field_type": {
+            "type": "string",
+            "enum": [
+              "CLICKS",
+              "FIRST_QUARTILES",
+              "IMPRESSIONS",
+              "MIDPOINTS",
+              "SPEND",
+              "REACH",
+              "VIDEO_VIEWS",
+              "THIRD_QUARTILES",
+              "LEADS",
+              "STARTS",
+              "PURCHASES",
+              "REVENUE",
+              "PAGE_VIEWS",
+              "ADD_TO_CART",
+              "AVERAGE_ORDER_VALUE",
+              "RETURN_ON_AD_SPEND",
+              "CUSTOMER_ACQUISITION_COST",
+              "COST_PER_LEAD",
+              "START_CHECKOUT",
+              "SIGN_UPS",
+              "PRODUCTS"
+            ]
+          },
+          "field_value": {
+            "type": ["number", "integer", "null"]
+          }
+        },
+        "required": ["field_type", "field_value"]
+      }
+    }
+  },
+  "required": ["entity_id", "start_time", "end_time", "stats"]
+}

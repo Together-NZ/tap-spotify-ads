@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "id": { "type": ["string", "null"] },
+    "name": { "type": ["string", "null"] },
+    "created_at": { "type": ["string", "null"], "format": "date-time" },
+    "updated_at": { "type": ["string", "null"], "format": "date-time" },
+    "purchase_order": { "type": ["string", "null"] },
+    "status": { "type": ["string", "null"] },
+    "objective": { "type": ["string", "null"] },
+    "delivery_goal_group": { "type": ["string", "null"] }
+  },
+  "required": ["id"]
+}

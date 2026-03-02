@@ -1,0 +1,48 @@
+send_anonymous_usage_stats: true
+project_id: "tap-spotifyads"
+default_environment: test
+requires_meltano: ">=4.0"
+environments:
+- name: test
+plugins:
+  extractors:
+  - name: "tap-spotifyads"
+    namespace: "tap_spotifyads"
+    pip_url: "-e ."
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    - structured-logging
+
+    config:
+      client_id: ${CLIENT_ID}
+      client_secret: ${CLIENT_SECRET}
+      redirect_url: ${REDIRECT_URL}
+      refresh_token: ${REFRESH_TOKEN}
+      ad_account_ids: ${AD_ACCOUNT_IDS}
+      start_date: ${START_DATE}
+      end_date: ${END_DATE}
+
+  loaders:
+  - name: target-jsonl
+    variant: andyh1203
+    pip_url: target-jsonl
+  - name: target-bigquery
+    variant: z3z1ma
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
+    config:
+      dataset: ${BQ_DATASET}
+      project: moe-main
+      location: australia-southeast1
+      denormalized: false
+      schema_resolver_version: 2
+      column_name_transforms:
+        add_underscore_when_invalid: true
+        lower: true
+        snake_case: true
+      fail_fast: false
+      method: ${BQ_METHOD}
+      bucket: australia-southeast1-meltan-00c049c-bigquery-staging
