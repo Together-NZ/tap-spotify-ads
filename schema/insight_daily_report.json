@@ -43,6 +43,7 @@
               "REVENUE",
               "PAGE_VIEWS",
               "ADD_TO_CART",
+              "COMPLETES",
               "AVERAGE_ORDER_VALUE",
               "RETURN_ON_AD_SPEND",
               "CUSTOMER_ACQUISITION_COST",
