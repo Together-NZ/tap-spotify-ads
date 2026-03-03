@@ -8,6 +8,7 @@ on:
       - "README.md"
       - ".github/**"
       - "terraform/**"
+      - "**/orchestrate/**"
 
 jobs:
   # 1. First job: Authenticate to Google Cloud with Service Account
