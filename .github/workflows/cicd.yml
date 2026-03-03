@@ -1,0 +1,89 @@
+name: Automated Docker Image CI
+
+on:
+  # Job Trigger: Pull Request
+  pull_request:
+    branches: [ "main" ]
+    paths_ignore:
+      - "README.md"
+      - ".github/**"
+      - "terraform/**"
+
+jobs:
+  # 1. First job: Authenticate to Google Cloud with Service Account
+  authenticate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate to Google Cloud with Service Account
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/364275589560/locations/global/workloadIdentityPools/amp-pool-unique/providers/github-resource-pool"
+          service_account: "impact-ci-ci-cd-service-accoun@together-internal.iam.gserviceaccount.com"
+
+
+  # 2. Second job: Detect which folders changed
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed folders
+        id: set-matrix
+        run: |
+          # Get unique top-level directory names
+          FOLDERS=$(git diff --name-only HEAD^ HEAD | cut -d/ -f1 | sort -u | jq -R . | jq -s -c .)
+          echo "matrix=$FOLDERS" >> $GITHUB_OUTPUT
+
+  # 3. Second job: Run a separate instance for each folder
+  build:
+    permissions:
+      id-token: write
+      contents: read
+    needs: 
+      - setup
+      - authenticate
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        folder: ${{ fromJson(needs.setup.outputs.matrix) }}
+    steps:
+      - name: Build the Docker image for the ${{ matrix.folder }} folder
+
+
+        run: echo "Currently building in ${{ matrix.folder }}" 
+ 
+
+      - uses: actions/checkout@v4
+
+      - name: Invoke gcloud setup
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker auth for Artifact Registry
+        run: gcloud auth configure-docker australia-southeast1-docker.pkg.dev --quiet
+
+      - name: Invoke SSH agent with ssh key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_SECRET }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Build the Docker image
+        working-directory: amp
+        run: python docker1.py ${{ matrix.folder }} --build-only
+
+      - name: Test the Docker image
+        working-directory: amp
+        run: python docker1.py ${{ matrix.folder }} --test-only
+
+      - name: Push the Docker image
+        working-directory: amp
+        run: python docker1.py ${{ matrix.folder }} --push-only
