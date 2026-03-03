@@ -11,8 +11,12 @@ on:
       - "**/orchestrate/**"
 
 jobs:
+
   # 1. First job: Authenticate to Google Cloud with Service Account
   authenticate:
+    permissions:
+      id-token: write
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Authenticate to Google Cloud with Service Account
