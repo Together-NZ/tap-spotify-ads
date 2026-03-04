@@ -27,7 +27,7 @@ jobs:
           service_account: "impact-ci-ci-cd-service-accoun@together-internal.iam.gserviceaccount.com"
 
 
-  # 2. Second job: Detect which folders changed
+  # 2. Second job: Detect which folders changed, get changed folders for project
   setup_project:
     runs-on: ubuntu-latest
     outputs:
@@ -61,7 +61,7 @@ jobs:
           FOLDERS=$(git diff --name-only HEAD^ HEAD | cut -d/ -f1 | sort -u | jq -R . | jq -s -c .)
           echo "matrix=$FOLDERS" >> $GITHUB_OUTPUT
   
-  # 2. Second job: Detect which folders changed
+  # 3. Third job: Detect which folders changed, get change folder for orchestrate DAG
   setup_dag:
     runs-on: ubuntu-latest
     outputs:
@@ -94,8 +94,8 @@ jobs:
           # Get unique top-level directory names
           FOLDERS=$(git diff --name-only HEAD^ HEAD | cut -d/ -f1 | sort -u | jq -R . | jq -s -c .)
           echo "matrix=$FOLDERS" >> $GITHUB_OUTPUT
-
-  upload:
+  # 4. Fourth job: Upload the DAG to the Composer environment
+  upload_dag:
     permissions:
       id-token: write
       contents: read
@@ -124,7 +124,7 @@ jobs:
             --source=${{ matrix.folder }}/orchestrate/dags/airflow/${{ matrix.folder }}.py
 
 
-  # 3. Second job: Run a separate instance for each folder
+  # 5. Fifth job: Build the Docker image for the project
   build:
     permissions:
       id-token: write
