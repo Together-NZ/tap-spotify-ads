@@ -12,19 +12,6 @@ on:
 
 jobs:
 
-  # 1. First job: Authenticate to Google Cloud with Service Account
-  authenticate:
-    permissions:
-      id-token: write
-      contents: read
-    runs-on: ubuntu-latest
-    steps:
-      - name: Authenticate to Google Cloud with Service Account
-        id: auth
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: "projects/364275589560/locations/global/workloadIdentityPools/amp-pool-unique/providers/github-resource-pool"
-          service_account: "impact-ci-ci-cd-service-accoun@together-internal.iam.gserviceaccount.com"
 
 
   # 2. Second job: Detect which folders changed, get changed folders for project
@@ -33,7 +20,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       project: ${{ steps.filter.outputs.project }}
-      dag: ${{ steps.filter.outputs.orchestrate }}
+      dag: ${{ steps.filter.outputs.dag }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -64,9 +51,9 @@ jobs:
   setup_dag:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      matrix: ${{ steps.set-dag-matrix.outputs.matrix }}
       project: ${{ steps.filter.outputs.project }}
-      dag: ${{ steps.filter.outputs.orchestrate }}
+      dag: ${{ steps.filter.outputs.dag }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -98,13 +85,21 @@ jobs:
       id-token: write
       contents: read
     needs:
-      - authenticate
       - setup_dag
     runs-on: ubuntu-latest
     strategy:
       matrix:
         folder: ${{ fromJson(needs.setup_dag.outputs.matrix) }}
     steps:
+ 
+
+      - name: Authenticate to Google Cloud with Service Account
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/364275589560/locations/global/workloadIdentityPools/amp-pool-unique/providers/github-resource-pool"
+          service_account: "impact-ci-ci-cd-service-accoun@together-internal.iam.gserviceaccount.com"
+
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
 
@@ -142,6 +137,13 @@ jobs:
  
 
       - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud with Service Account
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/364275589560/locations/global/workloadIdentityPools/amp-pool-unique/providers/github-resource-pool"
+          service_account: "impact-ci-ci-cd-service-accoun@together-internal.iam.gserviceaccount.com"
 
       - name: Invoke gcloud setup
         uses: google-github-actions/setup-gcloud@v2
