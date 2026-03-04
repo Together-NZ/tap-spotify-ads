@@ -55,7 +55,7 @@ jobs:
       # record the folder change if the change are not dag file 
       - name: Get changed folders
         id: set-matrix
-        if: steps.filter.outputs.project == 'true'
+        if: steps.filter.outputs.project == 'true' 
         run: |
           # Get unique top-level directory names
           FOLDERS=$(git diff --name-only HEAD^ HEAD | cut -d/ -f1 | sort -u | jq -R . | jq -s -c .)
@@ -167,8 +167,8 @@ jobs:
 
       - name: Test the Docker image
         working-directory: centralize_data
-        run: python docker1.py ${{ matrix.folder }} --test-only
+        run: python docker_build.py ${{ matrix.folder }} --test-only
 
       - name: Push the Docker image
         working-directory: centralize_data
-        run: python docker1.py ${{ matrix.folder }} --push-only
+        run: python docker_build.py ${{ matrix.folder }} --push-only
