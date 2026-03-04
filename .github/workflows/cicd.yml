@@ -43,15 +43,14 @@ jobs:
         uses: dorny/paths-filter@v3
         with:
           filters: |
-            project:
-              paths-ignore:
-                - "README.md"
-                - ".github/**"
-                - "terraform/**"
-                - "**/orchestrate/**"
             dag:
-              paths:
-                - "**/orchestrate/**"
+              - "**/orchestrate/**"
+            project:
+              - "**"
+              - "!README.md"
+              - "!.github/**"
+              - "!terraform/**"
+              - "!**/orchestrate/**"
       # record the folder change if the change are not dag file 
       - name: Get changed folders
         id: set-matrix
@@ -77,15 +76,14 @@ jobs:
         uses: dorny/paths-filter@v3
         with:
           filters: |
-            project:
-              paths-ignore:
-                - "README.md"
-                - ".github/**"
-                - "terraform/**"
-                - "**/orchestrate/**"
             dag:
-              paths:
-                - "**/orchestrate/**"
+              - "**/orchestrate/**"
+            project:
+              - "**"
+              - "!README.md"
+              - "!.github/**"
+              - "!terraform/**"
+              - "!**/orchestrate/**"
       # record the folder change if the change are not dag file 
       - name: Get changed folders
         id: set-dag-matrix
