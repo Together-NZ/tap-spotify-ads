@@ -9,7 +9,7 @@ from client_name import CLIENT_NAME
 class DockerBuild:
     def __init__(self, project_name):
         self.project_name = project_name
-        self.image = f"australia-southeast1-docker.pkg.dev/{project_name}-main/meltano/meltano-{project_name}-main:prod"
+        self.image = f"australia-southeast1-docker.pkg.dev/{project_name}-main/meltano/meltano-{project_name}-main:stage"
 
     def __return_image(self):
         return self.image
