@@ -4,12 +4,19 @@ from google.cloud import bigquery
 import pandas as pd
 from linkedin_name_fetching import Parsed_campaign_creative_click_url_name
 import time
+from google.cloud import secretmanager
 
 # Initialize BigQuery client
 
 client = bigquery.Client(project="together-internal")
 # Caching repeated creative lookups
 creative_cache = {}
+
+def read_secrets(project_id: str,secret_name: str):
+    client = secretmanager.SecretManagerServiceClient()
+    parent = f"projects/{project_id}"
+    response = client.access_secret_version(name=f"{parent}/secrets/{secret_name}/versions/latest")
+    return response.payload.data.decode("UTF-8")
 
 def enrich_row(row):
     creative_id = row["creative_id"]
@@ -35,7 +42,8 @@ def enrich_row(row):
     return row
 
 def main():
-    Parsed_campaign_creative_click_url_name.initialise_access_token("LINKEDIN_ACCESS_TOKEN")
+    env=read_secrets("739679429225","airflow-variables-meltano_common_secret")
+    Parsed_campaign_creative_click_url_name.initialise_access_token(env["TAP_LINKEDIN_ADS_ACCESS_TOKEN"])
     # Step 1: Read from BigQuery
     query = """
         SELECT distinct SPLIT(json_value(data,'$.account'),':')[OFFSET(3)] AS advertiser_account_id,

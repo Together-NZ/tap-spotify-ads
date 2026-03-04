@@ -110,7 +110,14 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'together-internal'
         env["DBT_BIGQUERY_DATASET"] = 'linkedin_transformed'
         return env
-    
+    def set_env_vars_spotifyads():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "spotify_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'together-internal'
+        env["DBT_BIGQUERY_DATASET"] = 'spotify_transformed'
+        return env
     set_env_task_cm360 = PythonOperator(
         task_id="set_env_cm360",
         python_callable=set_env_vars_cm360,
@@ -127,6 +134,10 @@ with models.DAG(
         task_id = "set_env_linkedin",
         python_callable=set_env_vars_linkedin
     )
+    set_env_task_spotifyads = PythonOperator(
+        task_id = "set_env_spotifyads",
+        python_callable=set_env_vars_spotifyads
+    )
     kube_google_mapping = KubernetesPodOperator(
         name='google_ads_mapping',
         task_id='google_ads_mapping',
@@ -137,6 +148,17 @@ with models.DAG(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_mapping(),
+    )
+    kube_spotifyads = KubernetesPodOperator(
+        name="spotifyads-to-bigquery",
+        task_id="spotifyads_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "run","tap-spotifyads","target-bigquery", "dbt-bigquery","invoke","run","--select","spotify_ads"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_spotifyads(),
     )
     kube_final_linkedin = KubernetesPodOperator(
         name="final-linkedin-to-bigquery",
@@ -197,5 +219,6 @@ with models.DAG(
     )
     set_env_task_mapping >> kube_google_mapping
     set_env_task_cm360 >> kube_cm360 
+    set_env_task_spotifyads >> kube_spotifyads
     set_env_task_cm360_contact >> kube_cm360_contact
-    set_env_task_linkedin >> kube_linkedin >>kube_final_linkedin
+    set_env_task_linkedin >> kube_linkedin 
