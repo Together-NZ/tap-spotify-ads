@@ -9,9 +9,21 @@ environments:
 #  uri: gs://together-meltano-state-staging
 plugins:
   extractors:
+  - name: tap-spotifyads
+    namespace: tap-spotifyads
+    pip_url: -e /Users/peter/work/tap-spotify-ads  setuptools<82.0
+    executable: tap-spotifyads
+    config:
+      start_date: ${START_DATE}
+      end_date: ${END_DATE}
+      client_id: ${CLIENT_ID}
+      client_secret: ${CLIENT_SECRET}
+      redirect_url: ${REDIRECT_URL}
+      refresh_token: ${REFRESH_TOKEN}
+      ad_account_ids: ${AD_ACCOUNT_IDS}
   - name: tap-cm360
     namespace: tap-cm360
-    pip_url: git+https://github.com/Together-NZ/tap-cm360.git
+    pip_url: git+https://github.com/Together-NZ/tap-cm360.git  setuptools<82.0
     executable: tap-cm360
     config:
       profile_id: '9840205'
@@ -22,7 +34,7 @@ plugins:
       start_date: ${START_DATE}
   - name: tap-linkedin-ads
     namespace: tap_linkedin_ads
-    pip_url: git+https://github.com/Together-NZ/tap-linkedin-ads.git
+    pip_url: git+https://github.com/Together-NZ/tap-linkedin-ads.git  setuptools<82.0
     executable: tap-linkedin-ads
     config:
       start_date: ${START_DATE}
@@ -31,11 +43,11 @@ plugins:
       user_agent: tap-linkedin-ads your_email@yourcompany.com
   - name: tap-pinterest-ads
     variant: gthesheep
-    pip_url: git+https://github.com/gthesheep/tap-pinterest-ads.git
+    pip_url: git+https://github.com/gthesheep/tap-pinterest-ads.git  setuptools<82.0
   loaders:
   - name: target-bigquery
     variant: z3z1ma
-    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git  setuptools<82.0
     config:
       dataset: ${BQ_DATASET}
       project: together-internal
@@ -66,7 +78,7 @@ plugins:
   files:
   - name: files-airflow
     variant: meltano
-    pip_url: git+https://github.com/meltano/files-airflow.git
+    pip_url: git+https://github.com/meltano/files-airflow.git  setuptools<82.0
   utilities:
   - name: run_python
     namespace: run_python
