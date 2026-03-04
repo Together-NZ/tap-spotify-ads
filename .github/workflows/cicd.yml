@@ -162,13 +162,13 @@ jobs:
           python-version: "3.10"
 
       - name: Build the Docker image
-        working-directory: amp
-        run: python docker1.py ${{ matrix.folder }} --build-only
+        working-directory: centralize_data
+        run: python docker_build.py ${{ matrix.folder }} --build-only
 
       - name: Test the Docker image
-        working-directory: amp
+        working-directory: centralize_data
         run: python docker1.py ${{ matrix.folder }} --test-only
 
       - name: Push the Docker image
-        working-directory: amp
+        working-directory: centralize_data
         run: python docker1.py ${{ matrix.folder }} --push-only
