@@ -22,7 +22,7 @@ from airflow.operators.dagrun_operator import TriggerDagRunOperator
 from google.cloud import storage
 import json
 
-#temporary change to test the CI/CD pipeline test
+
 IMAGE = "australia-southeast1-docker.pkg.dev/together-internal/centralized/meltano-centralized-main:prod"
 
 
