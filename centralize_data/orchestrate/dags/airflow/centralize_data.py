@@ -160,17 +160,7 @@ with models.DAG(
         ),
         env_vars=set_env_vars_spotifyads(),
     )
-    kube_final_linkedin = KubernetesPodOperator(
-        name="final-linkedin-to-bigquery",
-        task_id="final_linkedin_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "invoke", "dbt-bigquery","run","--select","linkedin"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_linkedin(),
-    )
+
     kube_google_ads_search_location=KubernetesPodOperator(
         name="google-ads-search-location",
         task_id="google_ads_search_location",
