@@ -111,10 +111,10 @@ jobs:
       - name: Upload the DAG
       
         run: gcloud composer environments storage dags import \
-            --project=together-internal \
-            --location=australia-southeast1 \
-            --environment=meltano \
-            --source=${{ matrix.folder }}/orchestrate/dags/airflow/${{ matrix.folder }}.py
+            --project = together-internal \
+            --location = australia-southeast1 \
+            --environment = meltano \
+            --source = ${{ matrix.folder }}/orchestrate/dags/airflow/${{ matrix.folder }}.py
 
 
   # 5. Fifth job: Build the Docker image for the project
