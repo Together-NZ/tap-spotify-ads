@@ -44,7 +44,7 @@ jobs:
         if: steps.filter.outputs.project == 'true' 
         run: |
           # Get unique top-level directory names
-          FOLDERS=$(git diff --name-only HEAD^ HEAD |grep -v '/orchestrate/'|grep -v 'README.md'| cut -d/ -f1 | sort -u | jq -R . | jq -s -c .)
+          FOLDERS=$(git diff --name-only HEAD^ HEAD |grep -v '/orchestrate/'|grep -v 'README.md'|grep -v '.github/'| cut -d/ -f1 | sort -u | jq -R . | jq -s -c .)
           echo "matrix=$FOLDERS" >> $GITHUB_OUTPUT
   
   # 3. Third job: Detect which folders changed, get change folder for orchestrate DAG
