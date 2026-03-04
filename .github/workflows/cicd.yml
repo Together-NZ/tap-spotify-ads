@@ -32,8 +32,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-      project: ${{ step.filter.outputs.project }}
-      dag: ${{ step.filter.outputs.orchestrate }}
+      project: ${{ steps.filter.outputs.project }}
+      dag: ${{ steps.filter.outputs.orchestrate }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -66,8 +66,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-      project: ${{ step.filter.outputs.project }}
-      dag: ${{ step.filter.outputs.orchestrate }}
+      project: ${{ steps.filter.outputs.project }}
+      dag: ${{ steps.filter.outputs.orchestrate }}
     steps:
       - uses: actions/checkout@v4
         with:
