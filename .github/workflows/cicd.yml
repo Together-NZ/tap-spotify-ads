@@ -4,15 +4,19 @@ on:
   # Job Trigger: Pull Request
   pull_request:
     branches: [ "main" ]
-    paths_ignore:
+    paths-ignore:
       - "README.md"
       - ".github/**"
       - "terraform/**"
-      - "**/orchestrate/**"
+      #- "**/orchestrate/**"
 
 jobs:
+
   # 1. First job: Authenticate to Google Cloud with Service Account
   authenticate:
+    permissions:
+      id-token: write
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Authenticate to Google Cloud with Service Account
@@ -23,35 +27,115 @@ jobs:
           service_account: "impact-ci-ci-cd-service-accoun@together-internal.iam.gserviceaccount.com"
 
 
-  # 2. Second job: Detect which folders changed
-  setup:
+  # 2. Second job: Detect which folders changed, get changed folders for project
+  setup_project:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      project: ${{ steps.filter.outputs.project }}
+      dag: ${{ steps.filter.outputs.orchestrate }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
+      - name: Filter changed folders
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            project:
+              paths-ignore:
+                - "README.md"
+                - ".github/**"
+                - "terraform/**"
+                - "**/orchestrate/**"
+            dag:
+              paths:
+                - "**/orchestrate/**"
+      # record the folder change if the change are not dag file 
       - name: Get changed folders
         id: set-matrix
+        if: steps.filter.outputs.project == 'true'
         run: |
           # Get unique top-level directory names
           FOLDERS=$(git diff --name-only HEAD^ HEAD | cut -d/ -f1 | sort -u | jq -R . | jq -s -c .)
           echo "matrix=$FOLDERS" >> $GITHUB_OUTPUT
+  
+  # 3. Third job: Detect which folders changed, get change folder for orchestrate DAG
+  setup_dag:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      project: ${{ steps.filter.outputs.project }}
+      dag: ${{ steps.filter.outputs.orchestrate }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Filter changed folders
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            project:
+              paths-ignore:
+                - "README.md"
+                - ".github/**"
+                - "terraform/**"
+                - "**/orchestrate/**"
+            dag:
+              paths:
+                - "**/orchestrate/**"
+      # record the folder change if the change are not dag file 
+      - name: Get changed folders
+        id: set-dag-matrix
+        if: steps.filter.outputs.dag == 'true'
+        run: |
+          # Get unique top-level directory names
+          FOLDERS=$(git diff --name-only HEAD^ HEAD | cut -d/ -f1 | sort -u | jq -R . | jq -s -c .)
+          echo "matrix=$FOLDERS" >> $GITHUB_OUTPUT
+  # 4. Fourth job: Upload the DAG to the Composer environment
+  upload_dag:
+    permissions:
+      id-token: write
+      contents: read
+    needs:
+      - authenticate
+      - setup_dag
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        folder: ${{ fromJson(needs.setup_dag.outputs.matrix) }}
+    steps:
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
 
-  # 3. Second job: Run a separate instance for each folder
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Upload the DAG
+        working-directory: ${{ matrix.folder }}
+        run: gcloud composer environments storage dags import \
+            --project=together-internal \
+            --location=australia-southeast1 \
+            --environment=meltano \
+            --source=${{ matrix.folder }}/orchestrate/dags/airflow/${{ matrix.folder }}.py
+
+
+  # 5. Fifth job: Build the Docker image for the project
   build:
     permissions:
       id-token: write
       contents: read
     needs: 
-      - setup
+      - setup_project
       - authenticate
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        folder: ${{ fromJson(needs.setup.outputs.matrix) }}
+        folder: ${{ fromJson(needs.setup_project.outputs.matrix) }}
     steps:
       - name: Build the Docker image for the ${{ matrix.folder }} folder
 
@@ -78,13 +162,13 @@ jobs:
           python-version: "3.10"
 
       - name: Build the Docker image
-        working-directory: amp
-        run: python docker1.py ${{ matrix.folder }} --build-only
+        working-directory: centralize_data
+        run: python docker_build.py ${{ matrix.folder }} --build-only
 
       - name: Test the Docker image
-        working-directory: amp
+        working-directory: centralize_data
         run: python docker1.py ${{ matrix.folder }} --test-only
 
       - name: Push the Docker image
-        working-directory: amp
+        working-directory: centralize_data
         run: python docker1.py ${{ matrix.folder }} --push-only
