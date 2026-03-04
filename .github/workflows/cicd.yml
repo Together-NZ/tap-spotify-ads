@@ -109,7 +109,7 @@ jobs:
           python-version: "3.10"
 
       - name: Upload the DAG
-        working-directory: centralize_data
+      
         run: gcloud composer environments storage dags import \
             --project=together-internal \
             --location=australia-southeast1 \
