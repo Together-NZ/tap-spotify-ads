@@ -73,8 +73,9 @@ if __name__ == "__main__":
         run_cmd(push_command)
         print("✅ Push done.")
     elif args.test_only:
+        test_command = DockerBuild(args.project_name).test_command()
         print("🧪 Running ci_test.sh inside container...")
-        run_ci_test_sh(on_host=False)
+        run_cmd(test_command)
         print("✅ Test done.")
     else:
         raise ValueError("Invalid argument")
