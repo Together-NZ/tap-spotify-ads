@@ -26,7 +26,7 @@ class DockerBuild:
     def test_command(self):
         return [
             "docker", "run", "--rm", "--entrypoint", "sh", self.image,
-            "ci_test.sh"
+            "../centralize_data/ci_test.sh"
         ]
     def retag_command(self, tag):
         new_image = self.image.rsplit(":", 1)[0] + f":{tag}"
