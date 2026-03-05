@@ -11,7 +11,7 @@ plugins:
   extractors:
   - name: tap-spotifyads
     namespace: tap-spotifyads
-    pip_url: -e /Users/peter/work/tap-spotify-ads  setuptools<82.0
+    pip_url: git+https://github.com/Together-NZ/tap-spotify-ads.git  setuptools<82.0
     executable: tap-spotifyads
     config:
       start_date: ${START_DATE}

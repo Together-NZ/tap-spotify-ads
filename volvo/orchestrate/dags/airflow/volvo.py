@@ -45,7 +45,7 @@ def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_volvo_main", deserialize_json=True)
     meltano_env_common = Variable.get("meltano_common_secret",deserialize_json=True)
     meltano_env = meltano_env_unique
-    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
     start_date_str = yesterday.strftime("%Y-%m-%d")
 
     meltano_env["START_DATE"] = start_date_str
@@ -245,7 +245,9 @@ with models.DAG(
             task_id=f"{brand}-facebook_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-facebook", "target-bigquery",f"dbt-bigquery:facebook_{brand}_models"],
+            arguments=["--environment=prod", "run", "tap-facebook", "target-bigquery",
+                       "--full-refresh",
+                       f"dbt-bigquery:facebook_{brand}_models"],
                     container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),

@@ -8,8 +8,11 @@ from client_name import CLIENT_NAME
 
 class DockerBuild:
     def __init__(self, project_name):
-        self.project_name = project_name
-        self.image = f"australia-southeast1-docker.pkg.dev/{project_name}-main/meltano/meltano-{project_name}-main:stage"
+        self.project_name = CLIENT_NAME[args.project_name]
+        if self.project_name == "together-internal":
+            self.image = f"australia-southeast1-docker.pkg.dev/{CLIENT_NAME[args.project_name]}/meltano/meltano-{CLIENT_NAME[args.project_name]}:stage"
+        else:
+            self.image = f"australia-southeast1-docker.pkg.dev/{CLIENT_NAME[args.project_name]}-main/meltano/meltano-{CLIENT_NAME[args.project_name]}-main:stage"
 
     def __return_image(self):
         return self.image
@@ -59,7 +62,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    gcp_name = CLIENT_NAME[args.project_name]
+    
 
 
     if args.build_only:
@@ -73,8 +76,9 @@ if __name__ == "__main__":
         run_cmd(push_command)
         print("✅ Push done.")
     elif args.test_only:
+        test_command = DockerBuild(args.project_name).test_command()
         print("🧪 Running ci_test.sh inside container...")
-        run_ci_test_sh(on_host=False)
+        run_cmd(test_command)
         print("✅ Test done.")
     else:
         raise ValueError("Invalid argument")
