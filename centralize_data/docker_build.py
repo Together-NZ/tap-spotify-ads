@@ -33,10 +33,21 @@ class DockerBuild:
             "ci_test.sh"
         ]
 
-    def push_command(self):
+    def tag_command(self, new_tag):
+        new_image = self.image.rsplit(":", 1)[0] + f":{new_tag}"
         return [
-            "docker", "push", self.__return_image()
+            "docker", "tag", self.__return_image(), new_image
         ]
+
+    def push_command(self, tag):
+        if tag:
+            retag=self.tag_command(tag)
+            cmd=[
+                "docker", "push", retag
+            ]
+            return cmd
+        else:
+            raise ValueError("Tag is required")
 
 # Environment variable for enabling BuildKit
 env = {**os.environ, "DOCKER_BUILDKIT": "1"}
@@ -72,7 +83,7 @@ if __name__ == "__main__":
         print("✅ Build done.")
     elif args.push_only:
         print("📦 Pushing Docker image...")
-        push_command = DockerBuild(args.project_name).push_command()
+        push_command = DockerBuild(args.project_name).push_command(tag="prod")
         run_cmd(push_command)
         print("✅ Push done.")
     elif args.test_only:
