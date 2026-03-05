@@ -30,7 +30,7 @@ log: logging.log = logging.getLogger("airflow.task")
 log.setLevel(logging.INFO)
 
 local_tz = pendulum.timezone("Pacific/Auckland")
-yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
 ga4_start_date = datetime.datetime.now(local_tz) - datetime.timedelta(days=30)
 default_args = {
     "retries": 3,
@@ -328,7 +328,9 @@ with models.DAG(
         task_id="uow-facebook_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-facebook", "target-bigquery","dbt-bigquery:facebook_models"],
+        arguments=["--environment=prod", "run", "tap-facebook", "target-bigquery",
+                   "--full-refresh",
+                   "dbt-bigquery:facebook_models"],
                 container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
