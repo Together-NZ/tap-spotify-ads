@@ -7,7 +7,7 @@ from client_name import CLIENT_NAME
 
 
 class DockerBuild:
-    def __init__(self, project_name, tag="prod"):
+    def __init__(self, project_name, tag="stage"):
         gcp_name = CLIENT_NAME[project_name]
         if gcp_name == "together-internal":
             self.image = f"australia-southeast1-docker.pkg.dev/{gcp_name}/meltano/meltano-{gcp_name}:{tag}"
