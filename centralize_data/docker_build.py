@@ -9,7 +9,10 @@ from client_name import CLIENT_NAME
 class DockerBuild:
     def __init__(self, project_name):
         self.project_name = CLIENT_NAME[args.project_name]
-        self.image = f"australia-southeast1-docker.pkg.dev/{CLIENT_NAME[args.project_name]}-main/meltano/meltano-{CLIENT_NAME[args.project_name]}-main:stage"
+        if self.project_name == "together-internal":
+            self.image = f"australia-southeast1-docker.pkg.dev/{CLIENT_NAME[args.project_name]}/meltano/meltano-{CLIENT_NAME[args.project_name]}:stage"
+        else:
+            self.image = f"australia-southeast1-docker.pkg.dev/{CLIENT_NAME[args.project_name]}-main/meltano/meltano-{CLIENT_NAME[args.project_name]}-main:stage"
 
     def __return_image(self):
         return self.image
