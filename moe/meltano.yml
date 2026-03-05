@@ -29,10 +29,10 @@ plugins:
       start_date: ${START_DATE}
       _catalog_path: ./catalog.json
     select:
+    - campaign_groups.*
     - campaigns.*
     - creatives.*
     - ad_analytics_by_creative.*
-    - ad_analytics_by_campaign.*
   - name: tap-dv360
     namespace: tap-dv360
     pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
