@@ -109,6 +109,14 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
         env["DBT_BIGQUERY_DATASET"] = 'google_ads_search_transformed'
         return env
+    def set_env_vars_tiktok():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "tiktok_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
+        env["DBT_BIGQUERY_DATASET"] = 'tiktok_transformed'
+        return env
     def set_env_vars_dash_search():
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
@@ -183,6 +191,17 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dash()
         )
+    kube_tiktok = KubernetesPodOperator(
+        name="moe-tiktok-to-bigquery",
+        task_id="moe-tiktok_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","--full-refresh","dbt-bigquery:tiktok_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_tiktok()
+    )
 
     for name,kube_ga4 in ga4_list_task.items():
         kube_ga4 >> kube_ga4_merge
@@ -197,7 +216,7 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dash()
     )
-    kube_google_ads_search >> kube_dash_search >> kube_dash >> kube_dash_union >> kube_ga4_merge
+    kube_google_ads_search >> kube_dash_search >> kube_tiktok >> kube_dash >> kube_dash_union >> kube_ga4_merge
 
 with models.DAG(
     dag_id="moe-meltano-extraction-transformation-dbt",
@@ -211,14 +230,7 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
         env["DBT_BIGQUERY_DATASET"] = 'dash_table_search'
         return env
-    def set_env_vars_tiktok():
-        env = get_meltano_env()
-        env["BQ_DATASET"] = "tiktok_raw"
-        env["BQ_METHOD"] = "batch_job"
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
-        env["DBT_BIGQUERY_DATASET"] = 'tiktok_transformed'
-        return env
+
     def set_env_vars_facebook():
         env = get_meltano_env()
         env["BQ_DATASET"] = "facebook_raw"
@@ -277,10 +289,7 @@ with models.DAG(
         task_id="set_env_dash_search",
         python_callable=set_env_vars_dash_search,
     )
-    set_env_task_tiktok = PythonOperator(
-        task_id="set_env_tiktok",
-        python_callable=set_env_vars_tiktok,
-    )
+
 
     set_env_task_facebook = PythonOperator(
         task_id="set_env_facebook",
@@ -319,17 +328,7 @@ with models.DAG(
     )
 
 
-    kube_tiktok = KubernetesPodOperator(
-        name="moe-tiktok-to-bigquery",
-        task_id="moe-tiktok_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","--full-refresh","dbt-bigquery:tiktok_models"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_tiktok()
-    )
+
 
         
     kube_facebook = KubernetesPodOperator(
@@ -423,7 +422,7 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dash()
     )
-    set_env_task_tiktok >> kube_tiktok
+
     set_env_task_facebook >> kube_facebook
     set_env_task_snapchat >> kube_snapchat 
     set_env_task_dv360 >> kube_dv360
@@ -431,5 +430,5 @@ with models.DAG(
     set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd 
     
     set_env_task_linkedin >> kube_linkedin
-    [kube_tiktok,kube_facebook,kube_snapchat,kube_dv360,kube_cm360,kube_ttd,kube_linkedin] >> kube_dash
+    [kube_facebook,kube_snapchat,kube_dv360,kube_cm360,kube_ttd,kube_linkedin] >> kube_dash
     kube_dash>>kube_dash_search >> kube_dash_union
