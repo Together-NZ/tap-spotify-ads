@@ -8,6 +8,7 @@ CLIENT_NAME={
     "beststart":"best-start",
     "brightr":"brightr",
     "colorsteel":"colorsteel",
+    "cffc":"cffc",
     "contact":"contact-energy",
     "centralize_data":"together-internal",
     "curative":"curative",
