@@ -8,8 +8,8 @@ from client_name import CLIENT_NAME
 
 class DockerBuild:
     def __init__(self, project_name):
-        self.project_name = project_name
-        self.image = f"australia-southeast1-docker.pkg.dev/{project_name}-main/meltano/meltano-{project_name}-main:stage"
+        self.project_name = CLIENT_NAME[args.project_name]
+        self.image = f"australia-southeast1-docker.pkg.dev/{CLIENT_NAME[args.project_name]}-main/meltano/meltano-{CLIENT_NAME[args.project_name]}-main:stage"
 
     def __return_image(self):
         return self.image
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
 
-    gcp_name = CLIENT_NAME[args.project_name]
+    
 
 
     if args.build_only:
