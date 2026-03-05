@@ -11,7 +11,7 @@ plugins:
   extractors:
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
-    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git
+    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git setuptools<82.0
     executable: tap-linkedin-ads
     capabilities:
     - state
@@ -24,10 +24,15 @@ plugins:
       refresh_token: ${TAP_LINKEDIN_ADS_REFRESH_TOKEN}
       client_id: ${TAP_LINKEDIN_ADS_CLIENT_ID}
       client_secret: ${TAP_LINKEDIN_ADS_CLIENT_SECRET}
-      accounts: '517044818'
+      accounts: ${TAP_LINKEDIN_ADS_ACCOUNTS}
       user_agent: agent
       start_date: ${START_DATE}
       _catalog_path: ./catalog.json
+    select:
+      - campaigns.*
+      - creatives.*
+      - campaign_groups.*
+      - ad_analytics_by_creative.*
   - name: tap-ga4
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
@@ -39,17 +44,24 @@ plugins:
       - goal
   - name: tap-ttd
     namespace: tap-ttd
-    pip_url: git+https://github.com/Together-NZ/tap-ttd.git
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
     executable: tap-ttd
     config:
       api_key: ${TAP_TTD_API_KEY}
       start_date: ${START_DATE}
       end_date:
       manual: false
-      advertiser_id: dhx29ef
+      advertiser_id: ${TAP_TTD_ADVERTISER_ID}
+  - name: tap-hivestack
+    namespace: tap-hivestack
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0
+    executable: tap-hivestack
+    config:
+        api_key: ${TAP_HIVESTACK_API_KEY}
+        report_id: '84171'
   - name: tap-facebook
     variant: airbyte
-    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
     config:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
@@ -67,7 +79,7 @@ plugins:
     pip_url: target-jsonl
   - name: target-bigquery
     variant: z3z1ma
-    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
     config:
       dataset: ${BQ_DATASET}
       project: geely-main
@@ -89,20 +101,36 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1
+    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
     commands:
-      ttd_models:
-        args: run --select +ttd
-      facebook_models:
-        args: run --select +facebook
-      ga4_models:
-        args: run --select +ga4_goal_a +ga4_goal_channel
-      cm360_models:
-        args: run --select +cm360_seralized +cm360_direct_buy
-      google_ads_models: 
-        args: run --select +google_ads_search +google_ads_demand
-      linkedin_models:
-        args: run --select +linkedin_no_creative +linkedin
+      ttd_geely_models:
+        args: run --select +ttd__geely
+      ttd_lotus_models:
+        args: run --select +ttd__lotus
+      facebook_geely_models:
+        args: run --select +facebook__geely
+      facebook_lotus_models:
+        args: run --select +facebook__lotus
+      ga4_geely_models:
+        args: run --select +ga4_goal_a__geely +ga4_goal_channel__geely
+      ga4_lotus_models:
+        args: run --select +ga4_goal_a__lotus +ga4_goal_channel__lotus
+      cm360_geely_models:
+        args: run --select +cm360_seralized__geely +cm360_direct_buy__geely
+      cm360_lotus_models:
+        args: run --select +cm360_seralized__lotus +cm360_direct_buy__lotus
+      google_ads_geely_models: 
+        args: run --select +google_ads_search__geely +google_ads_demand__geely
+      google_ads_lotus_models: 
+        args: run --select +google_ads_search__lotus +google_ads_demand__lotus
+      linkedin_geely_models:
+        args: run --select +linkedin_no_creative__geely +linkedin__geely
+      linkedin_lotus_models:
+        args: run --select +linkedin_no_creative__lotus +linkedin__lotus
+      hivestack_geely_models:
+        args: run --select +hivestack__geely
+      hivestack_lotus_models:
+        args: run --select +hivestack__lotus
     config:
       project: geely-main
       location: australia-southeast1

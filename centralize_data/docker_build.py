@@ -23,10 +23,12 @@ class DockerBuild:
             "."
         ]
 
-    def test_command(self):
+    def test_command(self, ci_test_path="ci_test.sh"):
         return [
-            "docker", "run", "--rm", "--entrypoint", "sh", self.image,
-            "ci_test.sh"
+            "docker", "run", "--rm",
+            "-v", f"{os.path.abspath(ci_test_path)}:/project/ci_test.sh",
+            "--entrypoint", "sh", self.image,
+            "/project/ci_test.sh"
         ]
     def retag_command(self, tag):
         new_image = self.image.rsplit(":", 1)[0] + f":{tag}"
@@ -54,8 +56,9 @@ def run_ci_test_sh(cmd):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build, test, and push Docker image")
-    parser.add_argument("project_name",choices=CLIENT_NAME.keys())
-    
+    parser.add_argument("project_name", choices=CLIENT_NAME.keys())
+    parser.add_argument("--ci-test-path", default="../centralize_data/ci_test.sh", help="Path to ci_test.sh")
+
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--build-only", action="store_true", help="Only build the image")
     group.add_argument("--push-only", action="store_true", help="Only push the image (assumes image already built)")
@@ -76,9 +79,7 @@ if __name__ == "__main__":
         run_cmd(docker.retag_command("prod"))
         run_cmd(docker.push_command(tag="prod"))
     elif args.test_only:
-        test_command = DockerBuild(args.project_name).test_command()
-        print("🧪 Running ci_test.sh inside container...")
+        test_command = DockerBuild(args.project_name).test_command(ci_test_path=args.ci_test_path)
         run_cmd(test_command)
-        print("✅ Test done.")
     else:
         raise ValueError("Invalid argument")

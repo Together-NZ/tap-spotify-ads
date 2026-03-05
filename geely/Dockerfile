@@ -16,8 +16,20 @@ RUN pip install -r requirements.txt
 # Copy project files
 COPY . .
 
+RUN --mount=type=ssh \
+    mkdir -p /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts && \
+    git clone git@github.com:Together-NZ/tap-hivestack.git /tmp/tap-hivestack
+
+# Copy project files
+COPY . .
+
 # Install Meltano plugins (will use meltano.yml)
-RUN meltano install
+RUN --mount=type=ssh \
+    mkdir -p /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts && \
+    ssh -T git@github.com || true && \
+    meltano install
 
 
 # Install any additional Python libraries

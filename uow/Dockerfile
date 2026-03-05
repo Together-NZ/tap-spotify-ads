@@ -1,5 +1,4 @@
-ARG MELTANO_IMAGE=meltano/meltano:latest
-FROM $MELTANO_IMAGE
+FROM meltano/meltano:v3-python3.10
 
 WORKDIR /project
 
