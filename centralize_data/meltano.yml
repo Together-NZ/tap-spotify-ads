@@ -3,10 +3,13 @@ default_environment: dev
 project_id: 35ce4607-2a72-4658-88b3-af1ba05130fa
 environments:
 - name: dev
+
+# Todo: overwrite the dbt table name
 - name: staging
 - name: prod
 #state_backend:
 #  uri: gs://together-meltano-state-staging
+
 plugins:
   extractors:
   - name: tap-spotifyads
@@ -69,7 +72,7 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
     commands:
       cm360_models:
         args: run --select +linkedin
