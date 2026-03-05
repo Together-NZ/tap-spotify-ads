@@ -42,10 +42,10 @@ class DockerBuild:
     def push_command(self, tag):
         if tag:
             retag=self.tag_command(tag)
-            cmd=[
+            return [
                 "docker", "push", retag
             ]
-            return cmd
+            
         else:
             raise ValueError("Tag is required")
 
