@@ -272,6 +272,8 @@ select *,
      OR lower(REPLACE(sessionManualAdContent, '"', '')) = lower('UOW0042_YT_CONSIDERATION_PROG_Google_15-video_Video_Community') 
      OR lower(REPLACE(sessionManualAdContent, '"', '')) = lower('UOW0042_YT_CONSIDERATION_PROG_Google_15-video_Video_Discovery') 
      OR lower(REPLACE(sessionManualAdContent, '"', '')) = lower('UOW0042_YT_CONSIDERATION_PROG_Google_15-video_Video_Innovation')
+     OR LOWER(REPLACE(sessionManualAdContent, '"', '')) LIKE lower(('%UOW0051_YT_AWARENESS_PROG_Google_30"-video_Video_Broadcast%'))
+     OR LOWER(REPLACE(sessionManualAdContent, '"', '')) LIKE lower(('%UOW0051_YT_AWARENESS_PROG_Google_30"-video_Video_Online%'))
       OR lower(REPLACE(sessionManualAdContent, '"', '')) = lower('UOW0042_YT_CONSIDERATION_PROG_Google_6-video_Video_Bumper')
       or lower(REPLACE(sessionManualAdContent, '"', '')) like '%employability%' or lower(REPLACE(sessionManualAdContent, '"', '')) like '%excellence%' 
       or lower(replace(sessionManualAdContent,'"','')) like '%experience%'
@@ -308,7 +310,11 @@ select *,
     WHEN REGEXP_REPLACE(LOWER(REPLACE(sessionManualAdContent,'"','')), r'\s+', '') LIKE '%lifestyle%' THEN 'LifeStyle'
     WHEN LOWER(REPLACE(sessionManualAdContent,'"','')) LIKE '%management%' THEN 'Management'
     WHEN LOWER(REPLACE(sessionManualAdContent,'"','')) LIKE '%maori%' THEN 'Maori'
-    WHEN LOWER(REPLACE(sessionManualAdContent,'"','')) LIKE '%ncea%' THEN 'NCEA'
+    WHEN LOWER(REPLACE(sessionManualAdContent,'"','')) LIKE '%ncea%' 
+    or LOWER(REPLACE(sessionManualAdContent,'"','')) LIKE '%UOW0051_SOCIAL_AWARENESS_PROG_META_29"-video_Video_Kareena Cut Throug%'
+    or LOWER(REPLACE(sessionManualAdContent,'"','')) LIKE '%UOW0051_SOCIAL_AWARENESS_PROG_Snapchat_29"-video_Video_Kareena Cut Through%'
+    or LOWER(REPLACE(sessionManualAdContent,'"','')) LIKE '%UOW0051_SOCIAL_AWARENESS_PROG_TikTok_29"-video_Video_Kareena Cut Through%'
+    THEN 'NCEA'
     WHEN LOWER(REPLACE(sessionManualAdContent,'"','')) LIKE '%pacific%' THEN 'Pacific'
     WHEN LOWER(REPLACE(sessionManualAdContent,'"','')) LIKE '%pharmacy%' THEN 'Pharmacy'
     WHEN LOWER(REPLACE(sessionManualAdContent,'"','')) LIKE '%psych%' THEN 'Psychology'

@@ -36,7 +36,7 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
-    'retry_delay': datetime.timedelta(minutes=30),
+    'retry_delay': datetime.timedelta(minutes=5),
     "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
 }
 
@@ -406,6 +406,7 @@ with models.DAG(
             #base_container_name=f"meltano-{label}-facebook",
             get_logs = True
     )
+    # increase retry delay, reduce retries to 1 for ttd
     kube_ttd = KubernetesPodOperator(
             name="amp-ttd-to-bigquery",
             task_id="amp-ttd_to_bigquery",
@@ -417,6 +418,8 @@ with models.DAG(
             ),
             env_vars=set_env_vars_ttd(),
             execution_timeout=timedelta(minutes=60),
+            retries=1,
+            retry_delay=timedelta(minutes=20),
             #base_container_name=f"meltano-{label}-ttd",
             get_logs = True
     )
