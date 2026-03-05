@@ -129,7 +129,7 @@ plugins:
       reddit_models:
         args: run --select reddit
       ttd_models: run --select ttd_transformed
-      linkedin_models: run --select linkedin_no_creative linkedin
+      linkedin_models: run --select linkedin
       hivestack_models: run --select hivestack
       cm360_models: run --select cm360_seralized cm360_direct_buy
       dash_models: run --select dash_table
