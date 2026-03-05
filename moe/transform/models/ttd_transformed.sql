@@ -9,6 +9,7 @@ WITH parsed_data AS (
         JSON_VALUE(JSON_EXTRACT(data, "$.Campaign ID")) AS campaign_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.Ad Group ID")) AS ad_group_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.Ad Format")) AS ad_format,
+        _sdc_extracted_at,
         JSON_VALUE(JSON_EXTRACT(data, "$.Creative ID")) AS creative_id,
         CAST(JSON_VALUE(JSON_EXTRACT(data, "$.Frequency")) AS FLOAT64) AS frequency,
         JSON_VALUE(JSON_EXTRACT(data, "$.Advertiser")) AS advertiser,
@@ -91,13 +92,16 @@ WITH parsed_data AS (
     FROM
         `moe-main.ttd_raw.standard_streams`
 ),
+# Rank the data by the extracted_at timestamp
 ranked_data AS (
     SELECT
         *,
         ROW_NUMBER() OVER (
             PARTITION BY
                 Date, partner_id, advertiser_id, campaign_id, ad_group_id, ad_format, creative_id, 
-                advertiser, campaign_name, ad_group, creative, deal_id, ad_server_creative_placement_id
+                advertiser,  deal_id, ad_server_creative_placement_id
+            order by
+                _sdc_extracted_at desc
         ) AS row_num
     FROM
         parsed_data
@@ -119,9 +123,9 @@ CASE
 else 'Other'
 END AS media_format,
 CASE
-    WHEN ARRAY_LENGTH(SPLIT(ad_group,'_')) <8 THEN 'Other'
+    WHEN ARRAY_LENGTH(SPLIT(creative,'_')) <8 THEN 'Other'
     ELSE
-        SPLIT(ad_group,'_')[OFFSET(7)] 
+        SPLIT(creative,'_')[OFFSET(7)] 
 END AS audience_name,
 SPLIT(creative, '_')[OFFSET(ARRAY_LENGTH(SPLIT(creative, '_'))-1)] AS creative_descr,
 CASE 
