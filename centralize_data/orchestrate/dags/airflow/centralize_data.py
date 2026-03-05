@@ -23,7 +23,7 @@ from google.cloud import storage
 import json
 
 
-IMAGE = "australia-southeast1-docker.pkg.dev/together-internal/centralized/meltano-centralized-main:prod"
+IMAGE = "australia-southeast1-docker.pkg.dev/together-internal/meltano/meltano-together-internal:prod"
 
 
 log: logging.log = logging.getLogger("airflow.task")
@@ -36,7 +36,7 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
-    "start_date": yesterday
+    "start_date": datetime.datetime(2026, 3, 5, tzinfo=local_tz)
 }
 # Setting timezone for DAG's start date
 start_date = datetime.datetime(2024, 1, 1, tzinfo=local_tz)
