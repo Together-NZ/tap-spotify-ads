@@ -11,7 +11,7 @@ plugins:
   extractors:
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
-    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git
+    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git setuptools<82.0
     executable: tap-linkedin-ads
     capabilities:
     - state
@@ -31,8 +31,8 @@ plugins:
     select:
     - campaigns.*
     - creatives.*
+    - campaign_groups.*
     - ad_analytics_by_creative.*
-    - ad_analytics_by_campaign.*
 
   - name: tap-ga4
     variant: meltanolabs
@@ -46,7 +46,7 @@ plugins:
 
   - name: tap-dv360
     namespace: tap-dv360
-    pip_url: git+https://github.com/Together-NZ/tap-dv360.git
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
     executable: tap-dv360
     capabilities:
     - state
@@ -63,7 +63,7 @@ plugins:
         together-meltano@together-internal.iam.gserviceaccount.com
   - name: tap-facebook
     variant: airbyte
-    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
     config:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
@@ -78,7 +78,7 @@ plugins:
 
   - name: tap-tiktok
     variant: gthesheep
-    pip_url: git+https://github.com/gthesheep/tap-tiktok.git
+    pip_url: git+https://github.com/gthesheep/tap-tiktok.git setuptools<82.0
     config:
       start_date: ${START_DATE}
   loaders:
@@ -87,7 +87,7 @@ plugins:
     pip_url: target-jsonl
   - name: target-bigquery
     variant: z3z1ma
-    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
     config:
       dataset: ${BQ_DATASET}
       project: doconservation-main
@@ -109,7 +109,7 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1
+    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
     commands:
       facebook_models: run --select +facebook
       dv360_models: run --select +dv360_standard +dv360_youtube
@@ -117,7 +117,7 @@ plugins:
       ga4_models: run --select +ga4_goal_a +ga4_goal_channel
       google_ads_models: run --select +google_ads_search +google_ads_demand
       linkedin_models:
-        args: run --select +linkedin_no_creative +linkedin
+        args: run --select +linkedin
     config:
       project: doconservation-main
       location: australia-southeast1
