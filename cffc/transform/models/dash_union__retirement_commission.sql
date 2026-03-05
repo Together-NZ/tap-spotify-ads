@@ -1,7 +1,7 @@
 {{ config(
     materialized='table',
 ) }}
-with final_result AS (SELECT SAFE_CAST(metrics_value_per_conversion AS FLOAT64) AS metrics_value_per_conversion,
+with final_result AS (SELECT 
 SAFE_CAST(segments_conversion_action AS STRING) AS segments_conversion_action,
 SAFE_CAST(segments_conversion_action_category AS STRING) AS segments_conversion_action_category,
 SAFE_CAST(segments_conversion_action_name AS STRING) AS segments_conversion_action_name,

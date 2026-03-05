@@ -37,7 +37,7 @@ SELECT
     ELSE 'Other'
   END AS audience_name,
   CASE
-    WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>=1 THEN SPLIT(campaign_name,'_')[1]
+    WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>=2 THEN SPLIT(campaign_name,'_')[1]
     ELSE 'Other'
   END AS campaign_descr,
   CASE 

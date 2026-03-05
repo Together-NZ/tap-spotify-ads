@@ -1,12 +1,8 @@
 {{ config(
     materialized='table',
 ) }}
-WITH final_result AS(SELECT SAFE_CAST(metrics_value_per_conversion AS FLOAT64) AS metrics_value_per_conversion,
-SAFE_CAST(segments_conversion_action AS STRING) AS segments_conversion_action,
-SAFE_CAST(segments_conversion_action_category AS STRING) AS segments_conversion_action_category,
-SAFE_CAST(segments_conversion_action_name AS STRING) AS segments_conversion_action_name,
-SAFE_CAST(segments_conversion_attribution_event_type AS STRING) AS segments_conversion_attribution_event_type,
-SAFE_CAST(segments_day_of_week AS STRING) AS segments_day_of_week,
+WITH final_result AS(SELECT 
+
 EXTRACT(MONTH FROM date) AS segments_month,
 EXTRACT(QUARTER FROM date) AS segments_quarter,
 EXTRACT(WEEK FROM date) AS segments_week,

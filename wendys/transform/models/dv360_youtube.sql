@@ -8,7 +8,7 @@ WITH parsed_data AS (
         JSON_VALUE(data, "$.Advertiser Currency") AS advertiser_currency,
         JSON_VALUE(data, "$.Clicks") AS clicks,
         JSON_EXTRACT_SCALAR(data, "$['Complete Views (Video)']") AS complete_views_video,
-        FORMAT_DATE('%Y-%m-%d', PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))) AS date, -- Convert date format
+        FORMAT_DATE('%Y-%m-%d', SAFE.PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))) AS date, -- Convert date format
         JSON_EXTRACT_SCALAR(data, "$['First-Quartile Views (Video)']") AS first_quartile_views_video,
         JSON_VALUE(data, "$.Impressions") AS impressions,
         JSON_VALUE(data, "$.Insertion Order") AS campaign_name,
@@ -24,7 +24,7 @@ WITH parsed_data AS (
         JSON_VALUE(data, "$.YouTube Ad Group ID") AS youtube_ad_group_id,
         ROW_NUMBER() OVER (
             PARTITION BY 
-                FORMAT_DATE('%Y-%m-%d', PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))), -- Use converted date
+                FORMAT_DATE('%Y-%m-%d', SAFE.PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))), -- Use converted date
                 JSON_VALUE(data, "$.Insertion Order ID"),
                 JSON_VALUE(data, "$.Line Item ID"),
                 JSON_VALUE(data, "$.YouTube Ad")

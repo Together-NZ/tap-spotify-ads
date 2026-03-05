@@ -175,7 +175,7 @@ SELECT * EXCEPT(ad_name), ad_name as creative_name,
     END AS media_format,
     SPLIT(ad_name, '_')[OFFSET(5)] AS ad_format_detail,
     SPLIT(ad_name, '_')[OFFSET(6)] AS ad_format,
-    SPLIT(ad_name, '_')[OFFSET(7)] AS creative_descr,
+    CASE WHEN ARRAY_LENGTH(SPLIT(ad_name, '_'))>=8 THEN SPLIT(ad_name,'_')[OFFSET(7)] ELSE NULL END AS creative_descr,
     CASE 
         WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>=2 THEN
         SPLIT(campaign_name,'_')[OFFSET(1)] 
