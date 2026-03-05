@@ -12,7 +12,7 @@ plugins:
   # university of waikato:
   - name: tap-ttd
     namespace: tap-ttd
-    pip_url: git+https://github.com/Together-NZ/tap-ttd.git
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
     executable: tap-ttd
     config:
       api_key: ${TAP_TTD_API_KEY}
@@ -22,7 +22,7 @@ plugins:
       advertiser_id: ao3nvmu
   - name: tap-dv360
     namespace: tap-dv360
-    pip_url: git+https://github.com/Together-NZ/tap-dv360.git
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
     executable: tap-dv360
     capabilities:
     - state
@@ -38,12 +38,12 @@ plugins:
       service_account: together-meltano@together-internal.iam.gserviceaccount.com
   - name: tap-tiktok
     variant: gthesheep
-    pip_url: git+https://github.com/gthesheep/tap-tiktok.git
+    pip_url: git+https://github.com/gthesheep/tap-tiktok.git setuptools<82.0
     config:
       start_date: ${START_DATE}
   - name: tap-snapchat-ads
     namespace: tap-snapchat-ads
-    pip_url: git+https://github.com/Together-NZ/tap_snapchat_ads.git pyhumps
+    pip_url: git+https://github.com/Together-NZ/tap_snapchat_ads.git pyhumps setuptools<82.0
     executable: tap-snapchat-ads
     capabilities:
     - catalog
@@ -63,7 +63,7 @@ plugins:
     catalog: snapchat_catalog.json
   - name: tap-ga4
     variant: meltanolabs
-    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
       reports: ./report.json
       start_date: ${START_DATE}
@@ -85,7 +85,7 @@ plugins:
 
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
-    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git
+    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git setuptools<82.0
     executable: tap-linkedin-ads
     capabilities:
     - state
@@ -106,7 +106,7 @@ plugins:
     - campaigns.*
     - creatives.*
     - campaign_groups.*
-    
+    - ad_analytics_by_creative.*
   loaders:
   - name: target-jsonl
     variant: andyh1203
