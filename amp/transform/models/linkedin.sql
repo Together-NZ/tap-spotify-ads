@@ -29,7 +29,7 @@ WITH daily_stats_raw AS (SELECT
   JSON_VALUE(data, '$.creative_id') AS creative_id,
   ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.creative_id'),  JSON_VALUE(data, '$.start_at') ORDER BY _sdc_extracted_at DESC) AS row_num
 FROM
-  `volvo-main.linkedin_raw__volvo.ad_analytics_by_creative`),
+  `amp-main.linkedin_raw.ad_analytics_by_creative`),
   daily_stats AS (
     SELECT * EXCEPT(row_num)  FROM daily_stats_raw WHERE row_num = 1
   ),
