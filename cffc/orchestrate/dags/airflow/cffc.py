@@ -36,7 +36,7 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
-    "start_date": yesterday
+    "start_date": datetime.datetime(2026, 3, 5, tzinfo=local_tz)
 }
 dv360_args = {
     "retries": 2,
@@ -314,8 +314,3 @@ with models.DAG(
             for upstream in label_kube_list[list]:
                 upstream >> kube_dash
             kube_dash >> kube_dash_union
-
-
-
-    
-    
