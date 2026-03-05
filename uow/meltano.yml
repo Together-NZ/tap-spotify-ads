@@ -72,7 +72,7 @@ plugins:
       - goal
   - name: tap-facebook
     variant: airbyte
-    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
     config:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
@@ -105,8 +105,7 @@ plugins:
     select:
     - campaigns.*
     - creatives.*
-    - ad_analytics_by_creative.*
-    - ad_analytics_by_campaign.*
+    - campaign_groups.*
     
   loaders:
   - name: target-jsonl
@@ -114,7 +113,7 @@ plugins:
     pip_url: target-jsonl
   - name: target-bigquery
     variant: z3z1ma
-    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
     config:
       dataset: ${BQ_DATASET}
       project: uowaikato-main
@@ -131,9 +130,9 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
     commands:
-      linkedin_models: run --select +linkedin_no_creative +linkedin
+      linkedin_models: run --select +linkedin
       tiktok_models:
         args: run --select +tiktok_ads_join
         description: Run the TikTok ads model
@@ -158,11 +157,6 @@ plugins:
       cm360_models:
         args: run --select +cm360_seralized +cm360_direct_buy
         description: Run the CM360 ads model
-  utilities:
-  - name: run_python
-    namespace: run_python
-    executable: python
-    commands:
-      naming: linkedin_campaign_creative_url_name_fetching.py
+
 elt:
   buffer_size: 52428800
