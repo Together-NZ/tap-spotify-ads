@@ -7,47 +7,33 @@ from client_name import CLIENT_NAME
 
 
 class DockerBuild:
-    def __init__(self, project_name):
-        self.project_name = CLIENT_NAME[args.project_name]
-        if self.project_name == "together-internal":
-            self.image = f"australia-southeast1-docker.pkg.dev/{CLIENT_NAME[args.project_name]}/meltano/meltano-{CLIENT_NAME[args.project_name]}:stage"
+    def __init__(self, project_name, tag="stage"):
+        gcp_name = CLIENT_NAME[project_name]
+        if gcp_name == "together-internal":
+            self.image = f"australia-southeast1-docker.pkg.dev/{gcp_name}/meltano/meltano-{gcp_name}:{tag}"
         else:
-            self.image = f"australia-southeast1-docker.pkg.dev/{CLIENT_NAME[args.project_name]}-main/meltano/meltano-{CLIENT_NAME[args.project_name]}-main:stage"
-
-    def __return_image(self):
-        return self.image
+            self.image = f"australia-southeast1-docker.pkg.dev/{gcp_name}-main/meltano/meltano-{gcp_name}-main:{tag}"
 
     def build_command(self):
-        
         return [
             "docker", "buildx", "build",
             "--ssh", "default",
             "--platform", "linux/amd64",
-            "-t", self.__return_image(),
+            "-t", self.image,
             "."
         ]
-        
+
     def test_command(self):
         return [
-            "docker", "run", "--rm", "--entrypoint", "sh", self.__return_image(),
+            "docker", "run", "--rm", "--entrypoint", "sh", self.image,
             "ci_test.sh"
         ]
 
-    def tag_command(self, new_tag):
-        new_image = self.image.rsplit(":", 1)[0] + f":{new_tag}"
-        return [
-            "docker", "tag", self.__return_image(), new_image
-        ]
-
     def push_command(self, tag):
-        if tag:
-            retag=self.tag_command(tag)
-            return [
-                "docker", "push", retag
-            ]
-            
-        else:
-            raise ValueError("Tag is required")
+        new_image = self.image.rsplit(":", 1)[0] + f":{tag}"
+        return [
+            "docker", "push", new_image
+        ]
 
 # Environment variable for enabling BuildKit
 env = {**os.environ, "DOCKER_BUILDKIT": "1"}
@@ -83,8 +69,8 @@ if __name__ == "__main__":
         print("✅ Build done.")
     elif args.push_only:
         print("📦 Pushing Docker image...")
-        push_command = DockerBuild(args.project_name).push_command(tag="prod")
-        run_cmd(push_command)
+        docker = DockerBuild(args.project_name)
+        run_cmd(docker.push_command(tag="prod"))
         print("✅ Push done.")
     elif args.test_only:
         test_command = DockerBuild(args.project_name).test_command()
