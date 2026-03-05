@@ -83,10 +83,10 @@ plugins:
       start_date: ${START_DATE}
       _catalog_path: ./catalog.json
     select:
-      - campaigns.*
+      - campaign_groups.*
       - creatives.*
+      - campaigns.*
       - ad_analytics_by_creative.*
-      - ad_analytics_by_campaign.*
   loaders:
   - name: target-jsonl
     variant: andyh1203
@@ -149,7 +149,7 @@ plugins:
       ga4_volvo_models:
         args: run --select ga4_goal_a__volvo ga4_goal_channel__volvo
       linkedin_volvo_models:
-        args: run --select +linkedin_no_creative__volvo +linkedin__volvo
+        args: run --select +linkedin__volvo
 
   files:
   - name: files-airflow
