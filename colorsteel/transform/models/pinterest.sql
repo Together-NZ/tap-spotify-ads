@@ -1,11 +1,7 @@
 {{ config(
     materialized='table',
 ) }}
-WITH collection AS (
-    SELECT data
-    FROM `colorsteel-main.pinterest_raw.reports`,
-    UNNEST(JSON_EXTRACT_ARRAY(data,'$.data')) as data
-),
+WITH 
 data AS (
   select json_value(data,'$.AD_ID') as ad_id,
   json_value(data,'$.CAMPAIGN_ID') as campaign_id,
@@ -19,9 +15,9 @@ data AS (
   json_value(data,'$.TOTAL_VIDEO_P75_COMBINED') as video_75_completion,
   json_value(data,'$.TOTAL_VIDEO_MRC_VIEWS') as video_views,
   ROW_NUMBER() OVER (PARTITION BY json_value(data,'$.AD_ID') ,
-  json_value(data,'$.CAMPAIGN_ID'),json_value(data,'$.DATE')) as row_num,
+  json_value(data,'$.AD_ID'),json_value(data,'$.DATE') ORDER BY _sdc_extracted_at DESC ) as row_num,
 
-  from collection
+  from `colorsteel-main.pinterest_raw.reports`
 ),
 ad_group as (
   SELECT DISTINCT JSON_VALUE(data,'$.id') as ad_group_id,
