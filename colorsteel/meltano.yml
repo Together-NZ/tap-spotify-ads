@@ -58,7 +58,7 @@ plugins:
       service_account: together-meltano@together-internal.iam.gserviceaccount.com
   - name: tap-pinterest-ads
     namespace: tap-pinterest-ads
-    pip_url: ssh://git@github.com/Together-NZ/tap-pinterest-ads.git  setuptools<82.0
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-pinterest-ads.git setuptools<82.0
     config:
       client_id: ${PINTEREST_CLIENT_ID}
       client_secret: ${PINTEREST_CLIENT_SECRET}
