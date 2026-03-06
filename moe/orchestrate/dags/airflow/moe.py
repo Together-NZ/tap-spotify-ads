@@ -59,25 +59,7 @@ with models.DAG(
     schedule_interval="10 14 * * *",
     default_args=default_args,
 ) as google_dag:
-    def set_env_vars_ga4(id,label):
-        env = get_meltano_env()
-        env["BQ_DATASET"] = f"ga4_{label}_raw"
-        env["BQ_METHOD"] = "gcs_stage"
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'curative-main'
-        env["DBT_BIGQUERY_DATASET"] = f'ga4_transformed__{label}'       
-        developer_creds = Credentials(
-            None,
-            refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
-            token_uri="https://oauth2.googleapis.com/token",
-            client_id=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_ID"],
-            client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
-        )
-        developer_creds.refresh(Request())
-        env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-        env["TAP_GA4_PROPERTY_ID"] = id
-        env["TAP_GA4_START_DATE"] = get_ga4_start_date()
-        return env
+
     def set_env_vars_ga4_merge():
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
