@@ -1,9 +1,17 @@
 version: 1
-default_environment: prod
+default_environment: staging
 project_id: 2de0b6f6-586c-4cae-828a-f4b265302e9e
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          REFERENCE_META_BIGQUERY_DATASET: facebook_test
 - name: prod
 state_backend:
   uri: gs://amp-main-meltano-state-staging
@@ -16,7 +24,7 @@ plugins:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-
+    - ads_insights
     - ad_account.*
     - ad_sets.*
     - ads.*
@@ -114,6 +122,10 @@ plugins:
   - name: dbt-bigquery
     variant: dbt-labs
     pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
+    env:
+      DBT_BIGQUERY_PROJECT: amp-main
+      DBT_BIGQUERY_LOCATION: australia-southeast1
+      REFERENCE_META_BIGQUERY_DATASET: facebook_raw
     commands:
       dv360_models:
         args: run --select dv360_standard dv360_youtube
