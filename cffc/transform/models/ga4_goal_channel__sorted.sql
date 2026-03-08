@@ -67,7 +67,7 @@ select *,
                 WHEN LOWER(site_name) LIKE '%email%' THEN 'Email'
                 WHEN LOWER(site_name) LIKE '%tiktok%' AND (lower(sessionCampaignName) like '%wat%' or lower(split(sessionCampaignName,'_')[safe_offset(0)]) like '%00%') and channel like '%Paid%' THEN 'Tiktok'
                 WHEN LOWER(sessionSourceMedium) LIKE '%snapchat%' THEN 'Snapchat'
-                WHEN LOWER(sessionSourceMedium) LIKE '%youtube%' OR LOWER(sessionSourceMedium) LIKE '%yt%' THEN 'Youtube'
+                WHEN LOWER(sessionSourceMedium) LIKE '%youtube%' OR LOWER(sessionSourceMedium) LIKE '%yt%' or lower(sessionCampaignName) like '%yt%' THEN 'Youtube'
                 WHEN LOWER(sessionSourceMedium) LIKE '%3now%' OR LOWER(sessionSourceMedium) LIKE '%three%' THEN 'Threenow'
                 WHEN LOWER(sessionSourceMedium) LIKE '%nzme%' THEN 'Nzme'
                 WHEN LOWER(sessionSourceMedium) LIKE '%acast%' THEN 'Acast'
@@ -124,8 +124,20 @@ CASE WHEN
 END AS campaign_name_selection
  FROM campaign_base camb LEFT JOIN deduplicate_raw ON LOWER(deduplicate_raw.campaign_name_raw) = LOWER(camb.campaign_name_raw)
 ),
-
-
+funnel_campaign AS (
+     select distinct funnel, campaign_name from `cffc-main.dash_table__sorted.dash_union__sorted`
+),
+dash AS (
+     SELECT DISTINCT 
+          TRIM(creative_descr) AS old_creative,
+          --campaign_name AS platform_campaigns,
+          REGEXP_REPLACE(TRIM(creative_descr), r'[_\-\s]+', '') AS creative_name,
+          ROW_NUMBER() OVER(PARTITION BY LOWER(creative_descr)) AS row_num
+     FROM `cffc-main.dash_table__sorted.dash_union__sorted`
+),
+deduplicate_dash AS (
+    SELECT old_creative,creative_name FROM dash WHERE row_num=1
+),
 semi_final AS (
 SELECT
   -- Replace publisher from table2 if matched, else keep original
@@ -136,45 +148,76 @@ EXCEPT(publisher) -- exclude original publisher to avoid duplicate columns
 FROM final_result AS t1
 LEFT JOIN `together-internal.publisher_naming.publisher_naming` AS t2
   ON LOWER(trim(t1.publisher)) = LOWER(trim(t2.publisher))),
+ga4_tmp AS (
+    SELECT DISTINCT TRIM(sessionManualAdContent) as ga4_creative_name,
+      --campaign_name AS ga4_campaigns,
+      REGEXP_REPLACE(TRIM(sessionManualAdContent), r'[_\-\s]+', '') AS creative_name,
+      ROW_NUMBER() OVER (PARTITION BY LOWER(sessionManualAdContent)) AS row_num
+    FROM semi_final
+),
+deduplicate_ga4 AS (
+    SELECT ga4_creative_name,creative_name
+    FROM ga4_tmp
+    WHERE row_num=1
+),
+creative_matching AS (
+  SELECT DISTINCT 
+    ga4.ga4_creative_name,
+    --ga4_tmp.ga4_campaigns,
+    dash.old_creative,
+    ROW_NUMBER() OVER (PARTITION BY LOWER(ga4.ga4_creative_name)) AS row_num
+    --dash.date
+  FROM deduplicate_ga4 AS ga4
+  LEFT JOIN deduplicate_dash AS dash
+    ON LOWER(dash.creative_name) = LOWER(ga4.creative_name)
+  WHERE dash.creative_name IS NOT NULL
+),
+creative_matching_result AS (
+  SELECT *EXCEPT(row_num) FROM creative_matching WHERE row_num=1
+),
 non_media_format as (
 
 select 
 COALESCE(t2.new_campaign_name,t1.campaign_name) AS campaign_name,
 t1.* except(campaign_name)
 from semi_final as t1 left join `together-internal.google_ads_campaign_mapping.campaign_name_mapping` as t2
-on lower(trim(t1.campaign_name)) = lower(trim(t2.old_campaign_name)))
-SELECT *,
+on lower(trim(t1.campaign_name)) = lower(trim(t2.old_campaign_name))
+)
+
+SELECT md.* EXCEPT(sessionManualAdContent),
+CASE WHEN cmr.old_creative IS NOT NULL THEN cmr.old_creative ELSE md.sessionManualAdContent END AS sessionManualAdContent,
+COALESCE(fc.funnel,'OTHER') as funnel,
 CASE
   -- hard override for SOCIAL
   WHEN
     LOWER(COALESCE(sessionSourceMediumraw, '')) LIKE '%social%' OR
-    LOWER(COALESCE(campaign_name,  '')) LIKE '%social%' OR
+    LOWER(COALESCE(md.campaign_name,  '')) LIKE '%social%' OR
     LOWER(TRIM(COALESCE(publisher,      ''))) LIKE '%facebook%' OR
     LOWER(TRIM(COALESCE(publisher,      ''))) LIKE '%meta%' OR
     LOWER(TRIM(COALESCE(publisher,      ''))) IN ('tiktok','snapchat','linkedin','twitter','x','instagram','pinterest')
   THEN 'SOCIAL'
 
   -- everything else
-  WHEN LOWER(COALESCE(campaign_name,'')) LIKE '%vod%'    OR
-       LOWER(COALESCE(campaign_name,'')) LIKE '%vidod%'  OR
+  WHEN LOWER(COALESCE(md.campaign_name,'')) LIKE '%vod%'    OR
+       LOWER(COALESCE(md.campaign_name,'')) LIKE '%vidod%'  OR
        LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%vod%'    OR
        LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%vidod%'
   THEN 'VIDOD'
 
-  WHEN LOWER(COALESCE(campaign_name,'')) LIKE '%dooh%'   OR
+  WHEN LOWER(COALESCE(md.campaign_name,'')) LIKE '%dooh%'   OR
        LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%dooh%'
   THEN 'PDOOH'
 
-  WHEN LOWER(COALESCE(campaign_name,'')) LIKE '%yt%'      OR
-       LOWER(COALESCE(campaign_name,'')) LIKE '%youtube%' OR
-       LOWER(COALESCE(campaign_name,'')) LIKE '%you tube%' OR
+  WHEN LOWER(COALESCE(md.campaign_name,'')) LIKE '%yt%'      OR
+       LOWER(COALESCE(md.campaign_name,'')) LIKE '%youtube%' OR
+       LOWER(COALESCE(md.campaign_name,'')) LIKE '%you tube%' OR
        LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%yt%'       OR
        LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%youtube%'  OR
        LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%you tube%'
   THEN 'YT'
 
-  WHEN LOWER(COALESCE(campaign_name,'')) LIKE '%native%' OR
-       LOWER(COALESCE(campaign_name,'')) LIKE '%nat%'    OR
+  WHEN LOWER(COALESCE(md.campaign_name,'')) LIKE '%native%' OR
+       LOWER(COALESCE(md.campaign_name,'')) LIKE '%nat%'    OR
        LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%native%' OR
        LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%nat%'
   THEN 'NATIVE'
@@ -198,8 +241,8 @@ CASE
 
   WHEN LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%performance max%' OR
        LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%pmax%' OR
-       LOWER(COALESCE(campaign_name,''))   LIKE '%pmax%' OR
-       LOWER(COALESCE(campaign_name,''))   LIKE '%performance max%'
+       LOWER(COALESCE(md.campaign_name,''))   LIKE '%pmax%' OR
+       LOWER(COALESCE(md.campaign_name,''))   LIKE '%performance max%'
   THEN 'PERFORMANCE MAX'
 
   WHEN LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%aud%' OR
@@ -207,22 +250,18 @@ CASE
        LOWER(TRIM(COALESCE(publisher,''))) = 'spotify'
   THEN 'AUD'
 
-  WHEN LOWER(COALESCE(campaign_name,''))          LIKE '%vid%' OR
+  WHEN LOWER(COALESCE(md.campaign_name,''))          LIKE '%vid%' OR
        LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%vid%'
   THEN 'VID'
 
   WHEN LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%rmdisp%'
   THEN 'RMDISP'
 
-  WHEN (LOWER(COALESCE(campaign_name,''))    LIKE '%search%' AND
+  WHEN (LOWER(COALESCE(md.campaign_name,''))    LIKE '%search%' AND
        LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%cpc%' ) OR sessionCampaignName='RLNZ005 - Travel Feed - Compare - NZ'
   THEN 'SEARCH'
-
-  WHEN LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%google%' AND
-       LOWER(COALESCE(sessionSourceMediumraw,'')) LIKE '%cpc%' AND
-       LOWER(COALESCE(campaign_name,''))    LIKE '%wat%'
-  THEN 'DEMAND GEN'
-
   ELSE 'OTHER'
-END AS media_format
-FROM non_media_format
+END AS media_format,
+
+FROM non_media_format as md left join funnel_campaign AS fc on fc.campaign_name = md.campaign_name
+LEFT JOIN creative_matching_result AS cmr ON lower(trim(md.sessionManualAdContent)) = lower(trim(cmr.ga4_creative_name))

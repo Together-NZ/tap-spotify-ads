@@ -103,7 +103,7 @@ WITH deduplicated_data AS (
     ) AS row_num
 
   FROM 
-    `cffc-main`.`ga4_raw__cffc`.`goal`
+    `cffc-main`.`ga4_raw__retirement_commission`.`goal`
 
 ),
 filtered_creatives as (
