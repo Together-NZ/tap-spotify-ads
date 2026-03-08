@@ -8,13 +8,13 @@ WITH ranked_data AS (
         JSON_VALUE(data, '$.account_id') AS account_id,
         JSON_VALUE(data, '$.account_name') AS account_name,
         JSON_VALUE(data, '$.ad_id') AS ad_id,
-        --JSON_VALUE(data, '$.ad_name') AS ad_name,
+        JSON_VALUE(data, '$.ad_name') AS ad_name,
         JSON_VALUE(data, '$.adset_id') AS adset_id,
-        --JSON_VALUE(data, '$.adset_name') AS adset_name,
+        JSON_VALUE(data, '$.adset_name') AS adset_name,
         JSON_VALUE(data, '$.campaign_id') AS campaign_id,
         JSON_EXTRACT_ARRAY(data, '$.conversions') AS conversion_array,
-        SAFE_CAST(JSON_VALUE(data, '$.clicks') AS INT64) AS clicks, 
-        SAFE_CAST(JSON_VALUE(data, '$.impressions') AS INT64) AS impressions, 
+        SAFE_CAST(JSON_VALUE(data, '$.clicks') AS FLOAT64) AS clicks, 
+        SAFE_CAST(JSON_VALUE(data, '$.impressions') AS FLOAT64) AS impressions, 
         JSON_VALUE(data, '$.ctr') AS ctr,
         SAFE_CAST(JSON_VALUE(data, '$.spend') AS FLOAT64) AS spend,
         JSON_VALUE(data, '$.date_start') AS date_start,
@@ -35,7 +35,7 @@ WITH ranked_data AS (
                 _sdc_extracted_at DESC
         ) AS row_number
     FROM
-        `cffc-main.facebook_raw__cffc.ads_insights_action_video_type`
+        `cffc-main.facebook_raw__cffc.ads_insights`
 ),
 deduplicated_data AS (
     SELECT *
@@ -49,9 +49,9 @@ flattened_video_actions AS (
     SELECT
         date_start,
         ad_id,
-        --ad_name,
+        ad_name,
         adset_id,
-        --adset_name,
+        adset_name,
         clicks,
         spend,
         campaign_id,
@@ -68,9 +68,9 @@ parsed_video_actions AS (
     SELECT
         date_start,
         ad_id,
-        
+        ad_name,
         adset_id,
-       
+        adset_name,
         spend,
         clicks,
         campaign_id,
@@ -121,32 +121,32 @@ parsed_video_actions AS (
             JSON_VALUE(
                 video_play_array[0],
                 '$.value'
-            ) AS INT64
+            ) AS FLOAT64
         ) AS last_video_played,
         video_play_array,
         CAST(
             JSON_VALUE(
                 video_p25_array[OFFSET(ARRAY_LENGTH(video_p25_array) - 1)],
                 '$.value'
-            ) AS INT64
+            ) AS FLOAT64
         ) AS last_video_p25,
         CAST(
             JSON_VALUE(
                 video_p50_array[OFFSET(ARRAY_LENGTH(video_p50_array) - 1)],
                 '$.value'
-            ) AS INT64
+            ) AS FLOAT64
         ) AS last_video_p50,
         CAST(
             JSON_VALUE(
                 video_p75_array[OFFSET(ARRAY_LENGTH(video_p75_array) - 1)],
                 '$.value'
-            ) AS INT64
+            ) AS FLOAT64
         ) AS last_video_p75,
         CAST(
             JSON_VALUE(
                 video_p100_array[OFFSET(ARRAY_LENGTH(video_p100_array) - 1)],
                 '$.value'
-            ) AS INT64
+            ) AS FLOAT64
         ) AS last_video_p100
     FROM flattened_video_actions
 ),
@@ -154,9 +154,9 @@ summed_data AS (
     SELECT
         date_start,
         ad_id,
-        --ad_name,
+        ad_name,
         adset_id,
-        --adset_name,
+        adset_name,
         campaign_id,
         SUM(SAFE_CAST(post_share AS INT64)) AS shares,
         SUM(SAFE_CAST(likes AS INT64)) AS likes,
@@ -173,25 +173,7 @@ summed_data AS (
         SUM(last_video_p75) AS total_video_p75,
         SUM(last_video_p100) AS total_video_p100
     FROM parsed_video_actions
-    GROUP BY date_start, ad_id,  campaign_id, adset_id
-),
-ad_data AS (
-    SELECT JSON_VALUE(data,'$.id') AS ad_id,
-    JSON_VALUE(data,'$.name') AS ad_name,
-    ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.id') ORDER BY _sdc_extracted_at) AS row_num
-    FROM `cffc-main.facebook_raw__cffc.ads`
-),
-deduplicate_ad_data AS (
-    SELECT * FROM ad_data where row_num = 1
-),
-adset_data AS (
-    select distinct json_value(data,'$.id') as adset_id,
-    json_value(data,'$.name') as adset_name,
-    ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.id') ORDER BY _sdc_extracted_at) AS row_num
-    from `cffc-main.facebook_raw__cffc.ad_sets`
-),
-deduplicate_adset_data AS (
-    SELECT * FROM adset_data where row_num = 1
+    GROUP BY date_start, ad_id, ad_name, campaign_id, adset_id, adset_name
 ),
 campaign_data AS (
     SELECT DISTINCT
@@ -269,10 +251,10 @@ deplicate_data AS (
 SELECT 
     sd.date_start as date,
     sd.ad_id,
-    ad.ad_name,
+    sd.ad_name,
     i.interest_names,
     sd.adset_id AS media_buy_external_id,
-    adset.adset_name AS media_buy_external_name,
+    sd.adset_name AS media_buy_external_name,
     sd.campaign_id,
     fcd.campaign_name,
     sd.shares,
@@ -301,12 +283,8 @@ LEFT JOIN filtered_interest_data i
     ON i.ad_id = sd.ad_id
 LEFT JOIN aggregated_device_data da
     ON da.ad_id = sd.ad_id
-LEFT JOIN deduplicate_ad_data as ad
-    ON ad.ad_id = sd.ad_id
-LEFT JOIN deduplicate_adset_data as adset
-    ON adset.adset_id = sd.adset_id
 
-ORDER BY sd.date_start
+ORDER BY sd.date_start, sd.ad_name
 )
 SELECT * EXCEPT(ad_name), ad_name as creative_name, 
 'Meta' AS publisher,
@@ -315,12 +293,12 @@ SPLIT(media_buy_external_name, '_')[OFFSET(7)]
 ELSE NULL
 END AS audience_name,
 CASE 
-WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>=4 AND SPLIT(campaign_name,'_')[OFFSET(3)] LIKE '%SOCIAL%' AND (lower(campaign_name) like '%vid%' or lower(ad_name) like '%vid%') THEN 'Social Video'
+WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>=4 AND SPLIT(campaign_name,'_')[OFFSET(3)] LIKE '%SOCIAL%' AND (lower(campaign_name) like '%vid%' or lower(ad_name) like '%vid%') THEN 'Social Video' 
 WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>=4 AND SPLIT(campaign_name,'_')[OFFSET(3)] LIKE '%SOCIAL%' AND (lower(campaign_name) not like '%vid%' and lower(ad_name) not like '%vid%')THEN 'Social Display'
 else 'Other'
 END AS media_format,
-CASE WHEN ARRAY_LENGTH(SPLIT(ad_name,'_'))>=8 THEN SPLIT(ad_name, '_')[OFFSET(5)] ELSE 'Other' END AS ad_format_detail,
-CASE WHEN ARRAY_LENGTH(SPLIT(ad_name,'_'))>=8 THEN SPLIT(ad_name, '_')[OFFSET(6)] ELSE 'Other' END AS ad_format,
-CASE WHEN ARRAY_LENGTH(SPLIT(ad_name,'_'))>=8 THEN SPLIT(ad_name, '_')[OFFSET(7)] ELSE 'Other' END  AS creative_descr,
+CASE WHEN ARRAY_LENGTH(SPLIT(ad_name, '_')) <8 THEN 'Other' ELSE SPLIT(ad_name, '_')[OFFSET(5)] END AS ad_format_detail,
+CASE WHEN ARRAY_LENGTH(SPLIT(ad_name, '_')) <8 THEN 'Other' ELSE SPLIT(ad_name, '_')[OFFSET(6)] END AS ad_format,
+CASE WHEN ARRAY_LENGTH(SPLIT(ad_name, '_')) <8 THEN 'Other' ELSE SPLIT(ad_name, '_')[OFFSET(7)]END AS creative_descr,
 CASE WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_')) <=1 THEN 'Other' ELSE SPLIT(campaign_name,'_')[OFFSET(1)] END AS campaign_descr
 FROM deplicate_data WHERE row_number = 1
