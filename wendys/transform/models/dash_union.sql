@@ -6,6 +6,7 @@ EXTRACT(MONTH FROM date) AS segments_month,
 EXTRACT(QUARTER FROM date) AS segments_quarter,
 EXTRACT(WEEK FROM date) AS segments_week,
 EXTRACT(YEAR FROM date) AS segments_year,
+SAFE_CAST(funnel as string) as funnel,
 SAFE_CAST(bidding_strategy_name AS STRING) AS bidding_strategy_name,
 SAFE_CAST(campaign_advertising_channel_sub_type AS STRING) AS campaign_advertising_channel_sub_type,
 SAFE_CAST(campaign_advertising_channel_type AS STRING) AS campaign_advertising_channel_type,
@@ -44,7 +45,6 @@ SAFE_CAST(_LATEST_DATE AS STRING) AS _LATEST_DATE,
 SAFE_CAST(_DATA_DATE AS STRING) AS _DATA_DATE,
 SAFE_CAST(media_cost AS FLOAT64) AS media_cost,
 SAFE_CAST(clicks AS INT64) AS clicks,
-SAFE_CAST(funnel as string) as funnel,
 SAFE_CAST(impressions AS FLOAT64) AS impressions,
 SAFE_CAST(date AS DATE) AS date,
 SAFE_CAST(campaign_name_selection AS STRING) AS campaign_name_selection,
@@ -61,13 +61,12 @@ SAFE_CAST(video_25_completion AS FLOAT64) AS video_25_completion,
 SAFE_CAST(video_75_completion AS FLOAT64) AS video_75_completion,
 SAFE_CAST(video_views AS INT64) AS video_views,
 SAFE_CAST(campaign_descr AS STRING) AS campaign_descr,
-SAFE_CAST(creative_descr AS STRING) AS creative_descr ,
-
-FROM `wendys-main.dash_table.dash_table` ) UNION ALL (
-    SELECT EXTRACT(MONTH FROM date) AS segments_month,
+SAFE_CAST(creative_descr AS STRING) AS creative_descr FROM `wendys-main.dash_table.dash_table` ) UNION ALL (SELECT 
+EXTRACT(MONTH FROM date) AS segments_month,
 EXTRACT(QUARTER FROM date) AS segments_quarter,
 EXTRACT(WEEK FROM date) AS segments_week,
 EXTRACT(YEAR FROM date) AS segments_year,
+SAFE_CAST(funnel as string) as funnel,
 SAFE_CAST(bidding_strategy_name AS STRING) AS bidding_strategy_name,
 SAFE_CAST(campaign_advertising_channel_sub_type AS STRING) AS campaign_advertising_channel_sub_type,
 SAFE_CAST(campaign_advertising_channel_type AS STRING) AS campaign_advertising_channel_type,
@@ -106,7 +105,6 @@ SAFE_CAST(_LATEST_DATE AS STRING) AS _LATEST_DATE,
 SAFE_CAST(_DATA_DATE AS STRING) AS _DATA_DATE,
 SAFE_CAST(media_cost AS FLOAT64) AS media_cost,
 SAFE_CAST(clicks AS INT64) AS clicks,
-SAFE_CAST(funnel as string) as funnel,
 SAFE_CAST(impressions AS FLOAT64) AS impressions,
 SAFE_CAST(date AS DATE) AS date,
 SAFE_CAST(campaign_name_selection AS STRING) AS campaign_name_selection,
@@ -123,9 +121,7 @@ SAFE_CAST(video_25_completion AS FLOAT64) AS video_25_completion,
 SAFE_CAST(video_75_completion AS FLOAT64) AS video_75_completion,
 SAFE_CAST(video_views AS INT64) AS video_views,
 SAFE_CAST(campaign_descr AS STRING) AS campaign_descr,
-SAFE_CAST(creative_descr AS STRING) AS creative_descr ,
- FROM `wendys-main.dash_table_search.dash_table_search`
-))
+SAFE_CAST(creative_descr AS STRING) AS creative_descr FROM `wendys-main.dash_table_search.dash_table_search` ) )
 SELECT
   -- Replace publisher from table2 if matched, else keep original
   COALESCE(t2.present, t1.publisher) AS publisher,
@@ -134,4 +130,4 @@ EXCEPT(publisher) -- exclude original publisher to avoid duplicate columns
 
 FROM final_result AS t1
 LEFT JOIN `together-internal.publisher_naming.publisher_naming` AS t2
-  ON LOWER(trim(t1.publisher)) = LOWER(trim(t2.publisher))
+  ON LOWER(t1.publisher) = LOWER(t2.publisher)

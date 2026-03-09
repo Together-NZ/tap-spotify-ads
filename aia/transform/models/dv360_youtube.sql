@@ -32,7 +32,7 @@ WITH parsed_data AS (
                 JSON_VALUE(data, "$.YouTube Ad"),
                 JSON_VALUE(data, "$.YouTube Ad Group ID")
             ORDER BY 
-                _sdc_extracted_at DESC -- Keep the record with the highest revenue
+                JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") DESC -- Keep the record with the highest revenue
         ) AS row_num
     FROM
         `aia-nz-main.dv360_raw.dv360_youtube`

@@ -4,7 +4,6 @@
 with basic as (
 SELECT 
   JSON_VALUE(data, '$.datetime') AS date,
-  JSON_VALUE(data, '$.campaign') AS campaign_name,
   CAST(JSON_VALUE(data, '$.campaign_id') AS INT64) AS campaign_id,
   JSON_VALUE(data, '$.city') AS city,
   JSON_VALUE(data, '$.creative') AS creative_name,
@@ -20,10 +19,25 @@ SELECT
       JSON_VALUE(data, '$.creative'),CAST(JSON_VALUE(data, '$.plays') AS INT64)
   ) as row_num ,
   FROM `wendys-main.hivestack_raw.wendys_report`),
+  campaign_data AS (
+    SELECT DISTINCT JSON_VALUE(data,'$.campaign') AS campaign_name,json_value(data,'$.campaign_id') AS campaign_id,row_number() over (
+      partition by json_value(data,'$.campaign_id') order by json_value(data,'$.datetime') desc
+    ) as row_number FROM `wendys-main.hivestack_raw.wendys_report`
+    
+  ),
+  distinct_campaign_name AS (
+    SELECT campaign_name ,campaign_id from campaign_data where row_number = 1
+  ),
   deduplicate_data AS (
-    SELECT date,campaign_name,campaign_id,city,creative_name,line_item,line_item_id,concentration,impressions,plays,progress,media_cost,
+    SELECT date,campaign_id,city,creative_name,line_item,line_item_id,concentration,impressions,plays,progress,media_cost,
     row_num FROM basic where row_num = 1
-  ) , populate_data as (
+  ) , 
+  joint_data AS (
+    SELECT deduplicate_data.*, distinct_campaign_name.campaign_name as campaign_name
+    FROM deduplicate_data join distinct_campaign_name on SAFE_CAST(deduplicate_data.campaign_id AS STRING) = distinct_campaign_name.campaign_id
+  ),
+  
+  populate_data as (
   SELECT SUM(impressions) AS impressions,
   SUM(media_cost) AS media_cost,
   SUM(plays) AS plays,
@@ -37,7 +51,7 @@ SELECT
     ELSE 'Other'
   END AS audience_name,
   CASE
-    WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>=2 THEN SPLIT(campaign_name,'_')[1]
+    WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>1 THEN SPLIT(campaign_name,'_')[1]
     ELSE 'Other'
   END AS campaign_descr,
   CASE 
@@ -61,7 +75,7 @@ SELECT
   concentration,
   date,
   progress
-  FROM deduplicate_data
+  FROM joint_data
   GROUP BY campaign_name,campaign_id,city,creative_name,line_item,line_item_id,concentration,date,progress
 
  

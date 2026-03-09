@@ -1,25 +1,8 @@
 {{ config(
     materialized='table',
 ) }}
-
-
-
 WITH dash_table AS (
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
-    FROM `wendys-main.ttd_transformed.ttd_transformed`
-
-    UNION ALL
-
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
-    FROM `wendys-main.dv360_transformed.dv360_standard`
-    UNION ALL
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
-    FROM `wendys-main.dv360_transformed.dv360_youtube` 
-    UNION ALL
-                  SELECT media_cost, impressions,clicks,
+           SELECT media_cost, impressions,clicks,
               ad_name AS creative_name,  
            --ARRAY_TO_STRING(media_format, ', ') AS media_format,   -- Convert array to string
            audience_name, -- Convert array to string
@@ -35,61 +18,20 @@ WITH dash_table AS (
             creative_descr,  -- Convert array to string
            date,
 
-    FROM `wendys-main.google_ads_search_transformed.google_ads_demand`
-    UNION ALL
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion
-           ,video_25_completion,video_50_completion,video_75_completion, video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
-    FROM `wendys-main.tiktok_transformed.tiktok`
+    FROM `cffc-main.google_ads_search_transformed__sorted_in_school.google_ads_demand__sorted_in_school`
 
-    UNION ALL
+    
 
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
-    FROM `wendys-main.snapchat_transformed.snapchat`
-
-    UNION ALL
-
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_played AS video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
-    FROM `wendys-main.facebook_transformed.facebook`
-
-    UNION ALL
-    select media_cost,impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, 
-        CAST(0 AS INT64) AS video_completion,
-        CAST(0 AS INT64) AS video_25_completion,
-        CAST(0 AS INT64) AS video_50_completion,
-        CAST(0 AS INT64) AS video_75_completion,
-        CAST(0 AS INT64) AS video_views,
-    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date,
-
-    from `wendys-main.cm360_transformed.cm360_direct_buy`
-    UNION ALL 
-    SELECT media_cost, impressions, CAST(0 AS INT64) AS clicks, creative_name,
-           --media_format AS media_format,   -- Convert array to string
-           audience_name AS audience_name, -- Convert array to string
-           ad_format AS ad_format,         -- Convert array to string
-           ad_format_detail AS ad_format_detail, 
-            CAST(0 AS INT64) AS video_completion,
-            CAST(0 AS INT64) AS video_25_completion,
-            CAST(0 AS INT64) AS video_50_completion,
-            CAST(0 AS INT64) AS video_75_completion,
-            CAST(0 AS INT64) AS video_views,
-           
-           campaign_name,publisher, campaign_descr, 
-           creative_descr AS creative_descr, -- Convert array to string
-           date,
-    FROM `wendys-main.hivestack_transformed.hivestack`
-
-   
 ),
-with_channel as (
+with_channel AS (
 SELECT * EXCEPT (publisher,channel), 
 dc.publisher,
 dc.channel
 
+
 FROM dash_table as dt join `together-internal.channel.publisher_channel` as dc
-ON lower(trim(dt.publisher)) = lower(trim(dc.publisher))),
+ON lower(dt.publisher) = lower(dc.publisher)
+),
 campaign_base AS (
        SELECT *,
               CASE WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>=2 
@@ -171,18 +113,15 @@ CASE WHEN
        WHERE lower(a) in UNNEST(ARRAY['aud','disp','native','pdooh','rmdisp','social','vid','vidod','yt']))
        THEN  (SELECT X FROM UNNEST(SPLIT(campaign_name,'_') ) as X WHERE lower(X) IN UNNEST(['aud','disp','native','pdooh','rmdisp','social','vid','vidod','yt'])
        LIMIT 1)
-       else 'OTHER'
+       else 'Other'
 END as media_format,
 CASE WHEN 
        EXISTS(SELECT 1 FROM UNNEST(SPLIT(campaign_name,'_')) as a
        WHERE LOWER(a) IN UNNEST(ARRAY['consideration','awareness','intent']))
        THEN (SELECT X FROM UNNEST(SPLIT(campaign_name,'_') ) as X WHERE LOWER(X) IN UNNEST(['consideration','awareness','intent'])
        LIMIT 1)
-       else 'OTHER'
+       else 'Other'
 END AS funnel
  FROM campaign_base camb LEFT JOIN deduplicate_raw ON LOWER(deduplicate_raw.campaign_name_raw) = LOWER(camb.campaign_name_raw)
-
-
-
 
 

@@ -10,7 +10,7 @@ WITH dedupllicate_data AS (
         SAFE_CAST(JSON_VALUE(data, "$.Clicks") AS INT64) as clicks,
         SAFE_CAST(JSON_EXTRACT_SCALAR(data, "$['Complete Views (Video)']") AS INT64) AS video_completion,
         JSON_VALUE(data, "$.Creative") AS creative_name,
-        safe.FORMAT_DATE('%Y-%m-%d', safe.PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))) AS date, -- Convert date format
+        FORMAT_DATE('%Y-%m-%d', safe.PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))) AS date, -- Convert date format
         SAFE_CAST(JSON_EXTRACT_SCALAR(data, "$['First-Quartile Views (Video)']") AS INT64) AS video_25_completion,
         JSON_VALUE(data, "$.Floodlight Activity ID") AS floodlight_activity_id,
         JSON_VALUE(data, "$.Floodlight Activity Name") AS floodlight_activity_name,
@@ -28,25 +28,20 @@ WITH dedupllicate_data AS (
         JSON_VALUE(data, "$.Total Conversions") AS total_conversions,
         ROW_NUMBER() OVER (
             PARTITION BY 
-                safe.FORMAT_DATE('%Y-%m-%d', safe.PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))), -- Use converted date
+                FORMAT_DATE('%Y-%m-%d', safe.PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))), -- Use converted date
                 JSON_VALUE(data, "$.Insertion Order ID"),
                 JSON_VALUE(data, "$.Line Item ID"),
                 JSON_VALUE(data, "$.Creative")
             ORDER BY 
                 CAST(JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS FLOAT64) DESC -- Keep the record with the highest revenue
-            
         ) AS row_num
     FROM
         `wendys-main.dv360_raw.dv360_standard`
-    WHERE JSON_VALUE(data,"$.Insertion Order") IS NOT NULL
-),youtube_detail AS (
-    SELECT DISTINCT JSON_VALUE(data,"$.Insertion Order") as campaign_name, JSON_VALUE(data,"$.YouTube Ad") as youtube_ad
-    FROM `wendys-main.dv360_raw.dv360_youtube`
-),final as (
+),final AS (
 SELECT * ,
     CASE 
-        WHEN ARRAY_LENGTH(SPLIT(campaign_name, '_'))>=8 AND SPLIT(campaign_name, '_')[OFFSET(3)] LIKE '%YT%' THEN 'Youtube Video'
-        ELSE 'Other'
+        WHEN SPLIT(campaign_name, '_')[OFFSET(3)] LIKE '%YT%' THEN 'Youtube Video'
+        ELSE SPLIT(campaign_name, '_')[OFFSET(3)]
     END AS media_format,
     CASE 
         WHEN LOWER(campaign_name) LIKE '%nzme%' OR LOWER(creative_name) LIKE '%nzme%' THEN 'Nzme'
@@ -62,18 +57,15 @@ SELECT * ,
         WHEN LOWER(campaign_name) LIKE '%stuff%' OR LOWER(creative_name) LIKE '%stuff%' THEN 'Stuff'
         ELSE 'Dv360'
     END AS publisher,
-    CASE WHEN ARRAY_LENGTH(SPLIT(line_item, '_'))>=8 THEN
-    SPLIT(line_item, '_')[OFFSET(7)] ELSE 'Other' END AS audience_name,
-    SPLIT(creative_name, '_')[OFFSET(ARRAY_LENGTH(SPLIT(creative_name, '_'))-1)] AS creative_descr,
+    CASE WHEN ARRAY_LENGTH(SPLIT(line_item, '_')) <8 THEN 'Other'
+    ELSE SPLIT(line_item, '_')[OFFSET(7)] END AS audience_name,
+    CASE WHEN ARRAY_LENGTH(SPLIT(creative_name, '_')) < 8 THEN 'Other' ELSE SPLIT(creative_name, '_')[OFFSET(7)] END AS creative_descr,
     CASE WHEN ARRAY_LENGTH(SPLIT(creative_name,'_'))>=8 THEN SPLIT(creative_name, '_')[OFFSET(5)] ELSE 'Other' END AS ad_format_detail,
     CASE WHEN ARRAY_LENGTH(SPLIT(creative_name,'_'))>=8 THEN SPLIT(creative_name, '_')[OFFSET(6)] ELSE 'Other' END AS ad_format,
-    CASE WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_')) <=1 THEN 'Other' ELSE SPLIT(campaign_name,'_')[OFFSET(1)] 
-    END AS campaign_descr
+    CASE WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_')) <=1 THEN 'Other'
+    ELSE SPLIT(campaign_name,'_')[OFFSET(1)] END AS campaign_descr
 
 FROM dedupllicate_data 
 WHERE row_num = 1)
-
-SELECT f.* except(creative_name),
-COALESCE(y.youtube_ad,f.creative_name) as creative_name
-from final f LEFT JOIN youtube_detail y ON f.campaign_name = y.campaign_name
-
+SELECT f.* 
+from final f WHERE LOWER(campaign_name) NOT LIKE '%yt%'

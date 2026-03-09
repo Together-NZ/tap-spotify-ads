@@ -27,9 +27,12 @@ WITH parsed_data AS (
                 FORMAT_DATE('%Y-%m-%d', safe.PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))), -- Use converted date
                 JSON_VALUE(data, "$.Insertion Order ID"),
                 JSON_VALUE(data, "$.Line Item ID"),
-                JSON_VALUE(data, "$.YouTube Ad")
+                JSON_VALUE(data, "$.YouTube Ad ID"),
+                JSON_VALUE(data, "$.YouTube Ad"),
+                JSON_VALUE(data, "$.YouTube Ad Group ID")
+                --safe_cast(TRUNC(SAFE_CAST(JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS FLOAT64))as int64)
             ORDER BY 
-                CAST(JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS FLOAT64) DESC -- Keep the record with the highest revenue
+                JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") DESC -- Keep the record with the highest revenue
         ) AS row_num
     FROM
         `cffc-main.dv360_raw.dv360_youtube`
@@ -68,4 +71,4 @@ SELECT
 FROM
     parsed_data
 WHERE
-    row_num = 1 and lower(campaign_name) like '%cffc%'
+    row_num = 1 and lower(campaign_name) like '%cff%'

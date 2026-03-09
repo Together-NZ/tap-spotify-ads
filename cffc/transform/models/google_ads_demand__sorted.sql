@@ -27,7 +27,7 @@ campaign_data AS (
         SELECT STRING_AGG(INITCAP(LOWER(part)), ' ')
         FROM UNNEST(SPLIT(campaign_advertising_channel_type, '_')) AS part
     ) AS publisher,
-        row_number() over (partition by campaign_id order by _DATA_DATE desc) as row_num
+        row_number() over (partition by campaign_id order by _LATEST_DATE desc) as row_num
     FROM 
         `together-internal.google_ads_data_transfer.ads_Campaign_6544860891`
     WHERE customer_id = 7930496158
