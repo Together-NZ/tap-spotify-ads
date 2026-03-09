@@ -30,14 +30,15 @@ log: logging.log = logging.getLogger("airflow.task")
 log.setLevel(logging.INFO)
 
 local_tz = pendulum.timezone("Pacific/Auckland")
-yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
+yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=4)
 ga4_start_date = datetime.datetime.now(local_tz) - datetime.timedelta(days=30)
 default_args = {
     "retries": 3,
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
-    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
+    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz),
+    'retry_delay': timedelta(minutes=30)
 }
 
 def get_meltano_env():
@@ -54,6 +55,9 @@ def get_meltano_env():
     return deepcopy(meltano_env)
 def get_ga4_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+
+def get_ttd_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 with models.DAG(
     dag_id = "wendys-meltano-google-ads",
     schedule_interval="20 13 * * *",
@@ -65,6 +69,26 @@ with models.DAG(
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'wendys-main'
         env["DBT_BIGQUERY_DATASET"] = 'dash_table'
+        return env
+    def set_env_vars_tiktok():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "tiktok_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'wendys-main'
+        env["DBT_BIGQUERY_DATASET"] = 'tiktok_transformed'
+        return env
+    def set_env_vars_dash_search():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'wendys-main'
+        env["DBT_BIGQUERY_DATASET"] = 'dash_table_search'
+        return env
+    def set_env_vars_google_ads():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'wendys-main'
+        env["DBT_BIGQUERY_DATASET"] = 'google_ads_search_transformed'
         return env
     def set_env_vars_ga4():
         env = get_meltano_env()
@@ -85,6 +109,30 @@ with models.DAG(
         env["TAP_GA4_START_DATE"] = get_ga4_start_date()
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
         return env
+    kube_tiktok = KubernetesPodOperator(
+        name="wendys-tiktok-to-bigquery",
+        task_id="wendys-tiktok_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","--full-refresh","dbt-bigquery:tiktok_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_tiktok(),
+        
+  
+    )
+    kube_dash_search=KubernetesPodOperator(
+        name="wendys-dash_search-to-bigquery",
+        task_id="wendys-dash_search_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_table_search"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash_search(),
+    )
     kube_ga4 = KubernetesPodOperator(
             name = "wendys-ga4-to-bigquery",
             task_id = "wendys-ga4_to_bigquery",
@@ -109,6 +157,19 @@ with models.DAG(
         
         
         )
+    kube_google_ads_search=KubernetesPodOperator(
+        name="wendys-google-ads-search-to-bigquery",
+        task_id="wendys-google-ads_search_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        trigger_rule='all_done',
+        arguments=["--environment=prod", "invoke","dbt-bigquery:google_ads_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            
+        ),
+        env_vars=set_env_vars_google_ads(),
+    )
+
     kube_dash_union = KubernetesPodOperator(
         name="wendys-dash-union-to-bigquery",
         task_id="wendys-dash_union_to_bigquery",
@@ -120,7 +181,7 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dash(),
     )
-    kube_dash >> kube_dash_union >> kube_ga4
+    kube_tiktok >> kube_google_ads_search >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4
     
     
     
@@ -147,14 +208,6 @@ with models.DAG(
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'wendys-main'
         env["DBT_BIGQUERY_DATASET"] = 'snapchat_transformed'
-        return env
-    def set_env_vars_tiktok():
-        env = get_meltano_env()
-        env["BQ_DATASET"] = "tiktok_raw"
-        env["BQ_METHOD"] = "batch_job"
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'wendys-main'
-        env["DBT_BIGQUERY_DATASET"] = 'tiktok_transformed'
         return env
     def set_env_vars_facebook():
         env = get_meltano_env()
@@ -196,15 +249,9 @@ with models.DAG(
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'wendys-main'
         env["DBT_BIGQUERY_DATASET"] = 'ttd_transformed'
+        env["TAP_TTD_START_DATE"]=get_ttd_start_date()
         return env
   
-
-
-
-    set_env_task_tiktok = PythonOperator(
-        task_id="set_env_tiktok",
-        python_callable=set_env_vars_tiktok,
-    )
     set_env_task_snapchat = PythonOperator(
         task_id="set_env_snapchat",
         python_callable=set_env_vars_snapchat,
@@ -273,19 +320,7 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dash(),
     )
-    kube_tiktok = KubernetesPodOperator(
-        name="wendys-tiktok-to-bigquery",
-        task_id="wendys-tiktok_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","--full-refresh","dbt-bigquery:tiktok_models"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_tiktok(),
-        
-  
-    )
+
 
     kube_facebook = KubernetesPodOperator(
         name="wendys-facebook-to-bigquery",
@@ -336,7 +371,7 @@ with models.DAG(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_ttd(),
-        
+        execution_timeout=timedelta(minutes=60)
         
     )
 
@@ -355,14 +390,12 @@ with models.DAG(
         
         
         )
-   
 
-    set_env_task_tiktok >> kube_tiktok
     set_env_task_facebook >> kube_facebook
     set_env_task_dv360 >> kube_dv360
     set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd 
     set_env_task_hivestack >> kube_hivestack
     set_env_task_snapchat >> kube_snapchat
     #kube_google_ads_search >> kube_dash_search
-    [kube_tiktok,kube_facebook,kube_dv360,kube_cm360,kube_ttd,kube_hivestack,kube_snapchat] >> kube_dash
+    [kube_facebook,kube_dv360,kube_cm360,kube_ttd,kube_hivestack,kube_snapchat] >> kube_dash
     kube_dash >> kube_dash_union

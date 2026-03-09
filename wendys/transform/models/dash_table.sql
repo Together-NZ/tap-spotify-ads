@@ -14,9 +14,29 @@ WITH dash_table AS (
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
     FROM `wendys-main.dv360_transformed.dv360_standard`
-    
     UNION ALL
+    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+    FROM `wendys-main.dv360_transformed.dv360_youtube` 
+    UNION ALL
+                  SELECT media_cost, impressions,clicks,
+              ad_name AS creative_name,  
+           --ARRAY_TO_STRING(media_format, ', ') AS media_format,   -- Convert array to string
+           audience_name, -- Convert array to string
+           ad_format AS ad_format,         -- Convert array to string
+           ad_format_detail AS ad_format_detail, 
+            CAST(0 AS INT64) AS video_completion,
+            CAST(0 AS INT64) AS video_25_completion,
+            CAST(0 AS INT64) AS video_50_completion,
+            CAST(0 AS INT64) AS video_75_completion,
+            CAST(0 AS INT64) AS video_views,
+           
+           campaign_name,publisher, campaign_descr, 
+            creative_descr,  -- Convert array to string
+           date,
 
+    FROM `wendys-main.google_ads_search_transformed.google_ads_demand`
+    UNION ALL
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion
            ,video_25_completion,video_50_completion,video_75_completion, video_views,
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
