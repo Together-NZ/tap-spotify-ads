@@ -12,6 +12,7 @@ WORKDIR /project
 # Copy requirements first to leverage Docker layer caching
 COPY requirements.txt .
 RUN pip install -r requirements.txt
+RUN pip install -U "setuptools<81"
 # Mount SSH and trust GitHub SSH host key
 # Mount SSH and trust GitHub host key
 RUN --mount=type=ssh \
@@ -40,6 +41,13 @@ RUN pip install \
     google-cloud-storage \
     pandas \
     pyarrow
+
+# Ensure plugin venvs have pip + pkg_resources (setuptools)
+RUN for v in /project/.meltano/*/*/venv/bin/python; do \
+"$v" -m ensurepip --upgrade || true; \
+"$v" -m pip install -U "setuptools<81" || true; \
+done
+
 
 # Entrypoint for container
 ENTRYPOINT ["meltano"]

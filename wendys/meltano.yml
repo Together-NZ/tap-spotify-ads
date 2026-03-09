@@ -114,11 +114,10 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0 
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
     commands:
       google_ads_models:
         args: run --select +google_ads_search +google_ads_demand
-        description: Run the Google Ads ads model
       tiktok_models:
         args: run --select +tiktok
         description: Run the TikTok ads model
