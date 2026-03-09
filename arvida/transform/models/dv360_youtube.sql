@@ -27,10 +27,11 @@ WITH parsed_data AS (
                 FORMAT_DATE('%Y-%m-%d', PARSE_DATE('%Y/%m/%d', JSON_VALUE(data, "$.Date"))), -- Use converted date
                 JSON_VALUE(data, "$.Insertion Order ID"),
                 JSON_VALUE(data, "$.Line Item ID"),
+                JSON_VALUE(data, "$.YouTube Ad ID"),
                 JSON_VALUE(data, "$.YouTube Ad"),
-                safe_cast(TRUNC(SAFE_CAST(JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS FLOAT64))as int64)
+                JSON_VALUE(data, "$.YouTube Ad Group ID")
             ORDER BY 
-                CAST(JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS FLOAT64) DESC -- Keep the record with the highest revenue
+                _sdc_extracted_at DESC -- Keep the record with the highest revenue
         ) AS row_num
     FROM
         `arvida-main.dv360_raw.dv360_youtube`
