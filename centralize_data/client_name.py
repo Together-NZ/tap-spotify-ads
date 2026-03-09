@@ -2,7 +2,7 @@ CLIENT_NAME={
     "amp": "amp",
     "aia": "aia-nz",
     "arvida":"arvida",
-    "balance":"ballance",
+    "ballance":"ballance",
     "barfoot":"barfoot-and-thompson",
     "bepure":"bepure",
     "beststart":"best-start",
