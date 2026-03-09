@@ -22,6 +22,7 @@ plugins:
     - ads.*
     - campaigns.*
     - custom_conversions.*
+    - ads_insights
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
     pip_url: git+https://github.com/Together-NZ/tap-linkedin.git setuptools<82.0
