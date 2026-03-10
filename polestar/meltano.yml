@@ -9,9 +9,19 @@ state_backend:
   uri: gs://polestar-meltano-state-staging
 plugins:
   extractors:
+  - name: tap-ttd
+    namespace: tap-ttd
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
+    executable: tap-ttd
+    config:
+      api_key: ${TAP_TTD_API_KEY}
+      start_date: ${START_DATE}
+      end_date:
+      manual: false
+      advertiser_id: rg2hcax
   - name: tap-ga4
     variant: meltanolabs
-    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
       reports: report.json
       start_date: ${START_DATE}
@@ -20,7 +30,7 @@ plugins:
       - goal
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
-    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git
+    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git setuptools<82.0
     executable: tap-linkedin-ads
     capabilities:
     - state
@@ -39,12 +49,12 @@ plugins:
       _catalog_path: ./catalog.json
   - name: tap-facebook
     variant: airbyte
-    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
     config:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights
+    - ads_insights.*
     - ad_account.*
     - ad_sets.*
     - ads.*
@@ -58,7 +68,7 @@ plugins:
     pip_url: target-jsonl
   - name: target-bigquery
     variant: z3z1ma
-    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
     config:
       dataset: ${BQ_DATASET}
       project: polestar-main
@@ -80,14 +90,14 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1
+    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
     config:
       project: polestar-main
       location: australia-southeast1
       method: oauth
     commands:
       linkedin_models:
-        args: run --select +linkedin_no_creative +linkedin
+        args: run --select +linkedin
       ga4_models:
         args: run --select ga4_goal_a ga4_goal_channel
       cm360_models:
@@ -97,6 +107,9 @@ plugins:
         args: run --select +google_ads_search +google_ads_demand
       facebook_models:
         args: run --select +facebook
+      ttd_models:
+        args: run --select +ttd
+        description: Run the TTD ads model
   files:
   - name: files-airflow
     variant: meltano

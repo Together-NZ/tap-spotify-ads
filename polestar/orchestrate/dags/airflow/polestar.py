@@ -30,12 +30,13 @@ log: logging.log = logging.getLogger("airflow.task")
 log.setLevel(logging.INFO)
 
 local_tz = pendulum.timezone("Pacific/Auckland")
-yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=13)
 default_args = {
     "retries": 3,
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
+    'retry_delay': datetime.timedelta(seconds=30),
     "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
 }
 
@@ -66,6 +67,14 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'polestar-main'
         env["DBT_BIGQUERY_DATASET"] = 'cm360_transformed'
         return env
+    def set_env_vars_ttd():
+        env= get_meltano_env()
+        env["BQ_DATASET"] = "ttd_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'polestar-main'
+        env["DBT_BIGQUERY_DATASET"] = 'ttd_transformed'
+        return env  
     def set_env_vars_facebook():
         env  = get_meltano_env()
         env["BQ_DATASET"] = "facebook_raw"
@@ -88,7 +97,20 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'polestar-main'
         env["DBT_BIGQUERY_DATASET"] = 'dash_table'
         return env
-
+    kube_ttd = KubernetesPodOperator(
+            name="polestar-ttd-to-bigquery",
+            task_id="polestar-ttd_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            trigger_rule='all_done',
+            arguments=["--environment=prod", "run","tap-ttd","target-bigquery","dbt-bigquery:ttd_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ttd(),
+            get_logs=True,
+            execution_timeout=timedelta(minutes=60)
+    )
     kube_dash = KubernetesPodOperator(
             name="polestar-dash-to-bigquery",
             task_id="polestar-dash_to_bigquery",
@@ -150,7 +172,7 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(),
         )
-    [kube_facebook,kube_cm360,kube_linkedin_ads] >> kube_dash >> kube_dash_union
+    [kube_facebook,kube_cm360,kube_linkedin_ads,kube_ttd] >> kube_dash >> kube_dash_union
     
 with models.DAG(
     dag_id="polestar-meltano-google_ads",
@@ -189,7 +211,7 @@ with models.DAG(
             env["BQ_DATASET"] = "ga4_raw"
             env["BQ_METHOD"] = "gcs_stage"
             env["DBT_BIGQUERY_METHOD"] = 'oauth'
-            env["DBT_BIGQUERY_PROJECT"] = 'geely-main'
+            env["DBT_BIGQUERY_PROJECT"] = 'polestar-main'
             env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'       
             developer_creds = Credentials(
                 None,
@@ -204,8 +226,8 @@ with models.DAG(
             return env
         
     kube_ga4 = KubernetesPodOperator(
-            name="geely-ga4-to-bigquery",
-            task_id="geely-ga4_to_bigquery",
+            name="polestar-ga4-to-bigquery",
+            task_id="polestar-ga4_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery","dbt-bigquery:ga4_models"],

@@ -35,7 +35,7 @@ WITH ranked_data AS (
                 _sdc_extracted_at DESC
         ) AS row_number
     FROM
-        `polestar-main.facebook_raw.ads_insights_action_video_type`
+        `polestar-main.facebook_raw.ads_insights`
 ),
 deduplicated_data AS (
     SELECT *
@@ -65,90 +65,80 @@ flattened_video_actions AS (
     FROM deduplicated_data
 ),
 parsed_video_actions AS (
-    SELECT
-        date_start,
-        ad_id,
-        
-        adset_id,
-       
-        spend,
-        clicks,
-        campaign_id,
-        impressions,
-        JSON_VALUE(
-            ARRAY(
-                SELECT JSON_EXTRACT_SCALAR(entry, '$.value')
-                FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
-                WHERE JSON_VALUE(entry, '$.action_type') = 'post'
-            )[SAFE_OFFSET(0)]
-        ) AS post_share,
-        JSON_VALUE(
-            ARRAY(
-                SELECT JSON_EXTRACT_SCALAR(entry, '$.value')
-                FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
-                WHERE JSON_VALUE(entry, '$.action_type') = 'post_reaction'
-            )[SAFE_OFFSET(0)]
-        ) AS post_reaction_value,
-        JSON_VALUE(
-            ARRAY(
-                SELECT JSON_EXTRACT_SCALAR(entry, '$.value')
-                FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
-                WHERE JSON_VALUE(entry, '$.action_type') = 'comment'
-            )[SAFE_OFFSET(0)]
-        ) AS comments,
-        JSON_VALUE(
-            ARRAY(
-                SELECT JSON_EXTRACT_SCALAR(entry, '$.value')
-                FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
-                WHERE JSON_VALUE(entry, '$.action_type') = 'like'
-            )[SAFE_OFFSET(0)]
-        ) AS likes,
-        JSON_VALUE(
-            ARRAY(
-                SELECT JSON_EXTRACT_SCALAR(entry, '$.value')
-                FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
-                WHERE JSON_VALUE(entry, '$.action_type') = 'post_engagement'
-            )[SAFE_OFFSET(0)]
-        ) AS post_reaction_engagement,
-        JSON_VALUE(
-            ARRAY(
-                SELECT JSON_EXTRACT_SCALAR(entry, '$.value')
-                FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
-                WHERE JSON_VALUE(entry, '$.action_type') = 'link_click'
-            )[SAFE_OFFSET(0)]
-        ) AS page_engagement,
-        CAST(
-            JSON_VALUE(
-                video_play_array[0],
-                '$.value'
-            ) AS INT64
-        ) AS last_video_played,
-        video_play_array,
-        CAST(
-            JSON_VALUE(
-                video_p25_array[OFFSET(ARRAY_LENGTH(video_p25_array) - 1)],
-                '$.value'
-            ) AS INT64
-        ) AS last_video_p25,
-        CAST(
-            JSON_VALUE(
-                video_p50_array[OFFSET(ARRAY_LENGTH(video_p50_array) - 1)],
-                '$.value'
-            ) AS INT64
-        ) AS last_video_p50,
-        CAST(
-            JSON_VALUE(
-                video_p75_array[OFFSET(ARRAY_LENGTH(video_p75_array) - 1)],
-                '$.value'
-            ) AS INT64
-        ) AS last_video_p75,
-        CAST(
-            JSON_VALUE(
-                video_p100_array[OFFSET(ARRAY_LENGTH(video_p100_array) - 1)],
-                '$.value'
-            ) AS INT64
-        ) AS last_video_p100
-    FROM flattened_video_actions
+ SELECT
+    date_start,
+    ad_id,
+    adset_id,
+    spend,
+    clicks,
+    campaign_id,
+    impressions,
+
+    -- ACTIONS (sum all matching entries)
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
+        WHERE JSON_VALUE(entry, '$.action_type') = 'post'
+    ) AS INT64) AS post_share,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
+        WHERE JSON_VALUE(entry, '$.action_type') = 'post_reaction'
+    ) AS INT64) AS post_reaction_value,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
+        WHERE JSON_VALUE(entry, '$.action_type') = 'comment'
+    ) AS INT64) AS comments,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
+        WHERE JSON_VALUE(entry, '$.action_type') = 'like'
+    ) AS INT64) AS likes,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
+        WHERE JSON_VALUE(entry, '$.action_type') = 'post_engagement'
+    ) AS INT64) AS post_reaction_engagement,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
+        WHERE JSON_VALUE(entry, '$.action_type') = 'link_click'
+    ) AS INT64) AS page_engagement,
+
+    -- VIDEO ACTIONS (sum entire arrays)
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+        FROM UNNEST(video_play_array) AS v
+    ) AS INT64) AS last_video_played,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+        FROM UNNEST(video_p25_array) AS v
+    ) AS INT64) AS last_video_p25,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+        FROM UNNEST(video_p50_array) AS v
+    ) AS INT64) AS last_video_p50,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+        FROM UNNEST(video_p75_array) AS v
+    ) AS INT64) AS last_video_p75,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+        FROM UNNEST(video_p100_array) AS v
+    ) AS INT64) AS last_video_p100
+
+FROM flattened_video_actions
+    
 ),
 summed_data AS (
     SELECT
@@ -233,7 +223,7 @@ interest_data AS (
         JSON_VALUE(data, '$.id') AS ad_id,
         IFNULL(JSON_EXTRACT_ARRAY(JSON_EXTRACT(data, '$.targeting.flexible_spec')), []) AS flexible_spec_array,
         JSON_EXTRACT_ARRAY(data, '$.device_platforms') AS device
-    FROM `polestar-main.facebook_raw.ads`
+    FROM `colorsteel-main.facebook_raw.ads`
 ),
 filtered_interest_data AS (
     SELECT
@@ -242,27 +232,6 @@ filtered_interest_data AS (
     FROM interest_data,
     UNNEST(flexible_spec_array) AS flexible_spec_item,
     UNNEST(IFNULL(JSON_EXTRACT_ARRAY(flexible_spec_item, '$.interests'), [])) AS interest_item
-    GROUP BY ad_id
-),
-device_data AS (
-    SELECT 
-        JSON_VALUE(data, '$.ad_id') AS ad_id,
-        CASE 
-            WHEN STARTS_WITH(JSON_VALUE(data, '$.device_platform'), 'mobile') THEN 'mobile'
-            ELSE JSON_VALUE(data, '$.device_platform')
-        END AS device_platform
-    FROM 
-        `polestar-main.facebook_raw.ads_insights_delivery_device`
-),
-deduplicated_device_data AS (
-    SELECT DISTINCT ad_id, device_platform
-    FROM device_data
-),
-aggregated_device_data AS (
-    SELECT
-        ad_id,
-        ARRAY_AGG(DISTINCT device_platform) AS device_platforms
-    FROM deduplicated_device_data
     GROUP BY ad_id
 ),
 deplicate_data AS (
@@ -287,7 +256,6 @@ SELECT
     sd.total_video_p75 as video_75_completion, 
     sd.total_video_p100 as video_completion,
     sd.total_video_played as video_played,
-    da.device_platforms,
     sd.page_engagement AS clicks,
     sd.engagement AS social_post_engagement,
     sd.impressions,
@@ -299,8 +267,6 @@ LEFT JOIN filtered_campaign_data fcd
     ON fcd.campaign_id = sd.campaign_id
 LEFT JOIN filtered_interest_data i
     ON i.ad_id = sd.ad_id
-LEFT JOIN aggregated_device_data da
-    ON da.ad_id = sd.ad_id
 LEFT JOIN deduplicate_ad_data as ad
     ON ad.ad_id = sd.ad_id
 LEFT JOIN deduplicate_adset_data as adset
@@ -317,7 +283,7 @@ END AS audience_name,
 CASE 
 WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>=4 AND SPLIT(campaign_name,'_')[OFFSET(3)] LIKE '%SOCIAL%' AND (lower(campaign_name) like '%vid%' or lower(ad_name) like '%vid%') THEN 'Social Video'
 WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>=4 AND SPLIT(campaign_name,'_')[OFFSET(3)] LIKE '%SOCIAL%' AND (lower(campaign_name) not like '%vid%' and lower(ad_name) not like '%vid%')THEN 'Social Display'
-else 'OTHER'
+else 'Other'
 END AS media_format,
 CASE WHEN ARRAY_LENGTH(SPLIT(ad_name,'_'))>=8 THEN SPLIT(ad_name, '_')[OFFSET(5)] ELSE 'Other' END AS ad_format_detail,
 CASE WHEN ARRAY_LENGTH(SPLIT(ad_name,'_'))>=8 THEN SPLIT(ad_name, '_')[OFFSET(6)] ELSE 'Other' END AS ad_format,
