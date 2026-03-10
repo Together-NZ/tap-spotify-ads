@@ -109,7 +109,7 @@ plugins:
       facebook_models:
         args: run --select facebook
       linkedin_models:
-        args: run --select linkedin_no_creative linkedin
+        args: run --select linkedin
   files:
   - name: files-airflow
     variant: meltano
