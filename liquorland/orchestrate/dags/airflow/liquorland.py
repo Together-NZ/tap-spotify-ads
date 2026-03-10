@@ -30,7 +30,7 @@ log: logging.log = logging.getLogger("airflow.task")
 log.setLevel(logging.INFO)
 
 local_tz = pendulum.timezone("Pacific/Auckland")
-yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
 default_args = {
     "retries": 3,
     "max_active_runs": 1,
