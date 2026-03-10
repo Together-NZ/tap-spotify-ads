@@ -59,7 +59,7 @@ WITH cm360reference AS (
     WHERE 
         (JSON_VALUE(JSON_EXTRACT(data, "$.advertiser"))) like '%Be Pure%'
         -- filter the site name from the cm360 dataset
-        AND LOWER(JSON_VALUE(JSON_EXTRACT(data, "$.site"))) NOT IN ('the trade desk', 'ttd', 'facebook', 'meta','dv360','dv_360', 'twitch', 'programmatic', 'dart', 'google ads', 'sem')
+        AND LOWER(JSON_VALUE(JSON_EXTRACT(data, "$.site"))) NOT IN ('the trade desk', 'ttd', 'facebook', 'twitch', 'programmatic', 'dart', 'google ads', 'sem')
 
 )
 

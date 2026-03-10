@@ -11,7 +11,7 @@ plugins:
   extractors:
   - name: tap-facebook
     variant: airbyte
-    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
     config:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
@@ -23,7 +23,7 @@ plugins:
     - campaigns.*
   - name: tap-ttd
     namespace: tap-ttd
-    pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git
     executable: tap-ttd
     config:
       api_key: ${TAP_TTD_API_KEY}
@@ -33,7 +33,7 @@ plugins:
       advertiser_id: on3qsjc
   - name: tap-ga4
     variant: meltanolabs
-    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
     config:
       reports: ${GA4_REPORTS}
       start_date: ${START_DATE}
@@ -42,12 +42,12 @@ plugins:
       - ${GA4_GOAL}
   - name: tap-tiktok
     variant: gthesheep
-    pip_url: git+https://github.com/gthesheep/tap-tiktok.git setuptools<82.0
+    pip_url: git+https://github.com/gthesheep/tap-tiktok.git
     config:
       start_date: ${START_DATE}
   - name: tap-dv360
     namespace: tap-dv360
-    pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git
     executable: tap-dv360
     capabilities:
     - state
@@ -67,7 +67,7 @@ plugins:
     pip_url: target-jsonl
   - name: target-bigquery
     variant: z3z1ma
-    pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
     config:
       dataset: ${BQ_DATASET}
       project: bepure-main
@@ -88,7 +88,7 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
     config:
       project: bepure-main
       method: oauth
