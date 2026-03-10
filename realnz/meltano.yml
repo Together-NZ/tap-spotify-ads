@@ -9,9 +9,10 @@ state_backend:
   uri: gs://realnz-main-meltano-state-staging
 plugins:
   extractors:
+  # university of waikato:
   - name: tap-ttd
     namespace: tap-ttd
-    pip_url: git+https://github.com/Together-NZ/tap-ttd.git
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
     executable: tap-ttd
     config:
       api_key: ${TAP_TTD_API_KEY}
@@ -22,7 +23,7 @@ plugins:
 
   - name: tap-dv360
     namespace: tap-dv360
-    pip_url: git+https://github.com/Together-NZ/tap-dv360.git
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
     executable: tap-dv360
     capabilities:
     - state
@@ -46,26 +47,26 @@ plugins:
   - name: tap-facebook
 
     variant: airbyte
-    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
     config:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights
+    - ads_insights.*
     - ad_account.*
     - ad_sets.*
     - ads.*
     - campaigns.*
   - name: tap-hivestack
     namespace: tap-hivestack
-    pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0
     executable: tap-hivestack
     config:
         api_key: ${TAP_HIVESTACK_API_KEY}
         report_id: '67687'
   - name: tap-ga4
     variant: meltanolabs
-    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
       reports: ${GA4_REPORTS}
       start_date: ${START_DATE}
@@ -78,7 +79,7 @@ plugins:
     pip_url: target-jsonl
   - name: target-bigquery
     variant: z3z1ma
-    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
     config:
       dataset: ${BQ_DATASET}
       project: real-nz-main
@@ -95,7 +96,7 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
     config:
       method: oauth
       project: real-nz-main

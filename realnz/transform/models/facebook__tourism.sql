@@ -234,7 +234,27 @@ filtered_interest_data AS (
     UNNEST(IFNULL(JSON_EXTRACT_ARRAY(flexible_spec_item, '$.interests'), [])) AS interest_item
     GROUP BY ad_id
 ),
-
+device_data AS (
+    SELECT 
+        JSON_VALUE(data, '$.ad_id') AS ad_id,
+        CASE 
+            WHEN STARTS_WITH(JSON_VALUE(data, '$.device_platform'), 'mobile') THEN 'mobile'
+            ELSE JSON_VALUE(data, '$.device_platform')
+        END AS device_platform
+    FROM 
+        `real-nz-main.facebook_raw__tourism.ads_insights_delivery_device`
+),
+deduplicated_device_data AS (
+    SELECT DISTINCT ad_id, device_platform
+    FROM device_data
+),
+aggregated_device_data AS (
+    SELECT
+        ad_id,
+        ARRAY_AGG(DISTINCT device_platform) AS device_platforms
+    FROM deduplicated_device_data
+    GROUP BY ad_id
+),
 deplicate_data AS (
 SELECT 
     sd.date_start as date,
@@ -257,6 +277,7 @@ SELECT
     sd.total_video_p75 as video_75_completion, 
     sd.total_video_p100 as video_completion,
     sd.total_video_played as video_played,
+    da.device_platforms,
     sd.page_engagement AS clicks,
     sd.engagement AS social_post_engagement,
     sd.impressions,
@@ -268,6 +289,8 @@ LEFT JOIN filtered_campaign_data fcd
     ON fcd.campaign_id = sd.campaign_id
 LEFT JOIN filtered_interest_data i
     ON i.ad_id = sd.ad_id
+LEFT JOIN aggregated_device_data da
+    ON da.ad_id = sd.ad_id
 LEFT JOIN deduplicate_ad_data as ad
     ON ad.ad_id = sd.ad_id
 LEFT JOIN deduplicate_adset_data as adset

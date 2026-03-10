@@ -12,13 +12,13 @@ from google.auth.transport.requests import Request
 from datetime import timedelta, datetime as dt
 import json
 
-IMAGE = "australia-southeast1-docker.pkg.dev/real-nz-main/meltano/meltano-realnz-main:prod"
+IMAGE = "australia-southeast1-docker.pkg.dev/real-nz-main/meltano/meltano-real-nz-main:prod"
 
 log: logging.log = logging.getLogger("airflow.task")
 log.setLevel(logging.INFO)
 
 local_tz = pendulum.timezone("Pacific/Auckland")
-yesterday = dt.now(local_tz) - timedelta(days=1)
+yesterday = dt.now(local_tz) - timedelta(days=13)
 ga4_start_date = dt.now(local_tz) - timedelta(days=30)
 
 default_args = {
