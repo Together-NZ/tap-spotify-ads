@@ -31,8 +31,8 @@ plugins:
     select:
     - campaigns.*
     - creatives.*
+    - campaign_groups.*
     - ad_analytics_by_creative.*
-    - ad_analytics_by_campaign.*
   - name: tap-ttd
     namespace: tap-ttd
     pip_url: git+https://github.com/Together-NZ/tap-ttd.git
@@ -60,7 +60,7 @@ plugins:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights
+    - ads_insights.*
     - ad_account.*
     - ad_sets.*
     - ads.*
