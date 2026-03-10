@@ -12,7 +12,7 @@ plugins:
 
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
-    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git
+    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git setuptools<82.0
     executable: tap-linkedin-ads
     capabilities:
     - state
@@ -31,12 +31,12 @@ plugins:
       _catalog_path: ./catalog.json
     select:
     - campaigns.*
+    - campaign_groups.*
     - creatives.*
     - ad_analytics_by_creative.*
-    - ad_analytics_by_campaign.*
   - name: tap-ga4
     variant: meltanolabs
-    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
       reports: ./report.json
       start_date: ${START_DATE}
@@ -45,7 +45,7 @@ plugins:
       - goal
   - name: tap-facebook
     variant: airbyte
-    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
     config:
         airbyte_config:
           start_date: ${START_DATE}T00:00:00Z
@@ -57,7 +57,7 @@ plugins:
         - campaigns.*
   - name: tap-ttd
     namespace: tap-ttd
-    pip_url: git+https://github.com/Together-NZ/tap-ttd.git
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
     executable: tap-ttd
     config:
       api_key: ${TAP_TTD_API_KEY}
@@ -67,7 +67,7 @@ plugins:
       advertiser_id: 2lqfpih
   - name: tap-hivestack
     namespace: tap-hivestack
-    pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0
     executable: tap-hivestack
     config:
       api_key: ${TAP_HIVESTACK_API_KEY}
@@ -78,7 +78,7 @@ plugins:
     pip_url: target-jsonl
   - name: target-bigquery
     variant: z3z1ma
-    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
     config:
       dataset: ${BQ_DATASET}
       project: brightr-main
@@ -95,7 +95,7 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
     commands:
       google_ads_models:
         args: run --select google_ads_search google_ads_demand
@@ -108,7 +108,7 @@ plugins:
       hivestack_models:
         args: run --select +hivestack
       linkedin_models:
-        args: run --select +linkedin_no_creative +linkedin
+        args: run --select +linkedin
       ttd_models:
         args: run --select +ttd_transformed
       
