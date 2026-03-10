@@ -7,6 +7,7 @@ WITH parsed_data AS (
         JSON_VALUE(JSON_EXTRACT(data, "$.Partner ID")) AS partner_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.Advertiser ID")) AS advertiser_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.Campaign ID")) AS campaign_id,
+        _sdc_extracted_at,
         JSON_VALUE(JSON_EXTRACT(data, "$.Ad Group ID")) AS ad_group_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.Ad Format")) AS ad_format,
         JSON_VALUE(JSON_EXTRACT(data, "$.Creative ID")) AS creative_id,
@@ -97,7 +98,9 @@ ranked_data AS (
         ROW_NUMBER() OVER (
             PARTITION BY
                 Date, partner_id, advertiser_id, campaign_id, ad_group_id, ad_format, creative_id, 
-                advertiser, campaign_name, ad_group, creative, deal_id, ad_server_creative_placement_id
+                advertiser,  deal_id, ad_server_creative_placement_id
+            ORDER BY 
+                _sdc_extracted_at DESC
         ) AS row_num
     FROM
         parsed_data

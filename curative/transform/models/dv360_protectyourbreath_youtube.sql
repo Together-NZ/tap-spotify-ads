@@ -29,7 +29,7 @@ WITH parsed_data AS (
                 JSON_VALUE(data, "$.Line Item ID"),
                 JSON_VALUE(data, "$.YouTube Ad")
             ORDER BY 
-                CAST(JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS FLOAT64) DESC -- Keep the record with the highest revenue
+                JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") DESC -- Keep the record with the highest revenue
         ) AS row_num
     FROM
         `curative-main.dv360_protectyourbreath_raw.dv360_youtube`

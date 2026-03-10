@@ -29,10 +29,44 @@ WITH dash_table AS (
            ,video_25_completion,video_50_completion,video_75_completion, video_views,
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
     FROM `curative-main.tiktok_transformed__protectyourbreath.tiktok__protectyourbreath`
+    UNION ALL
+    SELECT media_cost, impressions,clicks,
+    ad_name AS  creative_name,  
+           --ARRAY_TO_STRING(media_format, ', ') AS media_format,   -- Convert array to string
+            audience_name, -- Convert array to string
+            ad_format,         -- Convert array to string
+            ad_format_detail, 
+            CAST(0 AS INT64) AS video_completion,
+            CAST(0 AS INT64) AS video_25_completion,
+            CAST(0 AS INT64) AS video_50_completion,
+            CAST(0 AS INT64) AS video_75_completion,
+            CAST(0 AS INT64) AS video_views,
+           
+           campaign_name,publisher, campaign_descr, 
+            creative_descr,  -- Convert array to string
+           date,
+
+    FROM `curative-main.google_ads_protectyourbreath_search_transformed.google_ads_demand__protectyourbreath`
+    UNION ALL
+    SELECT media_cost, impressions, CAST(0 AS INT64) AS clicks, 
+           creative_name,   -- Convert array to string
+           audience_name AS audience_name, -- Convert array to string
+           ad_format AS ad_format,         -- Convert array to string
+           ad_format_detail AS ad_format_detail, 
+            CAST(0 AS INT64) AS video_completion,
+            CAST(0 AS INT64) AS video_25_completion,
+            CAST(0 AS INT64) AS video_50_completion,
+            CAST(0 AS INT64) AS video_75_completion,
+            CAST(0 AS INT64) AS video_views,
+           
+           campaign_name,publisher, campaign_descr, 
+           creative_descr AS creative_descr, -- Convert array to string
+           date,
+    FROM `curative-main.hivestack_protectyourbreath_transformed.hivestack_protectyourbreath`
 
 ), with_channel AS (
 SELECT * EXCEPT (publisher,channel), 
-dt.publisher,
+dc.publisher,
 dc.channel
 
 

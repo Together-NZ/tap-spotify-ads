@@ -11,12 +11,12 @@ plugins:
   extractors:
   - name: tap-tiktok
     variant: gthesheep
-    pip_url: git+https://github.com/gthesheep/tap-tiktok.git
+    pip_url: git+https://github.com/gthesheep/tap-tiktok.git setuptools<82.0
     config:
       start_date: ${START_DATE}
   - name: tap-snapchat-ads
     namespace: tap-snapchat-ads
-    pip_url: git+https://github.com/Together-NZ/tap_snapchat_ads.git
+    pip_url: git+https://github.com/Together-NZ/tap_snapchat_ads.git setuptools<82.0
     executable: tap-snapchat-ads
     capabilities:
     - catalog
@@ -31,7 +31,7 @@ plugins:
     catalog: snapchat_catalog.json
   - name: tap-dv360
     namespace: tap-dv360
-    pip_url: git+https://github.com/Together-NZ/tap-dv360.git
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
     executable: tap-dv360
     capabilities:
     - state
@@ -47,7 +47,7 @@ plugins:
       service_account: together-meltano@together-internal.iam.gserviceaccount.com
   - name: tap-ga4
     variant: meltanolabs
-    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
       reports: ./report.json
       start_date: ${START_DATE}
@@ -56,7 +56,7 @@ plugins:
       - goal
   - name: tap-ttd
     namespace: tap-ttd
-    pip_url: git+https://github.com/Together-NZ/tap-ttd.git
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
     executable: tap-ttd
     config:
       api_key: ${TAP_TTD_API_KEY}
@@ -66,19 +66,19 @@ plugins:
       advertiser_id: ${TAP_TTD_ADVERTISER_ID}
   - name: tap-facebook
     variant: airbyte
-    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
     config:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights_*.*
+    - ads_insights.*
     - ad_account.*
     - ad_sets.*
     - ads.*
     - campaigns.*
   - name: tap-hivestack
     namespace: tap-hivestack
-    pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0
     executable: tap-hivestack
     config:
         api_key: ${TAP_HIVESTACK_API_KEY}
@@ -86,7 +86,7 @@ plugins:
   loaders:
   - name: target-bigquery
     variant: z3z1ma
-    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
     config:
       dataset: ${BQ_DATASET}
       project: curative-main
@@ -108,7 +108,7 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
     config:
       project: curative-main
       method: oauth
@@ -125,6 +125,8 @@ plugins:
         args: run --select dv360_protectyourbreath_standard dv360_protectyourbreath_youtube
       dv360_mahi_models:
         args: run --select dv360_mahi_standard dv360_mahi_youtube
+      dv360_creativenz_models:
+        args: run --select dv360_creativenz_standard dv360_creativenz_youtube
       facebook_creativenz_models:
         args: run --select facebook_creativenz
       facebook_protectyourbreath_models:
@@ -137,8 +139,11 @@ plugins:
         args: run --select ga4_goal_a__fasd ga4_goal_channel__fasd
       ga4_realnurses_models:
         args: run --select ga4_goal_a__realnurses ga4_goal_channel__realnurses
+      
       hivestack_protectyourbreath_models:
         args: run --select hivestack_protectyourbreath
+      hivestack_fasd_models:
+        args: run --select hivestack_fasd
       snapchat_protectyourbreath_models:
         args: run --select snapchat_protectyourbreath
       tiktok_creativenz_models:
@@ -158,6 +163,16 @@ plugins:
         args: run --select ttd_mahi_transformed
       ttd_realnurses_models:
         args: run --select ttd_realnurses_transformed
+      google_ads_creativenz_models:
+        args: run --select google_ads_search__creativenz google_ads_demand__creativenz
+      google_ads_protectyourbreath_models:
+        args: run --select google_ads_search__protectyourbreath google_ads_demand__protectyourbreath
+      google_ads_fasd_models:
+        args: run --select google_ads_search__fasd google_ads_demand__fasd
+      google_ads_mahi_models:
+        args: run --select google_ads_search__mahi google_ads_demand__mahi
+      google_ads_realnurses_models:
+        args: run --select google_ads_search__realnurses google_ads_demand__realnurses
   files:
   - name: files-airflow
     variant: meltano
