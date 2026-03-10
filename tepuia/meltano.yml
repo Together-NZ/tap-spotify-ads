@@ -11,7 +11,7 @@ plugins:
   extractors:
   - name: tap-dv360
     namespace: tap-dv360
-    pip_url: git+https://github.com/Together-NZ/tap-dv360.git
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
     executable: tap-dv360
     capabilities:
     - state
@@ -36,7 +36,7 @@ plugins:
       - ${GA4_GOAL}
   - name: tap-ttd
     namespace: tap-ttd
-    pip_url: git+https://github.com/Together-NZ/tap-ttd.git
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
     executable: tap-ttd
     config:
       api_key: ${TAP_TTD_API_KEY}
@@ -46,12 +46,12 @@ plugins:
       advertiser_id: 478e79v
   - name: tap-facebook
     variant: airbyte
-    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
     config:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights
+    - ads_insights.*
     - ad_account.*
     - ad_sets.*
     - ads.*
@@ -59,7 +59,7 @@ plugins:
   loaders:
   - name: target-bigquery
     variant: z3z1ma
-    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
     config:
       dataset: ${BQ_DATASET}
       project: tepuia-main
@@ -80,7 +80,7 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0
+    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
     commands:
       cm360_models: 
         args: run --select cm360_seralized cm360_direct_buy
