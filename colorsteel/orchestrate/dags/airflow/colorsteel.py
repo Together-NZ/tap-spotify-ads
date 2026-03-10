@@ -37,7 +37,8 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
-    "start_date": datetime.datetime(2026, 3, 5, tzinfo=local_tz)
+    'retry_delay': timedelta(minutes=30),
+    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
 }
 
 
@@ -46,93 +47,18 @@ def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_colorsteel_main", deserialize_json=True)
     meltano_env_common = Variable.get("meltano_common_secret",deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique}
-    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
-    start_date_str = yesterday.strftime("%Y-%m-%d")
-    meltano_env["TAP_PINTEREST_ADS_END_DATE"] = datetime.datetime.now(local_tz).strftime("%Y-%m-%d")
+    start_date_str = (datetime.datetime.now(local_tz) - datetime.timedelta(days=3)).strftime("%Y-%m-%d")
     meltano_env["START_DATE"] = start_date_str
     meltano_env["BQ_METHOD"] = "batch_job"
 
     return deepcopy(meltano_env)
 def get_ga4_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
-
-with models.DAG(
-    dag_id='colorsteel-main-google-ads',
-    schedule_interval='40 14 * * *',
-    default_args=default_args,
-) as google_dag:
-    def set_env_vars_ga4():
-        env = get_meltano_env()
-        env["BQ_DATASET"] = "ga4_raw"
-        env["BQ_METHOD"] = "gcs_stage"
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'colorsteel-main'
-        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'  
-        env["TAP_GA4_START_DATE"] = get_ga4_start_date() 
-        developer_creds = Credentials(
-            None,
-            refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
-            token_uri="https://oauth2.googleapis.com/token",
-            client_id=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_ID"],
-            client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
-        )
-        developer_creds.refresh(Request())
-        env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-        return env
-    
-    def set_env_vars_dash():
-        env = get_meltano_env()
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'colorsteel-main'
-        env["DBT_BIGQUERY_DATASET"] = 'dash_table'
-        return env
-    
-    kube_dash_union = KubernetesPodOperator(
-            name="colorsteel-dash-union-to-bigquery",
-            task_id="colorsteel-dash_union_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_dash(),
-            #base_container_name=f"meltano-{label}-dash",
-            get_logs = True
-    )
-    kube_ga4 = KubernetesPodOperator(
-            name="colorsteel-ga4-to-bigquery",
-            task_id="colorsteel-ga4_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "run","tap-ga4","target-bigquery", "dbt-bigquery:ga4_models"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_ga4(),
-            #base_container_name=f"meltano-{label}-ga4",
-            get_logs = True
-    )
-    kube_dash = KubernetesPodOperator(
-            name="colorsteel-dash-to-bigquery",
-            task_id="colorsteel-dash_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            trigger_rule = 'all_done',
-            arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_table"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_dash(),
-            #base_container_name=f"meltano-{label}-dash",
-            get_logs = True
-    )
-    kube_dash >> kube_dash_union >> kube_ga4
-
-
+def get_ttd_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 with models.DAG(
     dag_id="colorsteel-meltano-extraction-transformation-dbt",
-    schedule_interval="0 5 * * *",
+    schedule_interval="0 14 * * *",
     default_args=default_args,
 ) as dag:
     env = get_meltano_env()
@@ -176,7 +102,26 @@ with models.DAG(
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'colorsteel-main'
         env["DBT_BIGQUERY_DATASET"] = 'ttd_transformed'
+        env["TAP_TTD_START_DATE"] = get_ttd_start_date()
         #env["TAP_TTD_ADVERTISER_ID"] = id
+        return env
+    def set_env_vars_ga4():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "ga4_raw"
+        env["BQ_METHOD"] = "gcs_stage"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'colorsteel-main'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'  
+        env["TAP_GA4_START_DATE"] = get_ga4_start_date() 
+        developer_creds = Credentials(
+            None,
+            refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_ID"],
+            client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
+        )
+        developer_creds.refresh(Request())
+        env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
         return env
 
     def set_env_vars_dash():
@@ -203,6 +148,10 @@ with models.DAG(
     set_env_task_ttd = PythonOperator(
         task_id="set_env_task_ttd",
         python_callable=set_env_vars_ttd,
+    )
+    set_env_task_ga4 = PythonOperator(
+        task_id="set_env_task_ga4",
+        python_callable=set_env_vars_ga4,
     )
 
     set_env_task_dash = PythonOperator(
@@ -268,7 +217,8 @@ with models.DAG(
             ),
             env_vars=set_env_vars_ttd(),
             #base_container_name=f"meltano-{label}-ttd",
-            get_logs = True
+            get_logs = True,
+            execution_timeout=timedelta(minutes=60)
     )
     kube_cm360 = KubernetesPodOperator(
             name="colorsteel-cm360-to-bigquery",
@@ -283,7 +233,19 @@ with models.DAG(
             #base_container_name=f"meltano-{label}-cm360",
             get_logs = True
     )
-
+    kube_ga4 = KubernetesPodOperator(
+            name="colorsteel-ga4-to-bigquery",
+            task_id="colorsteel-ga4_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run","tap-ga4","target-bigquery", "dbt-bigquery:ga4_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ga4(),
+            #base_container_name=f"meltano-{label}-ga4",
+            get_logs = True
+    )
     kube_dash = KubernetesPodOperator(
             name="colorsteel-dash-to-bigquery",
             task_id="colorsteel-dash_to_bigquery",
@@ -314,6 +276,7 @@ with models.DAG(
 
     set_env_task_cm360 >> kube_cm360 
     set_env_task_ttd >> kube_ttd
+    set_env_task_ga4 >> kube_ga4
     set_env_task_facebook >> kube_facebook
     set_env_task_pinterest >> kube_pinterest
     [kube_cm360,kube_ttd,kube_facebook,kube_pinterest] >> set_env_task_dash >> kube_dash

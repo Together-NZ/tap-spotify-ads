@@ -12,13 +12,14 @@ WITH cm360reference AS (
         JSON_VALUE(JSON_EXTRACT(data, "$.advertiserId")) AS advertiser_id,
         safe.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.campaignEndDate"))) AS campaign_end_date,
         JSON_VALUE(JSON_EXTRACT(data, "$.campaignId")) AS campaign_id,
-        JSON_VALUE(JSON_EXTRACT(data, "$.campaign")) AS campaign_name,
+        JSON_VALUE(JSON_EXTRACT(data, "$.placement")) AS placement,
+        JSON_VALUE(JSON_EXTRACT(data, "$.campaign")) AS campaign_name_old,
         safe.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.campaignStartDate"))) AS campaign_start_date,
         JSON_VALUE(JSON_EXTRACT(data, "$.clickThroughUrl")) AS click_through_url,
         safe.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.date"))) AS date,
         JSON_VALUE(JSON_EXTRACT(data, "$.placementCostStructure")) AS placement_cost_structure,
         safe.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.placementEndDate"))) AS placement_end_date,
-        JSON_VALUE(JSON_EXTRACT(data, "$.placement")) AS placement,
+        JSON_VALUE(JSON_EXTRACT(data, "$.placement")) AS campaign_name,
         JSON_VALUE(JSON_EXTRACT(data, "$.packageRoadblockId")) AS package_roadblock_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.packageRoadblock")) AS package_roadblock,
         JSON_VALUE(JSON_EXTRACT(data, "$.placementSize")) AS placement_size,
@@ -59,7 +60,7 @@ WITH cm360reference AS (
     WHERE 
         lower((JSON_VALUE(JSON_EXTRACT(data, "$.advertiser")))) like '%coloursteel%'
         -- filter the site name from the cm360 dataset
-        AND LOWER(JSON_VALUE(JSON_EXTRACT(data, "$.site"))) NOT IN ('the trade desk', 'ttd', 'facebook','meta','dv360','dv 360', 'twitch', 'programmatic', 'dart', 'google ads', 'sem')
+        AND LOWER(JSON_VALUE(JSON_EXTRACT(data, "$.site"))) NOT IN ('the trade desk', 'ttd', 'facebook','meta','dv360','dv_360', 'twitch', 'programmatic', 'dart', 'google ads', 'sem')
 
 )
 
