@@ -73,7 +73,7 @@ UNION ALL
     FROM `barfoot-and-thompson-main.linkedin_transformed.linkedin`
 ), with_channel AS (
 SELECT * EXCEPT (publisher,channel), 
-dt.publisher,
+dc.publisher,
 dc.channel
 
 
