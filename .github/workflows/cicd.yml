@@ -43,8 +43,16 @@ jobs:
         id: set-matrix
         if: steps.filter.outputs.project == 'true' 
         run: |
-          # Get unique top-level directory names
-          FOLDERS=$(git diff --name-only HEAD^ HEAD |grep -v '/orchestrate/'|grep -v 'README.md'|grep -v '.github/'|grep -v '/ci_test.sh'|grep -v '/client_name.py' | grep -v '/docker_build.py'| cut -d/ -f1 | sort -u | jq -R . | jq -s -c .)
+          FOLDERS=$(git diff --name-only HEAD^ HEAD \
+            | grep -v '/orchestrate/' \
+            | grep -v 'README.md' \
+            | grep -v '.github/' \
+            | grep -v '/ci_test.sh' \
+            | grep -v '/client_name.py' \
+            | grep -v '/docker_build.py' \
+            | cut -d/ -f1 | sort -u \
+            | while read dir; do [ -d "$dir" ] && echo "$dir"; done \
+            | jq -R . | jq -s -c .)
           echo "matrix=$FOLDERS" >> $GITHUB_OUTPUT
   
   # 3. Third job: Detect which folders changed, get change folder for orchestrate DAG
@@ -76,9 +84,13 @@ jobs:
         id: set-dag-matrix
         if: steps.filter.outputs.dag == 'true'
         run: |
-          # Get unique top-level directory names
-          FOLDERS=$(git diff --name-only HEAD^ HEAD |grep '/orchestrate/'| cut -d/ -f1 | sort -u | jq -R . | jq -s -c .)
+          FOLDERS=$(git diff --name-only HEAD^ HEAD \
+            | grep '/orchestrate/' \
+            | cut -d/ -f1 | sort -u \
+            | while read dir; do [ -d "$dir" ] && echo "$dir"; done \
+            | jq -R . | jq -s -c .)
           echo "matrix=$FOLDERS" >> $GITHUB_OUTPUT
+
   # 4. Fourth job: Upload the DAG to the Composer environment
   upload_dag:
     permissions:
