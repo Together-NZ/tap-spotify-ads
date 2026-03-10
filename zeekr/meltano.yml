@@ -11,7 +11,7 @@ plugins:
   extractors:
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
-    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git
+    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git setuptools<82.0
     executable: tap-linkedin-ads
     capabilities:
     - state
@@ -35,7 +35,7 @@ plugins:
     - ad_analytics_by_creative.*
   - name: tap-ttd
     namespace: tap-ttd
-    pip_url: git+https://github.com/Together-NZ/tap-ttd.git
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
     executable: tap-ttd
     config:
       api_key: ${TAP_TTD_API_KEY}
@@ -55,7 +55,7 @@ plugins:
 
   - name: tap-facebook
     variant: airbyte
-    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
     config:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
@@ -74,7 +74,7 @@ plugins:
     pip_url: target-jsonl
   - name: target-bigquery
     variant: z3z1ma
-    pip_url: git+https://github.com/z3z1ma/target-bigquery.git
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
     config:
       dataset: ${BQ_DATASET}
       project: zeekr-main
@@ -96,7 +96,7 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1
+    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
     config:
       project: zeekr-main
       location: australia-southeast1
