@@ -23,7 +23,7 @@ from google.cloud import storage
 import json
 
 
-IMAGE = "australia-southeast1-docker.pkg.dev/contact-energy-main/meltano/meltano-contact-energys-main:prod"
+IMAGE = "australia-southeast1-docker.pkg.dev/contact-energy-main/meltano/meltano-contact-energy-main:prod"
 
 
 log: logging.log = logging.getLogger("airflow.task")
