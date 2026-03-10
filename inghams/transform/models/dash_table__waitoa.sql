@@ -58,7 +58,7 @@ from `inghams-main.cm360_transformed__waitoa.cm360_direct_buy__waitoa`
 ),
 with_channel AS (
 SELECT * EXCEPT (publisher,channel), 
-dt.publisher,
+dc.publisher,
 dc.channel
 
 

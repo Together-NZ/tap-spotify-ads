@@ -70,7 +70,7 @@ SELECT * ,
     ELSE SPLIT(campaign_name,'_')[OFFSET(1)] END AS campaign_descr
 
 FROM dedupllicate_data 
-WHERE row_num = 1)
+WHERE row_num = 1 and lower(campaign_name) not like '%yt%')
 SELECT f.* except(creative_name),
 COALESCE(y.youtube_ad,f.creative_name) as creative_name
 from final f LEFT JOIN youtube_detail y ON f.campaign_name = y.campaign_name

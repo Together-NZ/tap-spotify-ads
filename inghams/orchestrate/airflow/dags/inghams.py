@@ -36,6 +36,7 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
+    'retry_delay': timedelta(minutes=30),
     "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
 }
 
@@ -56,11 +57,28 @@ def get_meltano_env():
     return deepcopy(meltano_env)
 def get_ga4_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+def get_ttd_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 with models.DAG(
     dag_id="inghams-meltano-google-ads",
-    schedule_interval="20 13 * * *",
+    schedule_interval="10 14 * * *",
     default_args=default_args,
 ) as google_dag:
+    def set_env_vars_tiktok(id,label):
+        env = get_meltano_env()
+        env["BQ_DATASET"] = f"tiktok_raw__{label}"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'inghams-main'
+        env["DBT_BIGQUERY_DATASET"] = f'tiktok_transformed__{label}'
+        env["TAP_TIKTOK_ADVERTISER_ID"] = id
+        return env
+    def set_env_vars_dash(label):
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'inghams-main'
+        env["DBT_BIGQUERY_DATASET"] = f'dash_table__{label}'
+        return env
     def set_env_vars_ga4(id,label):
         env = get_meltano_env()
         env["BQ_DATASET"] = f"ga4_raw__{label}"
@@ -95,6 +113,47 @@ with models.DAG(
             env_vars=set_env_vars_ga4(key,label
             )
         )
+    tiktok_list = {env["TIKTOK_WAITOA_ADVERTISER_ID"]:'waitoa'}
+    for key,label in tiktok_list.items():
+        kube_tiktok = KubernetesPodOperator(
+            name=f"{label}-tiktok-to-bigquery",
+            task_id=f"{label}-tiktok_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","--full-refresh",f"dbt-bigquery:tiktok_{label}_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_tiktok(key,label
+)
+        )
+        kube_dash = KubernetesPodOperator(
+            name=f"{label}-dash-to-bigquery",
+            task_id=f"{label}-dash_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            trigger_rule='all_done',
+            arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select",f"dash_table__{label}"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_dash(label),
+            #base_container_name=f"meltano-{label}-dash",
+            )
+        kube_dash_union=KubernetesPodOperator(
+            name=f"{label}-dash-union-to-bigquery",
+            task_id=f"{label}-dash_union_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select",f"dash_union__{label}"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_dash(label),
+            #base_container_name=f"meltano-{label}-dash",
+        )
+        kube_tiktok >> kube_dash >> kube_dash_union
+        
 
 with models.DAG(
     dag_id="inghams-meltano-extraction-transformation-dbt",
@@ -111,15 +170,6 @@ with models.DAG(
         env["DBT_BIGQUERY_DATASET"] = f'hivestack_transformed__{label}'
         env["TAP_HIVESTACK_REPORT_ID"]= id
         return env      
-    def set_env_vars_tiktok(id,label):
-        env = get_meltano_env()
-        env["BQ_DATASET"] = f"tiktok_raw__{label}"
-        env["BQ_METHOD"] = "batch_job"
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'inghams-main'
-        env["DBT_BIGQUERY_DATASET"] = f'tiktok_transformed__{label}'
-        env["TAP_TIKTOK_ADVERTISER_ID"] = id
-        return env
     def set_env_vars_facebook(id,label):
         env = get_meltano_env()
         env["BQ_DATASET"] = f"facebook_raw__{label}"
@@ -153,33 +203,14 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'inghams-main'
         env["DBT_BIGQUERY_DATASET"] = f'ttd_transformed__{label}'
         env["TAP_TTD_ADVERTISER_ID"] = id
+        env["TAP_TTD_START_DATE"] = get_ttd_start_date()
         return env
 
-    def set_env_vars_dash(label):
-        env = get_meltano_env()
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'inghams-main'
-        env["DBT_BIGQUERY_DATASET"] = f'dash_table__{label}'
-        return env
+
 
 
     env = get_meltano_env()
 
-    tiktok_list = {env["TIKTOK_WAITOA_ADVERTISER_ID"]:'waitoa'}
-    for key,label in tiktok_list.items():
-        kube_tiktok = KubernetesPodOperator(
-            name=f"{label}-tiktok-to-bigquery",
-            task_id=f"{label}-tiktok_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","--full-refresh",f"dbt-bigquery:tiktok_{label}_models"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_tiktok(key,label
-            )
-        )
-        kube_downstream_dependencies.append(kube_tiktok)
     hive_list = {env["HIVESTACK_WAITOA_ID"]:'waitoa',env["HIVESTACK_INGHAMS_ID"]:'inghams'}
     for key,label in hive_list.items():
 
@@ -241,7 +272,8 @@ with models.DAG(
             ),
             env_vars=set_env_vars_ttd(key,label),
             #base_container_name=f"meltano-{label}-ttd",
-            get_logs =  True
+            get_logs =  True,
+            execution_timeout=timedelta(minutes=60)
         )
         kube_downstream_dependencies.append(kube_ttd)
         kube_cm360 = KubernetesPodOperator(
