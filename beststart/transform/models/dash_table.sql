@@ -90,7 +90,7 @@ WITH dash_table AS (
 from `best-start-main.cm360_transformed.cm360_direct_buy`
 ), with_channel AS (
 SELECT * EXCEPT (publisher,channel), 
-dt.publisher,
+dc.publisher,
 dc.channel
 
 
