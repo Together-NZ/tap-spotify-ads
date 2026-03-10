@@ -45,7 +45,7 @@ def get_meltano_env():
 def get_ga4_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 def get_ttd_start_date():
-    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=14)).strftime("%Y-%m-%d")
 
 def get_meta_start_date():
     return (
