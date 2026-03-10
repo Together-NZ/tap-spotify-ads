@@ -102,7 +102,6 @@ WITH deduplicated_data AS (
         JSON_VALUE(data, '$.sessionSourceMedium'),
         JSON_VALUE(data, '$.sessionCampaignName'),
         JSON_VALUE(data, '$.sessionManualAdContent'),
-        
         JSON_VALUE(data, '$.eventName'),
         json_value(data,'$.eventCount'),
         JSON_VALUE(data,'$.eventValue')
