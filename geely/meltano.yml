@@ -54,6 +54,7 @@ plugins:
       advertiser_id: ${TAP_TTD_ADVERTISER_ID}
   - name: tap-hivestack
     namespace: tap-hivestack
+   
     pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0
     executable: tap-hivestack
     config:
@@ -66,7 +67,7 @@ plugins:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights
+    - ads_insights.*
     - ad_account.*
     - ad_sets.*
     - ads.*
