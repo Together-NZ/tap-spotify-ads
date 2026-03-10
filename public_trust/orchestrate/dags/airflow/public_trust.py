@@ -30,6 +30,7 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
+    'retry_delay': timedelta(minutes=30),
     "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
 }
 
@@ -47,7 +48,8 @@ def get_meltano_env():
     return deepcopy(meltano_env)
 def get_ga4_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
-
+def get_ttd_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 with models.DAG(
     dag_id="public-trust-meltano-extraction-transformation-dbt",
     schedule_interval="0 3 * * *",
@@ -88,6 +90,7 @@ with models.DAG(
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'public-trust-main'
         env["DBT_BIGQUERY_DATASET"] = 'ttd_transformed'
+        env["TAP_TTD_START_DATE"] = get_ttd_start_date()
         return env
 
     def set_env_vars_dash():
@@ -218,7 +221,8 @@ with models.DAG(
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_ttd()
+        env_vars=set_env_vars_ttd(),
+        execution_timeout=timedelta(minutes=60)
     )
 
 

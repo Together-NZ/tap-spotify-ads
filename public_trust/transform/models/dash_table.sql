@@ -32,6 +32,11 @@ WITH dash_table AS (
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
     FROM `public-trust-main.facebook_transformed.facebook`
 
+    UNION ALL
+       SELECT media_cost, impressions, creative_name,clicks, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_played AS video_views,
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+    FROM `public-trust-main.facebook_transformed_old.facebook_old`
+
 
     UNION ALL 
 

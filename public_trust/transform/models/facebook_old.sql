@@ -35,7 +35,7 @@ WITH ranked_data AS (
                 _sdc_extracted_at DESC
         ) AS row_number
     FROM
-        `public-trust-main.facebook_raw.ads_insights`
+        `public-trust-main.facebook_raw_old.ads_insights`
 ),
 deduplicated_data AS (
     SELECT *
@@ -169,7 +169,7 @@ ad_data AS (
     SELECT JSON_VALUE(data,'$.id') AS ad_id,
     JSON_VALUE(data,'$.name') AS ad_name,
     ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.id') ORDER BY _sdc_extracted_at) AS row_num
-    FROM `public-trust-main.facebook_raw.ads`
+    FROM `public-trust-main.facebook_raw_old.ads`
 ),
 deduplicate_ad_data AS (
     SELECT * FROM ad_data where row_num = 1
@@ -178,7 +178,7 @@ adset_data AS (
     select distinct json_value(data,'$.id') as adset_id,
     json_value(data,'$.name') as adset_name,
     ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.id') ORDER BY _sdc_extracted_at) AS row_num
-    from `public-trust-main.facebook_raw.ad_sets`
+    from `public-trust-main.facebook_raw_old.ad_sets`
 ),
 deduplicate_adset_data AS (
     SELECT * FROM adset_data where row_num = 1
@@ -193,7 +193,7 @@ campaign_data AS (
         JSON_VALUE(data, '$.stop_time') AS stop_time,
         JSON_VALUE(data,'$.updated_time') AS updated_time
         
-    FROM `public-trust-main.facebook_raw.campaigns`
+    FROM `public-trust-main.facebook_raw_old.campaigns`
 ),
 deduplicated_campaign_data AS (
     SELECT
@@ -223,7 +223,7 @@ interest_data AS (
         JSON_VALUE(data, '$.id') AS ad_id,
         IFNULL(JSON_EXTRACT_ARRAY(JSON_EXTRACT(data, '$.targeting.flexible_spec')), []) AS flexible_spec_array,
         JSON_EXTRACT_ARRAY(data, '$.device_platforms') AS device
-    FROM `public-trust-main.facebook_raw.ads`
+    FROM `public-trust-main.facebook_raw_old.ads`
 ),
 filtered_interest_data AS (
     SELECT
