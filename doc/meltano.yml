@@ -31,12 +31,12 @@ plugins:
     select:
     - campaigns.*
     - creatives.*
-    - campaign_groups.*
     - ad_analytics_by_creative.*
+    - campaign_groups.*
 
   - name: tap-ga4
     variant: meltanolabs
-    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
       reports: ./report.json
       start_date: ${START_DATE}
