@@ -30,14 +30,15 @@ log: logging.log = logging.getLogger("airflow.task")
 log.setLevel(logging.INFO)
 
 local_tz = pendulum.timezone("Pacific/Auckland")
-yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
+yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
 ga4_start_date = datetime.datetime.now(local_tz) - datetime.timedelta(days=30)
 default_args = {
     "retries": 3,
     "max_active_runs": 1,
+    "retry_delay":datetime.timedelta(minutes=30),
     "concurrency": 1,
     "catchup": False,
-    "start_date": datetime.datetime(2026, 3, 5, tzinfo=local_tz)
+    "start_date": datetime.datetime(2025, 12, 14, tzinfo=local_tz)
 }
 
 def get_meltano_env():
@@ -45,7 +46,7 @@ def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_moe_main", deserialize_json=True)
     meltano_env_common = Variable.get("meltano_common_secret",deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique}
-    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=13)
     start_date_str = yesterday.strftime("%Y-%m-%d")
 
     meltano_env["START_DATE"] = start_date_str
@@ -54,24 +55,34 @@ def get_meltano_env():
     return deepcopy(meltano_env)
 def get_ga4_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+def get_ttd_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 with models.DAG(
-    dag_id="moe-meltano-google-ads",
-    schedule_interval="10 14 * * *",
+    dag_id="moe-meltano-extraction-google-ads",
+    schedule_interval = '10 14 * * *',
     default_args=default_args,
-) as google_dag:
-
-    def set_env_vars_ga4_merge():
-        env = get_meltano_env()
+) as dag_google_ads:
+    env=get_meltano_env()
+    def set_env_vars_google_ads_search():
+        env= get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
-        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
+        env["DBT_BIGQUERY_DATASET"] = 'google_ads_search_transformed'
+        return env  
+    def set_env_vars_tiktok():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "tiktok_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
+        env["DBT_BIGQUERY_DATASET"] = 'tiktok_transformed'
         return env
     def set_env_vars_ga4(id,label):
         env = get_meltano_env()
-        env["BQ_DATASET"] = f"ga4_raw__{label}"
+        env["BQ_DATASET"] = f"ga4_{label}_raw"
         env["BQ_METHOD"] = "gcs_stage"
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
+        env["DBT_BIGQUERY_PROJECT"] = 'curative-main'
         env["DBT_BIGQUERY_DATASET"] = f'ga4_transformed__{label}'       
         developer_creds = Credentials(
             None,
@@ -81,23 +92,15 @@ with models.DAG(
             client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
         )
         developer_creds.refresh(Request())
-        env['TAP_GA4_START_DATE'] = get_ga4_start_date()
-        env['TAP_GA4_PROPERTY_ID']=id
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
+        env["TAP_GA4_PROPERTY_ID"] = id
+        env["TAP_GA4_START_DATE"] = get_ga4_start_date()
         return env
-    def set_env_vars_google_ads_search():
-        env= get_meltano_env()
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
-        env["DBT_BIGQUERY_DATASET"] = 'google_ads_search_transformed'
-        return env
-    def set_env_vars_tiktok():
+    def set_env_vars_ga4_merge():
         env = get_meltano_env()
-        env["BQ_DATASET"] = "tiktok_raw"
-        env["BQ_METHOD"] = "batch_job"
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
-        env["DBT_BIGQUERY_DATASET"] = 'tiktok_transformed'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
         return env
     def set_env_vars_dash_search():
         env = get_meltano_env()
@@ -122,7 +125,18 @@ with models.DAG(
         ),
         env_vars=set_env_vars_google_ads_search()
     )
-    env = get_meltano_env()
+
+    kube_tiktok = KubernetesPodOperator(
+        name="moe-tiktok-to-bigquery",
+        task_id="moe-tiktok_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","--full-refresh","dbt-bigquery:tiktok_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_tiktok()
+    )
     ga4_list_task = {}
     ga4_list = {env["TAP_GA4_PROPERTY_ID_CAREER"]:'career',env["TAP_GA4_PROPERTY_ID_EDUCATION"]:'education'}
     for id,name in ga4_list.items():
@@ -138,17 +152,6 @@ with models.DAG(
             env_vars=set_env_vars_ga4(id,name)
         )
         ga4_list_task.setdefault(name,[]).append(kube_ga4)
-    kube_ga4_merge = KubernetesPodOperator(
-        name="moe-ga4-merge-to-bigquery",
-        task_id="moe-ga4_merge_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","ga4_goal_channel"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_ga4_merge()
-    )
     kube_dash_search = KubernetesPodOperator(
         name="moe-dash-search-to-bigquery",
         task_id="moe-dash_search_to_bigquery",
@@ -160,7 +163,17 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dash_search()
     )
-
+    kube_ga4_merge = KubernetesPodOperator(
+        name="moe-ga4-merge-to-bigquery",
+        task_id="moe-ga4_merge_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","ga4_goal_channel"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ga4_merge()
+    )
     kube_dash = KubernetesPodOperator(
         name="moe-dash-to-bigquery",
         task_id="moe-dash_to_bigquery",
@@ -173,18 +186,6 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dash()
         )
-    kube_tiktok = KubernetesPodOperator(
-        name="moe-tiktok-to-bigquery",
-        task_id="moe-tiktok_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","--full-refresh","dbt-bigquery:tiktok_models"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_tiktok()
-    )
-
     for name,kube_ga4 in ga4_list_task.items():
         kube_ga4 >> kube_ga4_merge
     kube_dash_union = KubernetesPodOperator(
@@ -198,8 +199,8 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dash()
     )
-    kube_google_ads_search >> kube_dash_search >> kube_tiktok >> kube_dash >> kube_dash_union >> kube_ga4_merge
-
+    kube_tiktok>>kube_dash>>kube_google_ads_search >>kube_dash_search>>kube_dash_union>>kube_ga4_merge
+    
 with models.DAG(
     dag_id="moe-meltano-extraction-transformation-dbt",
     schedule_interval="0 5 * * *",
@@ -237,7 +238,6 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
         env["DBT_BIGQUERY_DATASET"] = 'dv360_transformed'
         return env
-
     def set_env_vars_cm360():
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
@@ -251,10 +251,13 @@ with models.DAG(
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
         env["DBT_BIGQUERY_DATASET"] = 'ttd_transformed'
+        env["TAP_TTD_START_DATE"] = get_ttd_start_date()
         return env
 
     def set_env_vars_linkedin():
         env = get_meltano_env()
+        env["BQ_DATASET"] = "linkedin_raw"
+        env["BQ_METHOD"] = "batch_job"
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
         env["DBT_BIGQUERY_DATASET"] = 'linkedin_transformed'
@@ -265,13 +268,13 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
         env["DBT_BIGQUERY_DATASET"] = 'dash_table'
         return env
-
  
+
+
     set_env_task_dash_search = PythonOperator(
         task_id="set_env_dash_search",
         python_callable=set_env_vars_dash_search,
     )
-
 
     set_env_task_facebook = PythonOperator(
         task_id="set_env_facebook",
@@ -304,13 +307,12 @@ with models.DAG(
         namespace="composer-user-workloads",
         image=IMAGE,
         arguments = [
-             "--environment=prod", "invoke","dbt-bigquery:linkedin_models"],
+             "--environment=prod", "run","tap-linkedin-ads","target-bigquery","dbt-bigquery:linkedin_models"],
         env_vars=set_env_vars_linkedin(),
         
     )
 
-
-
+    env = get_meltano_env()
 
         
     kube_facebook = KubernetesPodOperator(
@@ -366,7 +368,8 @@ with models.DAG(
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_ttd()
+        env_vars=set_env_vars_ttd(),
+        execution_timeout=timedelta(minutes=60)
     )
     kube_dash_search = KubernetesPodOperator(
         name="moe-dash-search-to-bigquery",
@@ -380,6 +383,17 @@ with models.DAG(
         env_vars=set_env_vars_dash_search()
     )
 
+    kube_dash_union = KubernetesPodOperator(
+        name="moe-dash-union-to-bigquery",
+        task_id="moe-dash_union_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash()
+    )
     kube_dash = KubernetesPodOperator(
         name="moe-dash-to-bigquery",
         task_id="moe-dash_to_bigquery",
@@ -392,23 +406,9 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dash()
         )
-
-    kube_dash_union = KubernetesPodOperator(
-        name="moe-dash-union-to-bigquery",
-        task_id="moe-dash_union_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_dash()
-    )
-
     set_env_task_facebook >> kube_facebook
     set_env_task_snapchat >> kube_snapchat 
     set_env_task_dv360 >> kube_dv360
-
     set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd 
     
     set_env_task_linkedin >> kube_linkedin

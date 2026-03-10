@@ -71,4 +71,4 @@ SELECT * ,
     CASE WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>=2 THEN SPLIT(campaign_name,'_')[OFFSET(1)] ELSE 'Other' END AS campaign_descr
 
 FROM dedupllicate_data 
-WHERE row_num = 1
+WHERE row_num = 1 and lower(campaign_name) not like '%yt%'

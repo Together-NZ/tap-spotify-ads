@@ -92,7 +92,6 @@ WITH parsed_data AS (
     FROM
         `moe-main.ttd_raw.standard_streams`
 ),
-# Rank the data by the extracted_at timestamp
 ranked_data AS (
     SELECT
         *,
@@ -100,8 +99,8 @@ ranked_data AS (
             PARTITION BY
                 Date, partner_id, advertiser_id, campaign_id, ad_group_id, ad_format, creative_id, 
                 advertiser,  deal_id, ad_server_creative_placement_id
-            order by
-                _sdc_extracted_at desc
+            ORDER BY 
+                _sdc_extracted_at DESC
         ) AS row_num
     FROM
         parsed_data
@@ -123,9 +122,9 @@ CASE
 else 'Other'
 END AS media_format,
 CASE
-    WHEN ARRAY_LENGTH(SPLIT(creative,'_')) <8 THEN 'Other'
+    WHEN ARRAY_LENGTH(SPLIT(ad_group,'_')) <8 THEN 'Other'
     ELSE
-        SPLIT(creative,'_')[OFFSET(7)] 
+        SPLIT(ad_group,'_')[OFFSET(7)] 
 END AS audience_name,
 SPLIT(creative, '_')[OFFSET(ARRAY_LENGTH(SPLIT(creative, '_'))-1)] AS creative_descr,
 CASE 

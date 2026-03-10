@@ -10,7 +10,10 @@ WITH dash_table AS (
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
     FROM `moe-main.dv360_transformed.dv360_standard`
-    
+    UNION ALL
+       SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+    FROM `moe-main.dv360_transformed.dv360_youtube`
     UNION ALL
      SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion
            ,video_25_completion,video_50_completion,video_75_completion, video_views,
@@ -44,7 +47,7 @@ from `moe-main.cm360_transformed.cm360_direct_buy`
 ),
 with_channel AS (
 SELECT * EXCEPT (publisher,channel), 
-dt.publisher,
+dc.publisher,
 dc.channel
 
 

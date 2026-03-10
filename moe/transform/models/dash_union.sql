@@ -1,7 +1,6 @@
 {{ config(
     materialized='table',
 ) }}
-
 (SELECT 
 SAFE_CAST(funnel as string) as funnel,
 EXTRACT(MONTH FROM date) AS segments_month,
