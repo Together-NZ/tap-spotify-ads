@@ -81,7 +81,7 @@ with models.DAG(
         env = get_meltano_env()
         env["BQ_DATASET"] = "pinterest_raw"
         env["BQ_METHOD"] = "batch_job"
-        #env["TAP_PINTEREST_ADS_END_DATE"] = datetime.datetime.now(local_tz).strftime("%Y-%m-%d")
+        env["TAP_PINTEREST_ADS_END_DATE"] = datetime.datetime.now(local_tz).strftime("%Y-%m-%d")
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'colorsteel-main'
         env["DBT_BIGQUERY_DATASET"] = 'pinterest_transformed'
