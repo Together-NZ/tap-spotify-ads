@@ -23,7 +23,7 @@ from google.cloud import storage
 import json
 
 
-IMAGE = "australia-southeast1-docker.pkg.dev/contact-energy-main/meltano/meltano-contact-main:prod"
+IMAGE = "australia-southeast1-docker.pkg.dev/contact-energy-main/meltano/meltano-contact-energys-main:prod"
 
 
 log: logging.log = logging.getLogger("airflow.task")
@@ -36,6 +36,7 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
+    'retry_delay': timedelta(minutes=30),
     "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
 }
 
@@ -44,7 +45,7 @@ def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_contact_main", deserialize_json=True)
     meltano_env_common = Variable.get("meltano_common_secret",deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique}
-    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=13)
     start_date_str = yesterday.strftime("%Y-%m-%d")
 
     meltano_env["START_DATE"] = start_date_str
@@ -52,6 +53,8 @@ def get_meltano_env():
 
     return deepcopy(meltano_env)
 def get_ga4_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+def get_ttd_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 with models.DAG(
     dag_id = 'contact-energy-google_ads_search',
@@ -96,6 +99,14 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'contact-energy-main'
         env["DBT_BIGQUERY_DATASET"] = f'dash_table_search__{label}'
         return env
+    def set_env_vars_tiktok(label):
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "tiktok_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'contact-energy-main'
+        env["DBT_BIGQUERY_DATASET"] = f'tiktok_transformed__{label}'
+        return env
     def set_env_vars_dash(label):
         
         env = get_meltano_env()
@@ -107,7 +118,34 @@ with models.DAG(
     ga4_types = ['goal','ecommerce']
     search_list = ["mobile","broadband","energy"]
     for brand in search_list:
-
+        kube_tiktok = KubernetesPodOperator(
+            name=f"contact-{brand}-tiktok-to-bigquery",
+            task_id=f"contact-{brand}_tiktok_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","--full-refresh",f"dbt-bigquery:tiktok_{brand}_models"],
+                    container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_tiktok(brand),
+            get_logs=True,
+            is_delete_operator_pod=True,
+        )      
+        kube_dash = KubernetesPodOperator(
+            name=f"contact-{brand}-dash-to-bigquery",
+            task_id=f"contact-{brand}_dash_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "invoke", "dbt-bigquery","run","--select",f"dash_table__{brand}"],
+                    container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_dash(brand),
+            get_logs=True,
+            trigger_rule = 'all_done',
+            is_delete_operator_pod=True,
+        )          
+        kube_tiktok>>kube_dash
         kube_google_ads_search = KubernetesPodOperator(
             name=f"contact-{brand}-google-ads-search-to-bigquery",
             task_id=f"contact-{brand}_google_ads_search_to_bigquery",
@@ -135,7 +173,7 @@ with models.DAG(
             get_logs=True,
             is_delete_operator_pod=True,
         )
-        kube_google_ads_search >> kube_dash_search
+        kube_dash>>kube_google_ads_search >> kube_dash_search
         kube_dash_union = KubernetesPodOperator(
             name=f"contact-{brand}-dash-union-to-bigquery",
             task_id=f"contact-{brand}_dash_union_to_bigquery",
@@ -150,6 +188,7 @@ with models.DAG(
             is_delete_operator_pod=True,
         )
         kube_dash_search >> kube_dash_union
+    brand='mobile'
     kube_ga4_mobile_goal = KubernetesPodOperator(
                     name=f"contact-ga4-to-bigquery-mobile-goal",
                     task_id=f"contact_ga4_to_bigquery_mobile_goal",
@@ -248,14 +287,6 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'contact-energy-main'
         env["DBT_BIGQUERY_DATASET"] = f'cm360_transformed__{label}'
         return env
-    def set_env_vars_tiktok(label):
-        env = get_meltano_env()
-        env["BQ_DATASET"] = "tiktok_raw"
-        env["BQ_METHOD"] = "batch_job"
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'contact-energy-main'
-        env["DBT_BIGQUERY_DATASET"] = f'tiktok_transformed__{label}'
-        return env
     def set_env_vars_ttd(label):
         env = get_meltano_env()
         env["BQ_DATASET"] = "ttd_raw"
@@ -263,6 +294,7 @@ with models.DAG(
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'contact-energy-main'
         env["DBT_BIGQUERY_DATASET"] = f'ttd_transformed__{label}'
+        env["TAP_TTD_START_DATE"] =  get_ttd_start_date()
         return env
     def set_env_vars_dash(label):
         
@@ -320,20 +352,7 @@ with models.DAG(
             is_delete_operator_pod=True,
         )
         queue.setdefault(brand, []).append(kube_cm360)
-        kube_tiktok = KubernetesPodOperator(
-            name=f"contact-{brand}-tiktok-to-bigquery",
-            task_id=f"contact-{brand}_tiktok_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","--full-refresh",f"dbt-bigquery:tiktok_{brand}_models"],
-                    container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_tiktok(brand),
-            get_logs=True,
-            is_delete_operator_pod=True,
-        )                
-        queue.setdefault(brand, []).append(kube_tiktok)
+
 
         kube_google_demand = KubernetesPodOperator(
             name=f"contact-{brand}-google-demand-to-bigquery",
@@ -390,6 +409,7 @@ with models.DAG(
             env_vars=set_env_vars_ttd(brand),
             get_logs=True,
             is_delete_operator_pod=True,
+            execution_timeout=timedelta(minutes=60)
         )
         queue.setdefault(brand, []).append(kube_ttd)
 
