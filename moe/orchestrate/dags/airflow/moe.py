@@ -79,10 +79,10 @@ with models.DAG(
         return env
     def set_env_vars_ga4(id,label):
         env = get_meltano_env()
-        env["BQ_DATASET"] = f"ga4_{label}_raw"
+        env["BQ_DATASET"] = f"ga4_raw__{label}"
         env["BQ_METHOD"] = "gcs_stage"
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'curative-main'
+        env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
         env["DBT_BIGQUERY_DATASET"] = f'ga4_transformed__{label}'       
         developer_creds = Credentials(
             None,
