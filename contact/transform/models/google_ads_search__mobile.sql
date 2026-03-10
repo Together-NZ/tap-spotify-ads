@@ -12,7 +12,7 @@ campaign_basis AS (
 campaign AS (
   SELECT * ,
   ROW_NUMBER() OVER (PARTITION BY campaign_id ORDER BY _DATA_DATE DESC) AS row_num FROM `contact-energy-main.google_ads_search_raw.ads_Campaign_4362586476`
-  WHERE customer_id =2974308452
+
   ),
 distinct_campaign AS (
   SELECT * except(row_num) FROM campaign where row_num=1

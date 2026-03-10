@@ -71,7 +71,7 @@ from `contact-energy-main.cm360_transformed__energy.cm360_direct_buy__energy`
 ),
 with_channel AS (
 SELECT * EXCEPT (publisher,channel), 
-dt.publisher,
+dc.publisher,
 dc.channel
 
 

@@ -1,6 +1,5 @@
 # Base Meltano image
-FROM meltano/meltano:latest
-
+FROM meltano/meltano:v3-python3.10
 # Enable SSH agent forwarding
 # Required for cloning private GitHub repos via SSH
 # Must be enabled via `--ssh default` during build

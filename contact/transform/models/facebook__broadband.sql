@@ -8,11 +8,10 @@ WITH ranked_data AS (
         JSON_VALUE(data, '$.account_id') AS account_id,
         JSON_VALUE(data, '$.account_name') AS account_name,
         JSON_VALUE(data, '$.ad_id') AS ad_id,
-        JSON_VALUE(data, '$.ad_name') AS ad_name,
+        --JSON_VALUE(data, '$.ad_name') AS ad_name,
         JSON_VALUE(data, '$.adset_id') AS adset_id,
-        JSON_VALUE(data, '$.adset_name') AS adset_name,
+        --JSON_VALUE(data, '$.adset_name') AS adset_name,
         JSON_VALUE(data, '$.campaign_id') AS campaign_id,
-        JSON_VALUE(data, '$.campaign_name') AS campaign_name,
         JSON_EXTRACT_ARRAY(data, '$.conversions') AS conversion_array,
         SAFE_CAST(JSON_VALUE(data, '$.clicks') AS INT64) AS clicks, 
         SAFE_CAST(JSON_VALUE(data, '$.impressions') AS INT64) AS impressions, 
@@ -36,7 +35,7 @@ WITH ranked_data AS (
                 _sdc_extracted_at DESC
         ) AS row_number
     FROM
-        `contact-energy-main.facebook_raw.ads_insights_action_video_type`
+        `contact-energy-main.facebook_raw.ads_insights`
 ),
 deduplicated_data AS (
     SELECT *
@@ -50,12 +49,11 @@ flattened_video_actions AS (
     SELECT
         date_start,
         ad_id,
-        ad_name,
+        --ad_name,
         adset_id,
-        adset_name,
+        --adset_name,
         clicks,
         spend,
-        campaign_name,
         campaign_id,
         impressions,
         actions,
@@ -67,100 +65,88 @@ flattened_video_actions AS (
     FROM deduplicated_data
 ),
 parsed_video_actions AS (
-    SELECT
-        date_start,
-        ad_id,
-        ad_name,
-        adset_id,
-        adset_name,
-        spend,
-        clicks,
-        campaign_name,
-        campaign_id,
-        impressions,
-        JSON_VALUE(
-            ARRAY(
-                SELECT JSON_EXTRACT_SCALAR(entry, '$.value')
-                FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
-                WHERE JSON_VALUE(entry, '$.action_type') = 'post'
-            )[SAFE_OFFSET(0)]
-        ) AS post_share,
-        JSON_VALUE(
-            ARRAY(
-                SELECT JSON_EXTRACT_SCALAR(entry, '$.value')
-                FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
-                WHERE JSON_VALUE(entry, '$.action_type') = 'post_reaction'
-            )[SAFE_OFFSET(0)]
-        ) AS post_reaction_value,
-        JSON_VALUE(
-            ARRAY(
-                SELECT JSON_EXTRACT_SCALAR(entry, '$.value')
-                FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
-                WHERE JSON_VALUE(entry, '$.action_type') = 'comment'
-            )[SAFE_OFFSET(0)]
-        ) AS comments,
-        JSON_VALUE(
-            ARRAY(
-                SELECT JSON_EXTRACT_SCALAR(entry, '$.value')
-                FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
-                WHERE JSON_VALUE(entry, '$.action_type') = 'like'
-            )[SAFE_OFFSET(0)]
-        ) AS likes,
-        JSON_VALUE(
-            ARRAY(
-                SELECT JSON_EXTRACT_SCALAR(entry, '$.value')
-                FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
-                WHERE JSON_VALUE(entry, '$.action_type') = 'post_engagement'
-            )[SAFE_OFFSET(0)]
-        ) AS post_reaction_engagement,
-        JSON_VALUE(
-            ARRAY(
-                SELECT JSON_EXTRACT_SCALAR(entry, '$.value')
-                FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
-                WHERE JSON_VALUE(entry, '$.action_type') = 'link_click'
-            )[SAFE_OFFSET(0)]
-        ) AS page_engagement,
-        safe_CAST(
-            JSON_VALUE(
-                video_play_array[0],
-                '$.value'
-            ) AS INT64
-        ) AS last_video_played,
-        video_play_array,
-        safe_CAST(
-            JSON_VALUE(
-                video_p25_array[OFFSET(ARRAY_LENGTH(video_p25_array) - 1)],
-                '$.value'
-            ) AS INT64
-        ) AS last_video_p25,
-        safe_CAST(
-            JSON_VALUE(
-                video_p50_array[OFFSET(ARRAY_LENGTH(video_p50_array) - 1)],
-                '$.value'
-            ) AS INT64
-        ) AS last_video_p50,
-        safe_CAST(
-            JSON_VALUE(
-                video_p75_array[OFFSET(ARRAY_LENGTH(video_p75_array) - 1)],
-                '$.value'
-            ) AS INT64
-        ) AS last_video_p75,
-        safe_CAST(
-            JSON_VALUE(
-                video_p100_array[OFFSET(ARRAY_LENGTH(video_p100_array) - 1)],
-                '$.value'
-            ) AS INT64
-        ) AS last_video_p100
-    FROM flattened_video_actions
+ SELECT
+    date_start,
+    ad_id,
+    adset_id,
+    spend,
+    clicks,
+    campaign_id,
+    impressions,
+
+    -- ACTIONS (sum all matching entries)
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
+        WHERE JSON_VALUE(entry, '$.action_type') = 'post'
+    ) AS INT64) AS post_share,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
+        WHERE JSON_VALUE(entry, '$.action_type') = 'post_reaction'
+    ) AS INT64) AS post_reaction_value,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
+        WHERE JSON_VALUE(entry, '$.action_type') = 'comment'
+    ) AS INT64) AS comments,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
+        WHERE JSON_VALUE(entry, '$.action_type') = 'like'
+    ) AS INT64) AS likes,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
+        WHERE JSON_VALUE(entry, '$.action_type') = 'post_engagement'
+    ) AS INT64) AS post_reaction_engagement,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
+        WHERE JSON_VALUE(entry, '$.action_type') = 'link_click'
+    ) AS INT64) AS page_engagement,
+
+    -- VIDEO ACTIONS (sum entire arrays)
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+        FROM UNNEST(video_play_array) AS v
+    ) AS INT64) AS last_video_played,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+        FROM UNNEST(video_p25_array) AS v
+    ) AS INT64) AS last_video_p25,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+        FROM UNNEST(video_p50_array) AS v
+    ) AS INT64) AS last_video_p50,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+        FROM UNNEST(video_p75_array) AS v
+    ) AS INT64) AS last_video_p75,
+
+    SAFE_CAST((
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+        FROM UNNEST(video_p100_array) AS v
+    ) AS INT64) AS last_video_p100
+
+FROM flattened_video_actions
+    
 ),
 summed_data AS (
     SELECT
         date_start,
         ad_id,
-        ad_name,
+        --ad_name,
         adset_id,
-        adset_name,
-        campaign_name,
+        --adset_name,
         campaign_id,
         SUM(SAFE_CAST(post_share AS INT64)) AS shares,
         SUM(SAFE_CAST(likes AS INT64)) AS likes,
@@ -177,15 +163,36 @@ summed_data AS (
         SUM(last_video_p75) AS total_video_p75,
         SUM(last_video_p100) AS total_video_p100
     FROM parsed_video_actions
-    GROUP BY date_start, ad_id, ad_name, campaign_id, campaign_name, adset_id, adset_name
+    GROUP BY date_start, ad_id,  campaign_id, adset_id
+),
+ad_data AS (
+    SELECT JSON_VALUE(data,'$.id') AS ad_id,
+    JSON_VALUE(data,'$.name') AS ad_name,
+    ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.id') ORDER BY _sdc_extracted_at) AS row_num
+    FROM `contact-energy-main.facebook_raw.ads`
+),
+deduplicate_ad_data AS (
+    SELECT * FROM ad_data where row_num = 1
+),
+adset_data AS (
+    select distinct json_value(data,'$.id') as adset_id,
+    json_value(data,'$.name') as adset_name,
+    ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.id') ORDER BY _sdc_extracted_at) AS row_num
+    from `contact-energy-main.facebook_raw.ad_sets`
+),
+deduplicate_adset_data AS (
+    SELECT * FROM adset_data where row_num = 1
 ),
 campaign_data AS (
     SELECT DISTINCT
         JSON_VALUE(data, '$.id') AS campaign_id,
+        JSON_VALUE(data,'$.name') AS campaign_name,
         JSON_VALUE(data, '$.status') AS campaign_status,
         JSON_VALUE(data, '$.objective') AS campaign_objective,
         JSON_VALUE(data, '$.start_time') AS start_time,
-        JSON_VALUE(data, '$.stop_time') AS stop_time
+        JSON_VALUE(data, '$.stop_time') AS stop_time,
+        JSON_VALUE(data,'$.updated_time') AS updated_time
+        
     FROM `contact-energy-main.facebook_raw.campaigns`
 ),
 deduplicated_campaign_data AS (
@@ -194,8 +201,10 @@ deduplicated_campaign_data AS (
         campaign_status,
         campaign_objective,
         start_time,
+        updated_time,
+        campaign_name,
         stop_time,
-        ROW_NUMBER() OVER (PARTITION BY campaign_id ORDER BY start_time DESC) AS row_num
+        ROW_NUMBER() OVER (PARTITION BY campaign_id ORDER BY updated_time DESC) AS row_num
     FROM campaign_data
 ),
 filtered_campaign_data AS (
@@ -204,6 +213,7 @@ filtered_campaign_data AS (
         campaign_status,
         campaign_objective,
         start_time,
+        campaign_name,
         stop_time
     FROM deduplicated_campaign_data
     WHERE row_num = 1
@@ -224,37 +234,16 @@ filtered_interest_data AS (
     UNNEST(IFNULL(JSON_EXTRACT_ARRAY(flexible_spec_item, '$.interests'), [])) AS interest_item
     GROUP BY ad_id
 ),
-device_data AS (
-    SELECT 
-        JSON_VALUE(data, '$.ad_id') AS ad_id,
-        CASE 
-            WHEN STARTS_WITH(JSON_VALUE(data, '$.device_platform'), 'mobile') THEN 'mobile'
-            ELSE JSON_VALUE(data, '$.device_platform')
-        END AS device_platform
-    FROM 
-        `contact-energy-main.facebook_raw.ads_insights_delivery_device`
-),
-deduplicated_device_data AS (
-    SELECT DISTINCT ad_id, device_platform
-    FROM device_data
-),
-aggregated_device_data AS (
-    SELECT
-        ad_id,
-        ARRAY_AGG(DISTINCT device_platform) AS device_platforms
-    FROM deduplicated_device_data
-    GROUP BY ad_id
-),
 deplicate_data AS (
 SELECT 
     sd.date_start as date,
     sd.ad_id,
-    sd.ad_name,
+    ad.ad_name,
     i.interest_names,
     sd.adset_id AS media_buy_external_id,
-    sd.adset_name AS media_buy_external_name,
+    adset.adset_name AS media_buy_external_name,
     sd.campaign_id,
-    sd.campaign_name,
+    fcd.campaign_name,
     sd.shares,
     sd.likes,
     sd.comments,
@@ -267,7 +256,6 @@ SELECT
     sd.total_video_p75 as video_75_completion, 
     sd.total_video_p100 as video_completion,
     sd.total_video_played as video_played,
-    da.device_platforms,
     sd.page_engagement AS clicks,
     sd.engagement AS social_post_engagement,
     sd.impressions,
@@ -279,25 +267,27 @@ LEFT JOIN filtered_campaign_data fcd
     ON fcd.campaign_id = sd.campaign_id
 LEFT JOIN filtered_interest_data i
     ON i.ad_id = sd.ad_id
-LEFT JOIN aggregated_device_data da
-    ON da.ad_id = sd.ad_id
+LEFT JOIN deduplicate_ad_data as ad
+    ON ad.ad_id = sd.ad_id
+LEFT JOIN deduplicate_adset_data as adset
+    ON adset.adset_id = sd.adset_id
 
-ORDER BY sd.date_start, sd.ad_name
+ORDER BY sd.date_start
 )
-SELECT * EXCEPT(ad_name),ad_name as creative_name, 
+SELECT * EXCEPT(ad_name), ad_name as creative_name, 
 'Meta' AS publisher,
 CASE WHEN ARRAY_LENGTH(SPLIT(media_buy_external_name, '_'))>=8 THEN
 SPLIT(media_buy_external_name, '_')[OFFSET(7)] 
 ELSE NULL
 END AS audience_name,
 CASE 
-WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>=4 AND SPLIT(campaign_name,'_')[OFFSET(3)] LIKE '%SOCIAL%' AND (lower(campaign_name) like '%vid%' or lower(ad_name) like '%vid%') THEN 'Social Video' 
+WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>=4 AND SPLIT(campaign_name,'_')[OFFSET(3)] LIKE '%SOCIAL%' AND (lower(campaign_name) like '%vid%' or lower(ad_name) like '%vid%') THEN 'Social Video'
 WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>=4 AND SPLIT(campaign_name,'_')[OFFSET(3)] LIKE '%SOCIAL%' AND (lower(campaign_name) not like '%vid%' and lower(ad_name) not like '%vid%')THEN 'Social Display'
 else 'Other'
 END AS media_format,
-SPLIT(ad_name, '_')[OFFSET(5)] AS ad_format_detail,
-SPLIT(ad_name, '_')[OFFSET(6)] AS ad_format,
-CASE WHEN ARRAY_LENGTH(SPLIT(ad_name, '_')) <8 THEN 'Other' ELSE SPLIT(ad_name, '_')[OFFSET(7)]END AS creative_descr,
+CASE WHEN ARRAY_LENGTH(SPLIT(ad_name,'_'))>=8 THEN SPLIT(ad_name, '_')[OFFSET(5)] ELSE 'Other' END AS ad_format_detail,
+CASE WHEN ARRAY_LENGTH(SPLIT(ad_name,'_'))>=8 THEN SPLIT(ad_name, '_')[OFFSET(6)] ELSE 'Other' END AS ad_format,
+CASE WHEN ARRAY_LENGTH(SPLIT(ad_name,'_'))>=8 THEN SPLIT(ad_name, '_')[OFFSET(7)] ELSE 'Other' END  AS creative_descr,
 CASE WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_')) <=1 THEN 'Other' ELSE SPLIT(campaign_name,'_')[OFFSET(1)] END AS campaign_descr
 FROM deplicate_data WHERE row_number = 1 and lower(campaign_name) like '%broadband%'
     
