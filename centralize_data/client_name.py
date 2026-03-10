@@ -23,6 +23,7 @@ CLIENT_NAME={
     "public_trust":"public-trust",
     "realnz":"real-nz",
     "squirrel":"squirrel-together",
+    "tepuia":"tepuia",
     "uow":"uowaikato",
     "volvo":"volvo",
     "wendys":"wendys",
