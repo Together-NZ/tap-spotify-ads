@@ -165,7 +165,7 @@ with models.DAG(
         ),
         trigger_rule="all_done",
         env_vars=set_env_vars_dash(),
-        base_container_name=f"meltano-doc-dash",
+        
         )
     kube_dash_search = KubernetesPodOperator(
         name="doc-dash-search-to-bigquery",
