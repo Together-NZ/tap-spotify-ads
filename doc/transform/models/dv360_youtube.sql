@@ -34,7 +34,7 @@ WITH parsed_data AS (
                 JSON_VALUE(data, "$.YouTube Ad Group ID")
                 --safe_cast(TRUNC(SAFE_CAST(JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") AS FLOAT64))as int64)
             ORDER BY 
-                _sdc_extracted_at DESC
+                JSON_EXTRACT_SCALAR(data, "$['Revenue (Adv Currency)']") DESC
         ) AS row_num
     FROM
         `doconservation-main.dv360_raw.dv360_youtube` where LOWER(JSON_VALUE(data, "$.Insertion Order")) LIKE '%doc%'

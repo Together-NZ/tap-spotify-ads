@@ -34,7 +34,7 @@ default_args = {
     "retries": 3,
     "max_active_runs": 1,
     "concurrency": 1,
-    'retry_delay': datetime.timedelta(minutes=30),
+    'retry_delay': datetime.timedelta(minutes=10),
     "catchup": False,
     "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
 }
