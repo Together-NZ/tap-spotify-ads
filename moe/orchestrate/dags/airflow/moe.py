@@ -222,6 +222,14 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
         env["DBT_BIGQUERY_DATASET"] = 'facebook_transformed'
         return env
+    def set_env_vars_hivestack():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "hivestack_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
+        env["DBT_BIGQUERY_DATASET"] = 'hivestack_transformed'
+        return env
     def set_env_vars_snapchat():
         env = get_meltano_env()
         env["BQ_DATASET"] = "snapchat_raw"
@@ -300,7 +308,17 @@ with models.DAG(
         task_id="set_env_ttd",
         python_callable=set_env_vars_ttd,
     )
-  
+    kube_hivestack = KubernetesPodOperator(
+        name="moe-hivestack-to-bigquery",
+        task_id="moe-hivestack_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "run", "tap-hivestack", "target-bigquery","dbt-bigquery:hivestack_models"],
+        env_vars=set_env_vars_hivestack(),
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+    )
     kube_linkedin = KubernetesPodOperator(
         name="moe-linkedin-to-bigquery",
         task_id="moe-linkedin_to_bigquery",
@@ -412,5 +430,5 @@ with models.DAG(
     set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd 
     
     set_env_task_linkedin >> kube_linkedin
-    [kube_facebook,kube_snapchat,kube_dv360,kube_cm360,kube_ttd,kube_linkedin] >> kube_dash
+    [kube_facebook,kube_snapchat,kube_dv360,kube_hivestack,kube_cm360,kube_ttd,kube_linkedin] >> kube_dash
     kube_dash>>kube_dash_search >> kube_dash_union

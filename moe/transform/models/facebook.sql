@@ -14,7 +14,7 @@ WITH ranked_data AS (
         JSON_VALUE(data, '$.campaign_id') AS campaign_id,
         JSON_EXTRACT_ARRAY(data, '$.conversions') AS conversion_array,
         SAFE_CAST(JSON_VALUE(data, '$.clicks') AS INT64) AS clicks, 
-        SAFE_CAST(JSON_VALUE(data, '$.impressions') AS INT64) AS impressions, 
+        SAFE_CAST(SAFE_CAST(JSON_VALUE(data, '$.impressions') AS FLOAT64) AS INT64) AS impressions, 
         JSON_VALUE(data, '$.ctr') AS ctr,
         SAFE_CAST(JSON_VALUE(data, '$.spend') AS FLOAT64) AS spend,
         JSON_VALUE(data, '$.date_start') AS date_start,
@@ -76,64 +76,64 @@ parsed_video_actions AS (
 
     -- ACTIONS (sum all matching entries)
     SAFE_CAST((
-        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS FLOAT64))
         FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
         WHERE JSON_VALUE(entry, '$.action_type') = 'post'
     ) AS INT64) AS post_share,
 
     SAFE_CAST((
-        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS FLOAT64))
         FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
         WHERE JSON_VALUE(entry, '$.action_type') = 'post_reaction'
     ) AS INT64) AS post_reaction_value,
 
     SAFE_CAST((
-        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS FLOAT64))
         FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
         WHERE JSON_VALUE(entry, '$.action_type') = 'comment'
     ) AS INT64) AS comments,
 
     SAFE_CAST((
-        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS FLOAT64))
         FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
         WHERE JSON_VALUE(entry, '$.action_type') = 'like'
     ) AS INT64) AS likes,
 
     SAFE_CAST((
-        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS FLOAT64))
         FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
         WHERE JSON_VALUE(entry, '$.action_type') = 'post_engagement'
     ) AS INT64) AS post_reaction_engagement,
 
     SAFE_CAST((
-        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS INT64))
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(entry, '$.value') AS FLOAT64))
         FROM UNNEST(JSON_EXTRACT_ARRAY(actions)) AS entry
         WHERE JSON_VALUE(entry, '$.action_type') = 'link_click'
     ) AS INT64) AS page_engagement,
 
     -- VIDEO ACTIONS (sum entire arrays)
     SAFE_CAST((
-        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS FLOAT64))
         FROM UNNEST(video_play_array) AS v
     ) AS INT64) AS last_video_played,
 
     SAFE_CAST((
-        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS FLOAT64))
         FROM UNNEST(video_p25_array) AS v
     ) AS INT64) AS last_video_p25,
 
     SAFE_CAST((
-        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS FLOAT64))
         FROM UNNEST(video_p50_array) AS v
     ) AS INT64) AS last_video_p50,
 
     SAFE_CAST((
-        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS FLOAT64))
         FROM UNNEST(video_p75_array) AS v
     ) AS INT64) AS last_video_p75,
 
     SAFE_CAST((
-        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS INT64))
+        SELECT SUM(SAFE_CAST(JSON_EXTRACT_SCALAR(v, '$.value') AS FLOAT64))
         FROM UNNEST(video_p100_array) AS v
     ) AS INT64) AS last_video_p100
 

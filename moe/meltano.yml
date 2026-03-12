@@ -33,6 +33,18 @@ plugins:
     - campaigns.*
     - creatives.*
     - ad_analytics_by_creative.*
+  - name: tap-hivestack
+    namespace: tap-hivestack
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0
+    executable: tap-hivestack
+    config:
+        api_key: ${TAP_HIVESTACK_API_KEY}
+        report_id: '90252' 
+  - name: tap-tiktok
+    variant: gthesheep
+    pip_url: git+https://github.com/gthesheep/tap-tiktok.git setuptools<82.0
+    config:
+      start_date: ${START_DATE}
   - name: tap-dv360
     namespace: tap-dv360
     pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
@@ -148,6 +160,9 @@ plugins:
         args: run --select ga4_goal_a__career ga4_goal_channel__career
       ga4_education_models:
         args: run --select ga4_goal_a__education ga4_goal_channel__education
+      hivestack_models:
+        args: run --select +hivestack
+
   files:
   - name: files-airflow
     variant: meltano
