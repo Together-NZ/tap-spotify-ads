@@ -98,8 +98,8 @@ WITH deduplicated_data AS (
         JSON_VALUE(data, '$.sessionCampaignName'),
         JSON_VALUE(data, '$.sessionManualAdContent'),
         JSON_VALUE(data, '$.eventName'),
-        JSON_VALUE(data, '$.eventValue'),
-        JSON_VALUE(data, '$.eventCount')
+        CAST(SAFE_CAST(JSON_VALUE(data, '$.eventValue') AS FLOAT64) AS STRING),
+        CAST(SAFE_CAST(JSON_VALUE(data, '$.eventCount') AS FLOAT64) AS STRING)
       ORDER BY _sdc_extracted_at DESC
     ) AS row_num
 
