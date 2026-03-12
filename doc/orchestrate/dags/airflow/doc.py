@@ -274,7 +274,7 @@ with models.DAG(
         task_id="doc-facebook_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-facebook", "target-bigquery","--full-refresh","dbt-bigquery:facebook_models"],
+        arguments=["--environment=prod", "run", "tap-facebook", "target-bigquery","dbt-bigquery:facebook_models"],
                 container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
