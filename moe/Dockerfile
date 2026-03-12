@@ -7,7 +7,7 @@ WORKDIR /project
 # Install any additional requirements
 COPY ./requirements.txt .
 RUN pip install -r requirements.txt
-
+RUN apt-get update && apt-get install -y openssh-client git
 
 # Copy over Meltano project directory
 COPY . .
