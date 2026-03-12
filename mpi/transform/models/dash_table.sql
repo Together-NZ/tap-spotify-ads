@@ -25,6 +25,24 @@ WITH dash_table AS (
     campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date,
 
 from `mpi-main.cm360_transformed.cm360_direct_buy`
+UNION ALL
+           SELECT media_cost, impressions,clicks,
+              ad_name AS creative_name,  
+           --ARRAY_TO_STRING(media_format, ', ') AS media_format,   -- Convert array to string
+           audience_name, -- Convert array to string
+           ad_format AS ad_format,         -- Convert array to string
+           ad_format_detail AS ad_format_detail, 
+            CAST(0 AS INT64) AS video_completion,
+            CAST(0 AS INT64) AS video_25_completion,
+            CAST(0 AS INT64) AS video_50_completion,
+            CAST(0 AS INT64) AS video_75_completion,
+            CAST(0 AS INT64) AS video_views,
+           
+           campaign_name,publisher, campaign_descr, 
+            creative_descr,  -- Convert array to string
+           date,
+
+    FROM `mpi-main.google_ads_search_transformed.google_ads_demand`
 
 ),
 with_channel AS (
