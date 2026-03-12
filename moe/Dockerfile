@@ -11,7 +11,12 @@ RUN pip install -r requirements.txt
 
 # Copy over Meltano project directory
 COPY . .
-RUN meltano install 
+# Install Meltano plugins (will use meltano.yml)
+RUN --mount=type=ssh \
+    mkdir -p /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts && \
+    ssh -T git@github.com || true && \
+    meltano install
 RUN pip install httplib2 google-api-python-client google-auth google-auth-oauthlib google-cloud-bigquery pandas db-dtypes
 
 # Ensure plugin venvs have pip + pkg_resources (setuptools)
