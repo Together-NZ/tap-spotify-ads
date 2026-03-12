@@ -9,11 +9,13 @@ WITH dash_table AS (
     UNION ALL
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
-    FROM `moe-main.dv360_transformed.dv360_standard` AND LOWER(campaign_name) NOT LIKE '%yt%'
+    
+    FROM `moe-main.dv360_transformed.dv360_standard`  WHERE LOWER(campaign_name) NOT LIKE '%yt%'
     UNION ALL
        SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
-    FROM `moe-main.dv360_transformed.dv360_youtube` AND LOWER(campaign_name) LIKE '%yt%'
+    
+    FROM `moe-main.dv360_transformed.dv360_youtube`  WHERE LOWER(campaign_name) LIKE '%yt%'
     UNION ALL
      SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion
            ,video_25_completion,video_50_completion,video_75_completion, video_views,
@@ -44,6 +46,22 @@ WITH dash_table AS (
     campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date,
 
 from `moe-main.cm360_transformed.cm360_direct_buy`
+UNION ALL 
+      SELECT media_cost, impressions, CAST(0 AS INT64) AS clicks, 
+           creative_name,   -- Convert array to string
+           audience_name AS audience_name, -- Convert array to string
+           ad_format AS ad_format,         -- Convert array to string
+           ad_format_detail AS ad_format_detail, 
+            CAST(0 AS INT64) AS video_completion,
+            CAST(0 AS INT64) AS video_25_completion,
+            CAST(0 AS INT64) AS video_50_completion,
+            CAST(0 AS INT64) AS video_75_completion,
+            CAST(0 AS INT64) AS video_views,
+           
+           campaign_name,publisher, campaign_descr, 
+           creative_descr AS creative_descr, -- Convert array to string
+           date,
+    FROM `moe-main.hivestack_transformed.hivestack`
 ),
 with_channel AS (
 SELECT * EXCEPT (publisher,channel), 
@@ -144,5 +162,4 @@ CASE WHEN
        else 'Other'
 END AS funnel
  FROM campaign_base camb LEFT JOIN deduplicate_raw ON LOWER(deduplicate_raw.campaign_name_raw) = LOWER(camb.campaign_name_raw)
-
 
