@@ -24,7 +24,7 @@ WITH dash_table AS (
 
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_played AS video_views,
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
-    FROM `moe-main.facebook_transformed.facebook`
+    FROM `moe-main.facebook_transformed.facebook` WHERE LOWER(campaign_name) LIKE '%moe%'
 
     UNION ALL
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_views,
