@@ -5,8 +5,8 @@ environments:
 - name: dev
 - name: staging
 - name: prod
-state_backend:
-  uri: gs://volvo-meltano-state-staging
+#state_backend:
+#  uri: gs://volvo-meltano-state-staging
 plugins:
   extractors:
   - name: tap-ttd
