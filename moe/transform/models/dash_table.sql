@@ -145,12 +145,12 @@ trim(CASE WHEN
 END )AS campaign_name_selection,
 CASE WHEN 
        EXISTS(SELECT 1 FROM UNNEST(SPLIT(creative_name,'_'))  as a
-       WHERE lower(a) in UNNEST(ARRAY['aud','disp','native','pdooh','rmdisp','social','vid','vidod','yt']))
-       THEN  (SELECT X FROM UNNEST(SPLIT(creative_name,'_') ) as X WHERE lower(X) IN UNNEST(['aud','disp','native','pdooh','rmdisp','social','vid','vidod','yt'])
+       WHERE lower(a) in UNNEST(ARRAY['aud','dg','disp','native','pdooh','rmdisp','social','vid','vidod','yt']))
+       THEN  (SELECT X FROM UNNEST(SPLIT(creative_name,'_') ) as X WHERE lower(X) IN UNNEST(['aud','dg','disp','native','pdooh','rmdisp','social','vid','vidod','yt'])
        LIMIT 1)
        WHEN  EXISTS(SELECT 1 FROM UNNEST(SPLIT(campaign_name,'_'))  as a
-       WHERE lower(a) in UNNEST(ARRAY['aud','disp','native','pdooh','rmdisp','social','vid','vidod','yt']))
-       THEN  (SELECT X FROM UNNEST(SPLIT(campaign_name,'_') ) as X WHERE lower(X) IN UNNEST(['aud','disp','native','pdooh','rmdisp','social','vid','vidod','yt'])
+       WHERE lower(a) in UNNEST(ARRAY['aud','dg','disp','native','pdooh','rmdisp','social','vid','vidod','yt']))
+       THEN  (SELECT X FROM UNNEST(SPLIT(campaign_name,'_') ) as X WHERE lower(X) IN UNNEST(['aud','dg','disp','native','pdooh','rmdisp','social','vid','vidod','yt'])
        LIMIT 1)
        else 'Other'
 END as media_format,
