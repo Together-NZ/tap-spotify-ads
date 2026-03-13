@@ -273,7 +273,7 @@ with models.DAG(
                 task_id=f"realnz_ga4_to_bigquery_{label}_{_type}",
                 namespace="composer-user-workloads",
                 image=IMAGE,
-                arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery", f"dbt-bigquery:ga4_{label}_{_type}_models"],
+                arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery","--full-refresh", f"dbt-bigquery:ga4_{label}_{_type}_models"],
                 container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
                 env_vars=set_env_vars_ga4(key, label, _type),
             )
