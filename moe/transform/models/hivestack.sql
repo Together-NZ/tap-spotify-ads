@@ -15,9 +15,15 @@ SELECT
   CAST(JSON_VALUE(data, '$.plays') AS INT64) AS plays,
   CAST(JSON_VALUE(data, '$.progress') AS FLOAT64) AS progress,
   CAST(JSON_VALUE(data, '$.spend') AS FLOAT64) AS media_cost,
+  _sdc_extracted_at as extracted_at,
   ROW_NUMBER() OVER (
-      PARTITION BY CAST(JSON_VALUE(data, '$.campaign_id') AS INT64), CAST(JSON_VALUE(data, '$.line_item_id') AS INT64),JSON_VALUE(data, '$.datetime'),
-      JSON_VALUE(data, '$.creative'),CAST(JSON_VALUE(data, '$.plays') AS INT64)
+      PARTITION BY CAST(JSON_VALUE(data, '$.campaign_id') AS INT64), 
+      CAST(JSON_VALUE(data, '$.line_item_id') AS INT64),
+      JSON_VALUE(data, '$.datetime'),
+      JSON_VALUE(data, '$.creative'),
+      CAST(JSON_VALUE(data, '$.city') AS STRING)
+
+      ORDER BY _sdc_extracted_at DESC
   ) as row_num ,
   FROM `moe-main.hivestack_raw.moe_report`),
   deduplicate_data AS (
