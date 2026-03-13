@@ -23,7 +23,7 @@ SELECT
       JSON_VALUE(data, '$.creative'),
       CAST(JSON_VALUE(data, '$.city') AS STRING)
 
-      ORDER BY _sdc_extracted_at DESC
+      ORDER BY CAST(JSON_VALUE(data, '$.spend') AS FLOAT64) DESC
   ) as row_num ,
   FROM `moe-main.hivestack_raw.moe_report`),
   deduplicate_data AS (
