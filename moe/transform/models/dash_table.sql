@@ -46,6 +46,15 @@ WITH dash_table AS (
     campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date,
 
 from `moe-main.cm360_transformed.cm360_direct_buy`
+UNION ALL
+       select media_cost,impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, 
+        CAST(0 AS INT64) AS video_completion,
+        CAST(0 AS INT64) AS video_25_completion,
+        CAST(0 AS INT64) AS video_50_completion,
+        CAST(0 AS INT64) AS video_75_completion,
+        CAST(0 AS INT64) AS video_views,
+    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date
+FROM `moe-main.reddit_transformed.reddit`
 UNION ALL 
       SELECT media_cost, impressions, CAST(0 AS INT64) AS clicks, 
            creative_name,   -- Convert array to string

@@ -9,6 +9,17 @@ environments:
 #  uri: gs://moe-main-meltano-state-staging
 plugins:
   extractors:
+  - name: tap-reddit-ads
+    namespace: tap-reddit-ads
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-reddit-ads.git setuptools<82.0
+    executable: tap-reddit-ads
+    config:
+      refresh_token: ${TAP_REDDIT_ADS_REFRESH_TOKEN}
+      ad_account_id: ${TAP_REDDIT_ADS_AD_ACCOUNT_ID}
+      app_id: ${TAP_REDDIT_ADS_APP_ID}
+      client_secret: ${TAP_REDDIT_ADS_CLIENT_SECRET}
+      start_date: ${START_DATE}
+      
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
     pip_url: git+https://github.com/Together-NZ/tap-linkedin.git setuptools<82.0
@@ -92,6 +103,16 @@ plugins:
     - ad_sets.*
     - ads.*
     - campaigns.*
+  - name: tap-reddit-ads
+    namespace: tap-reddit-ads
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-reddit-ads.git setuptools<82.0
+    executable: tap-reddit-ads
+    config:
+      refresh_token: ${TAP_REDDIT_ADS_REFRESH_TOKEN}
+      ad_account_id: ${TAP_REDDIT_ADS_AD_ACCOUNT_ID}
+      app_id: ${TAP_REDDIT_ADS_APP_ID}
+      client_secret: ${TAP_REDDIT_ADS_CLIENT_SECRET}
+      start_date: ${START_DATE}
   - name: tap-tiktok
     variant: gthesheep
     pip_url: git+https://github.com/gthesheep/tap-tiktok.git setuptools<82.0
@@ -162,6 +183,8 @@ plugins:
         args: run --select ga4_goal_a__education ga4_goal_channel__education
       hivestack_models:
         args: run --select +hivestack
+      reddit_models:
+        args: run --select +reddit
 
   files:
   - name: files-airflow

@@ -230,6 +230,14 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
         env["DBT_BIGQUERY_DATASET"] = 'hivestack_transformed'
         return env
+    def set_env_vars_reddit():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "reddit_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
+        env["DBT_BIGQUERY_DATASET"] = 'reddit_transformed'
+        return env
     def set_env_vars_snapchat():
         env = get_meltano_env()
         env["BQ_DATASET"] = "snapchat_raw"
@@ -278,7 +286,10 @@ with models.DAG(
         return env
  
 
-
+    set_env_task_reddit = PythonOperator(
+        task_id="set_env_reddit",
+        python_callable=set_env_vars_reddit,
+    )
     set_env_task_dash_search = PythonOperator(
         task_id="set_env_dash_search",
         python_callable=set_env_vars_dash_search,
@@ -315,6 +326,17 @@ with models.DAG(
         image=IMAGE,
         arguments=["--environment=prod", "run", "tap-hivestack", "target-bigquery","dbt-bigquery:hivestack_models"],
         env_vars=set_env_vars_hivestack(),
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+    )
+    kube_reddit = KubernetesPodOperator(
+        name="moe-reddit-to-bigquery",
+        task_id="moe-reddit_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "run", "tap-reddit-ads", "target-bigquery","dbt-bigquery:reddit_models"],
+        env_vars=set_env_vars_reddit(),
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
@@ -430,5 +452,6 @@ with models.DAG(
     set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd 
     
     set_env_task_linkedin >> kube_linkedin
-    [kube_facebook,kube_snapchat,kube_dv360,kube_hivestack,kube_cm360,kube_ttd,kube_linkedin] >> kube_dash
+    set_env_task_reddit >> kube_reddit
+    [kube_facebook,kube_snapchat,kube_dv360,kube_reddit,kube_hivestack,kube_cm360,kube_ttd,kube_linkedin] >> kube_dash
     kube_dash>>kube_dash_search >> kube_dash_union
