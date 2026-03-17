@@ -41,7 +41,8 @@ RUN pip install \
     google-cloud-storage \
     pandas \
     pyarrow
-
+WORKDIR /project/transform
+RUN dbt deps
 
 
 # Entrypoint for container
