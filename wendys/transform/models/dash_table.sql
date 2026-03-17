@@ -38,7 +38,7 @@ WITH dash_table AS (
     FROM `wendys-main.google_ads_search_transformed.google_ads_demand`
     UNION ALL
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion
-           ,video_25_completion,video_50_completion,video_75_completion, video_views,
+           ,video_25_completion,video_50_completion,video_75_completion, video_play AS video_views,
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
     FROM `wendys-main.tiktok_transformed.tiktok`
 
