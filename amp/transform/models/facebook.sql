@@ -5,6 +5,7 @@ WITH {{facebook.daily_breakdown(source_name='facebook_raw', table_name='ads_insi
 {{facebook.conversion_goal(source_name='facebook_raw', table_name='ad_sets')}},
 {{facebook.custom_conversions(source_name='facebook_raw', table_name='custom_conversions')}},
 {{facebook.joining(source_name='facebook_raw', table_name='ads_insights')}},
+{{facebook.joining_adset_to_ads_tracking(source_name='facebook_raw', table_name='ads')}},
 {{facebook.metric_calculation()}},
 {{facebook.ad_data(source_name='facebook_raw', table_name='ads')}},
 {{facebook.adset_data(source_name='facebook_raw', table_name='ad_sets')}},
