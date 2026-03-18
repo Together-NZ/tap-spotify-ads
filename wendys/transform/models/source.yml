@@ -1,4 +1,18 @@
 sources:
+
+  - name: ga4_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw') }}"
+    tables:
+      - name: goal
+
+
+  - name: dash_union
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table') }}"
+    tables:
+      - name: dash_union
+
   - name: hivestack_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
     schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw') }}"
@@ -22,22 +36,7 @@ sources:
       - name: campaigns
       - name: custom_conversions
 
-  - name: linkedin_raw
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
-    schema: "{{ env_var('REFERENCE_LINKEDIN_BIGQUERY_DATASET', 'linkedin_raw') }}"
-    tables:
-      - name: ad_analytics_by_creative
-      - name: creatives
-      - name: campaigns
-      - name: campaign_groups
 
-  - name: reddit_raw
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
-    schema: "{{ env_var('REFERENCE_REDDIT_BIGQUERY_DATASET', 'reddit_raw') }}"
-    tables:
-      - name: ads
-      - name: campaigns
-      - name: reports
 
   - name: ttd_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
