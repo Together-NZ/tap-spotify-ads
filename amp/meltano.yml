@@ -22,6 +22,7 @@ environments:
           LINKEDIN_SUFFIX: dbt_test_linkedin
           TTD_SUFFIX: dbt_test_ttd
           REDDIT_SUFFIX: dbt_test_reddit
+          HIVESTACK_SUFFIX: dbt_test_hivestack
 - name: prod
 #state_backend:
 #  uri: gs://amp-main-meltano-state-staging

@@ -117,7 +117,22 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 5785
-
+  - name: hivestack
+    config:
+      schema: "{{ env_var('HIVESTACK_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 14706.55
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 799647.09
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 0
 
 
 
