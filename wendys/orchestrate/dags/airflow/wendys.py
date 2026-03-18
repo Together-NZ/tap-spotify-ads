@@ -280,7 +280,26 @@ with models.DAG(
         python_callable=set_env_vars_ttd,
     )
 
-    
+    kube_meltano_update = KubernetesPodOperator(
+        name="wendys-meltano-update",
+        task_id="wendys-meltano_update",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "install"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+    )
+    kube_dbt_deps = KubernetesPodOperator(
+        name="wendys-dbt-deps",
+        task_id="wendys-dbt_deps",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery", "deps"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+    )
     kube_snapchat = KubernetesPodOperator(
         name="wendys-snapchat-to-bigquery",
         task_id="wendys-snapchat_to_bigquery",
@@ -397,5 +416,5 @@ with models.DAG(
     set_env_task_hivestack >> kube_hivestack
     set_env_task_snapchat >> kube_snapchat
     #kube_google_ads_search >> kube_dash_search
-    [kube_facebook,kube_dv360,kube_cm360,kube_ttd,kube_hivestack,kube_snapchat] >> kube_dash
+    kube_meltano_update >> kube_dbt_deps >> [kube_facebook,kube_dv360,kube_cm360,kube_ttd,kube_hivestack,kube_snapchat] >> kube_dash
     kube_dash >> kube_dash_union
