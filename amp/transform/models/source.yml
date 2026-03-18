@@ -6,15 +6,15 @@ models:
     columns:
       - name: media_cost
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 1095.76
       - name: impressions
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 429635
       - name: clicks
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 1268
 
   - name: ttd_transformed
@@ -23,15 +23,15 @@ models:
     columns:
       - name: media_cost
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 52112.58
       - name: impressions
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 798906
       - name: clicks
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 363
 
   - name: facebook
@@ -41,15 +41,15 @@ models:
     columns:
       - name: media_cost
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 12078.13
       - name: impressions
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 2363422
       - name: clicks
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 18927
       
 
@@ -59,15 +59,15 @@ models:
     columns:
       - name: media_cost
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 132277.41
       - name: impressions
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 9808518
       - name: clicks
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 10278
   - name: dv360_youtube
     config:
@@ -75,15 +75,15 @@ models:
     columns:
       - name: media_cost
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 124977.92
       - name: impressions
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 8951645
       - name: clicks
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 6257
   - name: google_ads_search
     config:
@@ -91,15 +91,15 @@ models:
     columns:
       - name: media_cost
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 380962.55
       - name: impressions
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 22856329
       - name: clicks
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 498442
   - name: linkedin
     config:
@@ -107,15 +107,15 @@ models:
     columns:
       - name: media_cost
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 8327.91
       - name: impressions
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 771281
       - name: clicks
         tests:
-          - expected_sum:
+          - testing_sum.expected_sum:
               expected_value: 5785
 
 
