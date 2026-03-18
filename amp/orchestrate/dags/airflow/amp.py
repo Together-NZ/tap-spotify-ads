@@ -130,7 +130,7 @@ with models.DAG(
             task_id="amp-google-ads-search_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "invoke","dbt-bigquery:google_ads_search_models"],
+            arguments=["--environment=prod", "invoke","dbt-bigquery:google_ads_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
