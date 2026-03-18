@@ -7,15 +7,15 @@ models:
       - name: media_cost
         tests:
           - expected_sum:
-              expected_value: 12078.13
+              expected_value: 1095.76
       - name: impressions
         tests:
           - expected_sum:
-              expected_value: 2363422
+              expected_value: 429635
       - name: clicks
         tests:
           - expected_sum:
-              expected_value: 18927
+              expected_value: 1268
 
   - name: ttd_transformed
     config: 
@@ -24,15 +24,15 @@ models:
       - name: media_cost
         tests:
           - expected_sum:
-              expected_value: 12078.13
+              expected_value: 52112.58
       - name: impressions
         tests:
           - expected_sum:
-              expected_value: 2363422
+              expected_value: 798906
       - name: clicks
         tests:
           - expected_sum:
-              expected_value: 18927
+              expected_value: 363
 
   - name: facebook
     config:
@@ -108,15 +108,15 @@ models:
       - name: media_cost
         tests:
           - expected_sum:
-              expected_value: 12078.13
+              expected_value: 8327.91
       - name: impressions
         tests:
           - expected_sum:
-              expected_value: 2363422
+              expected_value: 771281
       - name: clicks
         tests:
           - expected_sum:
-              expected_value: 18927
+              expected_value: 5785
 
 
 
@@ -141,6 +141,14 @@ sources:
 # Then in the relevant dbt model, you will see {{ source('source_name', 'table_name_you_picked') }}
 # where project name and dataset name are decleared in source.yml per project
 # 
+  - name: reddit_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
+    schema: "{{ env_var('REFERENCE_REDDIT_BIGQUERY_DATASET', 'reddit_raw') }}"
+    tables:
+      - name: ads
+      - name: campaigns
+      - name: reports
+      
   - name: facebook_raw
 
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"

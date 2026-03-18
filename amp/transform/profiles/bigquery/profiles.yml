@@ -9,6 +9,7 @@ meltano:
       method: "{{ env_var('DBT_BIGQUERY_AUTH_METHOD') }}"
       project: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
       dataset: "{{ env_var('DBT_BIGQUERY_DATASET') }}"
+      location: australia-southeast1
       threads: 2
       refresh_token: "{{ env_var('DBT_BIGQUERY_REFRESH_TOKEN', '') }}"
       client_id: "{{ env_var('DBT_BIGQUERY_CLIENT_ID', '') }}"
@@ -20,6 +21,7 @@ meltano:
       method: "{{ env_var('DBT_BIGQUERY_METHOD') }}"
       project: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
       dataset: "{{ env_var('DBT_BIGQUERY_DATASET') }}"
+      location: australia-southeast1
       threads: 4
       refresh_token: "{{ env_var('DBT_BIGQUERY_REFRESH_TOKEN', '') }}"
       client_id: "{{ env_var('DBT_BIGQUERY_CLIENT_ID', '') }}"
@@ -31,6 +33,7 @@ meltano:
       method: "{{ env_var('DBT_BIGQUERY_METHOD') }}"
       project: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
       dataset: "{{ env_var('DBT_BIGQUERY_DATASET') }}"
+      location: australia-southeast1
       threads: 6
       refresh_token: "{{ env_var('DBT_BIGQUERY_REFRESH_TOKEN', '') }}"
       client_id: "{{ env_var('DBT_BIGQUERY_CLIENT_ID', '') }}"

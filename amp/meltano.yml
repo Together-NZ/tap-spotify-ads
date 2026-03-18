@@ -1,5 +1,5 @@
 version: 1
-default_environment: staging
+default_environment: prod
 project_id: 2de0b6f6-586c-4cae-828a-f4b265302e9e
 environments:
 - name: dev
@@ -14,15 +14,21 @@ environments:
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
           REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360
           REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
+          REFERENCE_REDDIT_BIGQUERY_DATASET: dbt_test_reddit
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
           GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
           LINKEDIN_SUFFIX: dbt_test_linkedin
+          TTD_SUFFIX: dbt_test_ttd
+          REDDIT_SUFFIX: dbt_test_reddit
 - name: prod
 #state_backend:
 #  uri: gs://amp-main-meltano-state-staging
 plugins:
+
   extractors:
+
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
@@ -104,7 +110,7 @@ plugins:
       app_id: ${TAP_REDDIT_ADS_APP_ID}
       client_secret: ${TAP_REDDIT_ADS_CLIENT_SECRET}
       start_date: ${START_DATE}
-     
+      end_date: ${END_DATE}
   loaders:
   - name: target-jsonl
     variant: andyh1203
@@ -130,7 +136,7 @@ plugins:
     variant: dbt-labs
     pip_url: dbt-core~=1.8.0 dbt-bigquery~=1.8.0 setuptools<82.0
     env:
-      DBT_BIGQUERY_PROJECT: amp-main
+
       DBT_BIGQUERY_LOCATION: australia-southeast1
       REFERENCE_META_BIGQUERY_DATASET: facebook_raw
     commands:
@@ -153,6 +159,6 @@ plugins:
       cm360_models: run --select cm360_seralized cm360_direct_buy
       dash_models: run --select dash_table
       dash_search_models: run --select dash_table_search
-      google_ads_search_models: run --select google_ads_search
+      google_ads_models: run --select google_ads_search google_ads_demand
 elt:
   buffer_size: 52428800
