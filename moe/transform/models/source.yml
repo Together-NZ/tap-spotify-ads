@@ -1,4 +1,23 @@
 sources:
+
+  - name: ga4_raw__career
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__career') }}"
+    tables:
+      - name: goal
+
+  - name: ga4_raw__education
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__education') }}"
+    tables:
+      - name: goal
+
+  - name: dash_union
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table') }}"
+    tables:
+      - name: dash_union
+
   - name: hivestack_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
     schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw') }}"

@@ -18,3 +18,5 @@ packages:
   - git: https://github.com/Together-NZ/Impact-CI-tiktok_models.git
 
   - git: https://github.com/Together-NZ/Impact-CI-testing_sum.git
+
+  - git: https://github.com/Together-NZ/Impact-CI-ga4_models.git
