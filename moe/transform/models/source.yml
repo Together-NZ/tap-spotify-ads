@@ -1,0 +1,235 @@
+sources:
+  - name: hivestack_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw') }}"
+    tables:
+      - name: moe_report
+
+  - name: dv360_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: facebook_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: linkedin_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_BIGQUERY_DATASET', 'linkedin_raw') }}"
+    tables:
+      - name: ad_analytics_by_creative
+      - name: creatives
+      - name: campaigns
+      - name: campaign_groups
+
+  - name: reddit_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_REDDIT_BIGQUERY_DATASET', 'reddit_raw') }}"
+    tables:
+      - name: ads
+      - name: campaigns
+      - name: reports
+
+  - name: ttd_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_raw') }}"
+    tables:
+      - name: standard_streams
+
+  - name: tiktok_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_BIGQUERY_DATASET', 'tiktok_raw') }}"
+    tables:
+      - name: ads
+      - name: ads_basic_data_metrics_by_day
+      - name: ads_video_play_metrics_by_day
+
+  - name: snapchat_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_SNAPCHAT_BIGQUERY_DATASET', 'snapchat_raw') }}"
+    tables:
+      - name: ad_stats_daily
+      - name: ads
+      - name: ad_squads
+      - name: campaigns
+
+
+#testing dbt
+models:
+  - name: hivestack
+    config:
+      schema: "{{ env_var('HIVESTACK_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 14706.55
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 799647.09
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 0
+  - name: reddit
+    config:
+      schema: "{{ env_var('REDDIT_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 1095.76
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 429635
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 1268
+
+  - name: ttd_transformed
+    config: 
+      schema: "{{ env_var('TTD_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 52112.58
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 798906
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 363
+
+  - name: facebook
+    config:
+      schema: "{{ env_var('META_SUFFIX', '') }}"
+
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 12078.13
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 2363422
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 18927
+      
+
+  - name: dv360_standard
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 132277.41
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 9808518
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 10278
+  - name: dv360_youtube
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 124977.92
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 8951645
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 6257
+  - name: google_ads_search
+    config:
+      schema: "{{ env_var('GOOGLE_ADS_SEARCH_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 380962.55
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 22856329
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 498442
+  - name: linkedin
+    config:
+      schema: "{{ env_var('LINKEDIN_SUFFIX','') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 8327.91
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 771281
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5785
+
+
+  - name: tiktok
+    config:
+      schema: "{{ env_var('TIKTOK_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 18983.49
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 4422216
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 12747
+
+  - name: snapchat
+    config:
+      schema: "{{ env_var('SNAPCHAT_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 14681.47
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 1974208
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 6867

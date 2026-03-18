@@ -4,6 +4,29 @@ project_id: 2de0b6f6-586c-4cae-828a-f4b265302e9e
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360
+          REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
+          REFERENCE_REDDIT_BIGQUERY_DATASET: dbt_test_reddit
+          REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok
+          REFERENCE_SNAPCHAT_BIGQUERY_DATASET: dbt_test_snapchat
+          META_SUFFIX: dbt_test_facebook
+          DV360_SUFFIX: dbt_test_dv360
+          GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
+          LINKEDIN_SUFFIX: dbt_test_linkedin
+          TTD_SUFFIX: dbt_test_ttd
+          REDDIT_SUFFIX: dbt_test_reddit
+          HIVESTACK_SUFFIX: dbt_test_hivestack
+          TIKTOK_SUFFIX: dbt_test_tiktok
+          SNAPCHAT_SUFFIX: dbt_test_snapchat
 - name: prod
 #state_backend:
 #  uri: gs://moe-main-meltano-state-staging
@@ -103,6 +126,8 @@ plugins:
     - ad_sets.*
     - ads.*
     - campaigns.*
+    - custom_conversions.*
+
   - name: tap-reddit-ads
     namespace: tap-reddit-ads
     pip_url: git+ssh://git@github.com/Together-NZ/tap-reddit-ads.git setuptools<82.0
@@ -161,7 +186,7 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
+    pip_url: dbt-core~=1.8.0 dbt-bigquery~=1.8.0 setuptools<82.0
     commands:
       cm360_models:
         args: run --select +cm360_seralized +cm360_direct_buy
@@ -185,6 +210,8 @@ plugins:
         args: run --select +hivestack
       reddit_models:
         args: run --select +reddit
+      google_ads_models:
+        args: run --select +google_ads_search
 
   files:
   - name: files-airflow

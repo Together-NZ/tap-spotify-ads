@@ -18,7 +18,7 @@ WITH dash_table AS (
     FROM `moe-main.dv360_transformed.dv360_youtube`  WHERE LOWER(campaign_name) LIKE '%yt%'
     UNION ALL
      SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion
-           ,video_25_completion,video_50_completion,video_75_completion, video_views,
+           ,video_25_completion,video_50_completion,video_75_completion, video_play as video_views,
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
     FROM `moe-main.tiktok_transformed.tiktok`
 

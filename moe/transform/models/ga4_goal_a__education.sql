@@ -12,7 +12,7 @@ WITH deduplicated_data AS (
     JSON_VALUE(data, '$.sessionCampaignName') AS campaign_name,
     JSON_VALUE(data, '$.sessionManualAdContent') AS sessionManualAdContent,
     JSON_VALUE(data, '$.eventName') AS eventName,
-    SAFE_CAST(JSON_VALUE(data, '$.eventCount') AS INT64) AS eventCount,
+    SAFE_CAST(SAFE_CAST(JSON_VALUE(data, '$.eventCount') AS FLOAT64) AS INT64) AS eventCount,
     JSON_VALUE(data, '$.eventValue') AS eventValue,
     JSON_VALUE(data, '$.report_start_date') AS report_start_date,
     JSON_VALUE(data, '$.report_end_date') AS report_end_date,
