@@ -25,6 +25,7 @@ initial_data as (
     SAFE_CAST(JSON_VALUE(data,'$.video_watched_50_percent') AS INT64) as video_50_completion,
     SAFE_CAST(JSON_VALUE(data,'$.video_watched_75_percent') AS INT64) as video_75_completion,
     SAFE_CAST(JSON_VALUE(data,'$.video_watched_100_percent') AS INT64)as video_completion,
+    DATETIME(_sdc_extracted_at) as _sdc_extracted_at,
     ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(data,'$.campaign_id') ,JSON_VALUE(data,'$.date'),JSON_VALUE(data,'$.ad_id')
     order by _sdc_extracted_at desc
     ) as row_num
@@ -32,6 +33,7 @@ initial_data as (
 ),filtered_data as (
    select * from initial_data where row_num = 1 
 ),
+
 final as (
     select SUM(clicks) as clicks,
     SUM(impressions) as impressions,
