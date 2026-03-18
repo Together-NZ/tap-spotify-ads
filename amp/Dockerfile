@@ -42,7 +42,11 @@ RUN pip install \
     pandas \
     pyarrow
 WORKDIR /project/transform
-RUN dbt deps
+RUN --mount=type=ssh \
+    mkdir -p /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts && \
+    ssh -T git@github.com || true && \
+    dbt deps
 
 
 # Entrypoint for container
