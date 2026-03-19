@@ -331,26 +331,7 @@ with models.DAG(
         ),
     )
 
-    kube_meltano_update = KubernetesPodOperator(
-        name="moe-meltano-update",
-        task_id="moe-meltano_update",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "install"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),)
-    
-    kube_dbt_deps = KubernetesPodOperator(
-        name="moe-dbt-deps",
-        task_id="moe-dbt_deps",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "invoke", "dbt-bigquery", "deps"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-    )
+
     
     kube_reddit = KubernetesPodOperator(
         name="moe-reddit-to-bigquery",
@@ -475,5 +456,5 @@ with models.DAG(
     
     set_env_task_linkedin >> kube_linkedin
     set_env_task_reddit >> kube_reddit
-    kube_meltano_update >> kube_dbt_deps >> [kube_facebook,kube_snapchat,kube_dv360,kube_reddit,kube_hivestack,kube_cm360,kube_ttd,kube_linkedin] >> kube_dash
+    [kube_facebook,kube_snapchat,kube_dv360,kube_reddit,kube_hivestack,kube_cm360,kube_ttd,kube_linkedin] >> kube_dash
     kube_dash>>kube_dash_search >> kube_dash_union

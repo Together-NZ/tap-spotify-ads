@@ -327,28 +327,6 @@ with models.DAG(
         task_id="set_env_task_dv360",
         python_callable=set_env_vars_dv360,
     )
-    kube_meltano_update = KubernetesPodOperator(
-        name="amp-meltano-update",
-        task_id="amp-meltano_update",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "install"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        get_logs = True
-    )
-    kube_dbt_deps = KubernetesPodOperator(
-        name="amp-dbt-deps",
-        task_id="amp-dbt_deps",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "invoke", "dbt-bigquery", "deps"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        get_logs = True
-    )
     kube_adobe_centralized = KubernetesPodOperator(
             name="amp-adobe-centralized-to-bigquery",
             task_id="amp-adobe_centralized_to_bigquery",
@@ -563,5 +541,5 @@ with models.DAG(
                 )  
                 kube_adobe_centralized >> kube_adobe 
                 task_list.append(kube_adobe)
-    kube_meltano_update >> kube_dbt_deps >> task_list >> set_env_task_dash >> kube_dash
+    task_list >> set_env_task_dash >> kube_dash
             
