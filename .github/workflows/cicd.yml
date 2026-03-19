@@ -50,6 +50,7 @@ jobs:
             | grep -v '.github/' \
             | grep -v '/ci_test.sh' \
             | grep -v '/client_name.py' \
+            | grep -v '/ci_pre_test.sh' \
             | grep -v '/docker_build.py' \
             | cut -d/ -f1 | sort -u \
             | while read dir; do [ -d "$dir" ] && echo "$dir"; done \
