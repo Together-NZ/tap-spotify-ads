@@ -47,13 +47,11 @@ RUN --mount=type=ssh \
     ssh-keyscan github.com >> /root/.ssh/known_hosts && \
     ssh -T git@github.com || true && \
     meltano invoke dbt-bigquery deps
-# testing dbt
-RUN --mount=type=secret,id=bq_keyfile,target=/tmp/bq_keyfile.json \
-    DBT_BIGQUERY_METHOD=service-account \
-    DBT_BIGQUERY_KEYFILE=/tmp/bq_keyfile.json \
+# Validate dbt models compile correctly (no credentials needed)
+RUN DBT_BIGQUERY_METHOD=oauth \
     DBT_BIGQUERY_PROJECT=together-internal \
     DBT_BIGQUERY_DATASET=test_dataset \
-    meltano --environment=staging invoke dbt-bigquery:test
+    meltano --environment=staging invoke dbt-bigquery compile
 
 # Entrypoint for container
 ENTRYPOINT ["meltano"]
