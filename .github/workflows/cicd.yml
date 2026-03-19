@@ -38,6 +38,7 @@ jobs:
               - "!.github/**"
               - "!terraform/**"
               - "!**/orchestrate/**"
+              - "!centralize_data/**"
       # record the folder change if the change are not dag file 
       - name: Get changed folders
         id: set-matrix
@@ -80,7 +81,7 @@ jobs:
               - "!terraform/**"
               - "!**/orchestrate/**"
               - "!centralize_data/**"
-              
+
       # record the folder change if the change are not dag file 
       - name: Get changed folders
         id: set-dag-matrix
