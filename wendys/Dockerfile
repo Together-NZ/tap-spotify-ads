@@ -47,7 +47,11 @@ RUN for v in /project/.meltano/*/*/venv/bin/python; do \
 "$v" -m ensurepip --upgrade || true; \
 "$v" -m pip install -U "setuptools<81" || true; \
 done
-
+RUN --mount=type=ssh \
+    mkdir -p /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts && \
+    ssh -T git@github.com || true && \
+    meltano invoke dbt-bigquery deps
 
 # Entrypoint for container
 ENTRYPOINT ["meltano"]

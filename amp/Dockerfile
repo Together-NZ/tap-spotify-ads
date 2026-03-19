@@ -41,12 +41,12 @@ RUN pip install \
     google-cloud-storage \
     pandas \
     pyarrow
-WORKDIR /project/transform
+
 RUN --mount=type=ssh \
     mkdir -p /root/.ssh && \
     ssh-keyscan github.com >> /root/.ssh/known_hosts && \
     ssh -T git@github.com || true && \
-    dbt deps
+    meltano invoke dbt-bigquery deps
 
 
 # Entrypoint for container
