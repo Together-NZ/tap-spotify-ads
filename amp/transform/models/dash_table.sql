@@ -75,7 +75,7 @@ FROM `amp-main.reddit_transformed.reddit`
            
            campaign_name,publisher, campaign_descr, 
             creative_descr,  -- Convert array to string
-           date, NULL AS conversions
+           date, conversions AS conversions
 
     FROM `amp-main.google_ads_search_transformed.google_ads_demand`
 ),
