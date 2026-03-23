@@ -453,7 +453,7 @@ with models.DAG(
     )
     kube_facebook_union = EmptyOperator(
         task_id="kube_facebook_union",
-        trigger_rule="none_failed",
+        trigger_rule="all_done",
     )
     kube_facebook_done >> kube_facebook_union
     kube_facebook_retry >> kube_facebook_union
