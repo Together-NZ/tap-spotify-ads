@@ -41,6 +41,11 @@ RUN pip install \
     google-cloud-storage \
     pandas \
     pyarrow
+RUN --mount=type=ssh \
+    mkdir -p /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts && \
+    ssh -T git@github.com || true && \
+    pip install git+ssh://git@github.com/Together-NZ/data-accuracy-check.git
 
 RUN --mount=type=ssh \
     mkdir -p /root/.ssh && \
