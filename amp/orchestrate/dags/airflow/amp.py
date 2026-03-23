@@ -16,7 +16,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 import json
 import time
-from data_accuracy_check import ComparisonTrigger
+from comparison_package import ComparisonTrigger
 from datetime import timedelta,datetime, timezone
 import datetime
 from google.cloud import secretmanager
@@ -34,7 +34,7 @@ log.setLevel(logging.INFO)
 all_tasks = []
 per_label_task = {}
 local_tz = pendulum.timezone("Pacific/Auckland")
-comparison_start_date = datetime.datetime.now(local_tz) - datetime.timedelta(days=30)
+comparison_start_date = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 default_args = {
     "retries": 3,
     "max_active_runs": 1,
@@ -61,7 +61,9 @@ def get_meltano_env():
 def get_ga4_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 def get_ttd_start_date():
-    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
+def get_facebook_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=2)).strftime("%Y-%m-%dT00:00:00Z")
 with models.DAG(
     dag_id="amp-meltano-google-ads",
     schedule_interval = "0 14 * * *",
@@ -228,6 +230,7 @@ with models.DAG(
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'amp-main'
         env["DBT_BIGQUERY_DATASET"] = 'facebook_transformed'
+        env["TAP_FACEBOOK_AIRBYTE_CONFIG_START_DATE"] = get_facebook_start_date()
         return env
     def set_env_vars_cm360():
         env = get_meltano_env()
@@ -338,11 +341,11 @@ with models.DAG(
         table_name="facebook",
         source_name="meta",
         start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz),
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
         secret_name="airflow-variables-meltano_amp_main",
         project_id=env["PROJECT_ID"]
         )
-    comparison_trigger_facebook.compare_data()
+
     
     task_facebook_comparison = PythonOperator(
         task_id="task_facebook_comparison",
@@ -432,7 +435,7 @@ with models.DAG(
     )
     def set_env_vars_facebook_retry():
         env = set_env_vars_facebook()
-        env["TAP_FACEBOOK_AIRBYTE_CONFIG_START_DATE"] = comparison_start_date
+        env["TAP_FACEBOOK_AIRBYTE_CONFIG_START_DATE"] = comparison_start_date + "T00:00:00Z"
         return env
     kube_facebook_retry = KubernetesPodOperator(
         name="amp-facebook-retry",
@@ -522,18 +525,19 @@ with models.DAG(
     set_env_task_hivestack >> kube_hivestack
     set_env_task_facebook >> kube_facebook
     set_env_task_dv360 >> kube_dv360
-    comparison_trigger_facebook >> task_facebook_comparison
-    set_env_task_dash_search >> kube_dash_search
-    kube_dash >>kube_dash_search
     @task.branch(task_id="branch_task_facebook_comparison")
     def branc_task_facebook_comparison(**context):
         xcom_value = context['ti'].xcom_pull(task_ids="task_facebook_comparison")
         if not xcom_value:
-            return 'kube_facebook_retry'
+            return 'amp-facebook_retry'
         return 'kube_facebook_done'
+
+    set_env_task_facebook >> kube_facebook >> task_facebook_comparison >> branc_task_facebook_comparison() >> [kube_facebook_done, kube_facebook_retry]
+    set_env_task_dash_search >> kube_dash_search
+    kube_dash >> kube_dash_search
         
     brands = ['centralized','wealth','general_insurance','direct']
-    task_list = [kube_cm360,kube_ttd,kube_dv360,kube_linkedin,kube_hivestack,kube_facebook,kube_facebook_union,kube_reddit] 
+    task_list = [kube_cm360,kube_ttd,kube_dv360,kube_linkedin,kube_hivestack,kube_facebook_union,kube_reddit] 
     for brand in brands:
         if brand == 'centralized':
             kube_dash_union_centralized = KubernetesPodOperator(
