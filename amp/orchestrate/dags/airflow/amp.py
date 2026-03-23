@@ -1,6 +1,8 @@
 import datetime
 from airflow import models
+from airflow.decorators import task
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.models import Variable
@@ -14,6 +16,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 import json
 import time
+from data_accuracy_check import ComparisonTrigger
 from datetime import timedelta,datetime, timezone
 import datetime
 from google.cloud import secretmanager
@@ -31,6 +34,7 @@ log.setLevel(logging.INFO)
 all_tasks = []
 per_label_task = {}
 local_tz = pendulum.timezone("Pacific/Auckland")
+comparison_start_date = datetime.datetime.now(local_tz) - datetime.timedelta(days=30)
 default_args = {
     "retries": 3,
     "max_active_runs": 1,
@@ -48,6 +52,7 @@ def get_meltano_env():
 
     yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
     start_date_str = yesterday.strftime("%Y-%m-%d")
+    
 
     meltano_env["START_DATE"] = start_date_str
     meltano_env["BQ_METHOD"] = "batch_job"
@@ -98,7 +103,7 @@ with models.DAG(
         task_id="set_env_task_dash_search",
         python_callable=set_env_vars_dash_search,
     )
-
+    
     kube_dash = KubernetesPodOperator(
                 name="amp-dash-to-bigquery",
                 task_id="amp-dash_to_bigquery",
@@ -180,7 +185,7 @@ with models.DAG(
             kube_dash_union_centralized >> kube_dash_union
     set_env_task_dash >> kube_dash >> kube_dash_search
     
-    
+
 
 with models.DAG(
     dag_id="amp-meltano-extraction-transformation-dbt",
@@ -327,6 +332,24 @@ with models.DAG(
         task_id="set_env_task_dv360",
         python_callable=set_env_vars_dv360,
     )
+    comparison_trigger_facebook = ComparisonTrigger(
+        project_name="amp-main",
+        destination_table="facebook_transformed",
+        table_name="facebook",
+        source_name="meta",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz),
+        secret_name="airflow-variables-meltano_amp_main",
+        project_id=env["PROJECT_ID"]
+        )
+    comparison_trigger_facebook.compare_data()
+    
+    task_facebook_comparison = PythonOperator(
+        task_id="task_facebook_comparison",
+        python_callable=comparison_trigger_facebook.compare_data,
+        trigger_rule="all_done",
+    )
+  
     kube_adobe_centralized = KubernetesPodOperator(
             name="amp-adobe-centralized-to-bigquery",
             task_id="amp-adobe_centralized_to_bigquery",
@@ -407,6 +430,33 @@ with models.DAG(
             #base_container_name=f"meltano-{label}-facebook",
             get_logs = True
     )
+    def set_env_vars_facebook_retry():
+        env = set_env_vars_facebook()
+        env["TAP_FACEBOOK_AIRBYTE_CONFIG_START_DATE"] = comparison_start_date
+        return env
+    kube_facebook_retry = KubernetesPodOperator(
+        name="amp-facebook-retry",
+        task_id="amp-facebook_retry",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "run", "tap-facebook", "target-bigquery","dbt-bigquery:facebook_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_facebook_retry(),
+        #base_container_name=f"meltano-{label}-facebook",
+        get_logs = True
+    )
+    kube_facebook_done = EmptyOperator(
+        task_id="kube_facebook_done",
+        trigger_rule="all_done",
+    )
+    kube_facebook_union = EmptyOperator(
+        task_id="kube_facebook_union",
+        trigger_rule="none_failed",
+    )
+    kube_facebook_done >> kube_facebook_union
+    kube_facebook_retry >> kube_facebook_union
     # increase retry delay, reduce retries to 1 for ttd
     kube_ttd = KubernetesPodOperator(
             name="amp-ttd-to-bigquery",
@@ -472,11 +522,18 @@ with models.DAG(
     set_env_task_hivestack >> kube_hivestack
     set_env_task_facebook >> kube_facebook
     set_env_task_dv360 >> kube_dv360
-    
+    comparison_trigger_facebook >> task_facebook_comparison
     set_env_task_dash_search >> kube_dash_search
     kube_dash >>kube_dash_search
+    @task.branch(task_id="branch_task_facebook_comparison")
+    def branc_task_facebook_comparison(**context):
+        xcom_value = context['ti'].xcom_pull(task_ids="task_facebook_comparison")
+        if not xcom_value:
+            return 'kube_facebook_retry'
+        return 'kube_facebook_done'
+        
     brands = ['centralized','wealth','general_insurance','direct']
-    task_list = [kube_cm360,kube_ttd,kube_dv360,kube_linkedin,kube_hivestack,kube_facebook,kube_reddit] 
+    task_list = [kube_cm360,kube_ttd,kube_dv360,kube_linkedin,kube_hivestack,kube_facebook,kube_facebook_union,kube_reddit] 
     for brand in brands:
         if brand == 'centralized':
             kube_dash_union_centralized = KubernetesPodOperator(
