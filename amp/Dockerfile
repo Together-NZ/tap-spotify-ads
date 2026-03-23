@@ -45,7 +45,7 @@ RUN --mount=type=ssh \
     mkdir -p /root/.ssh && \
     ssh-keyscan github.com >> /root/.ssh/known_hosts && \
     ssh -T git@github.com || true && \
-    pip install git+ssh://git@github.com/Together-NZ/data-accuracy-check.git
+    pip install git+ssh://git@github.com/Together-NZ/Impact-CI-data_accuracy_check.git
 
 RUN --mount=type=ssh \
     mkdir -p /root/.ssh && \
