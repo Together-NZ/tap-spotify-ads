@@ -1,0 +1,139 @@
+version: 2
+models:
+
+  - name: facebook__interislander
+    config:
+      schema: "{{ env_var('META_SUFFIX', '') }}"
+
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 14549.95
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 2857616
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 22450
+      
+
+      
+  - name: dv360_standard__interislander
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 1098.89
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 591910
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 3354
+
+  - name: dv360_youtube__interislander
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 25911.72
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 2097511
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 1853
+
+
+
+sources:
+# This part seperates the project and table between staging environment and 
+#production environment. How it works is this: A source has its name you decleared,
+# and it takes in three variabels: database(gcp project), shcema(bigquerydatasets) and tables(bigquery tables), database points to the project
+# shcema points to the datasets, and tables is the tables. 
+# Eg:
+# - name: source_name
+#   database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
+#   schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw') }}"
+#   tables:
+#     - name: ads_insights
+#     - name: ad_sets
+#     - name: ads
+#     - name: campaigns
+#     - name: custom_conversions
+# Then in the relevant dbt model, you will see {{ source('source_name', 'table_name_you_picked') }}
+# where project name and dataset name are decleared in source.yml per project
+# 
+
+      
+  - name: facebook_raw__great_journey
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__great_journey') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: facebook_raw__interislander
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__interislander') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: dv360_raw__great_journey
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw__great_journey') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: dv360_raw__interislander
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw__interislander') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: ga4_raw__great_journey
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__great_journey') }}"
+    tables:
+      - name: goal
+  - name: ga4_raw__interislander
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__interislander') }}"
+    tables:
+      - name: goal
+  - name: dash_union__great_journey
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_union__great_journey') }}"
+    tables:
+      - name: dash_union__great_journey
+  - name: dash_union__interislander
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_union__interislander') }}"
+    tables:
+      - name: dash_union__interislander
+
+
+
+  
+
+  

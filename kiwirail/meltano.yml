@@ -1,0 +1,106 @@
+default_environment: dev
+project_id: 019cdac6-2fc4-78d5-a35a-e6671332d7a6
+environments:
+- name: dev
+- name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          #GOOGLE_ADS_SEARCH_SUFFIX: google_ads_search_test
+          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          META_SUFFIX: dbt_test_facebook
+          DV360_SUFFIX: dbt_test_dv360
+          GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
+          PLAN_CODE_INTERISLANDER: uow
+          PLAN_CODE_GREAT_JOURNEY: uow
+  
+
+- name: prod
+plugins:
+  extractors:
+  - name: tap-dv360
+    namespace: tap-dv360
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
+    executable: tap-dv360
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      start_date: ${START_DATE}
+      advertiser_id: '8048813517'
+      query_standard: dv360_standard.json
+      query_youtube: dv360_youtube.json
+      service_account: together-meltano@together-internal.iam.gserviceaccount.com
+  - name: tap-ga4
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
+    config:
+      reports: ./report.json
+      start_date: ${START_DATE}
+      keep_empty_rows: true
+      select:
+      - goal
+  - name: tap-facebook
+    variant: airbyte
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
+    config:
+      airbyte_config:
+        start_date: ${START_DATE}T00:00:00Z
+    select:
+    - ads_insights.*
+    - ad_account.*
+    - ad_sets.*
+    - ads.*
+    - campaigns.*
+    - custom_conversions.*
+  loaders:
+  - name: target-bigquery
+    variant: z3z1ma
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
+    config:
+      dataset: ${BQ_DATASET}
+      project: kiwirail-main
+      location: australia-southeast1
+      denormalized: false
+      schema_resolver_version: 2
+      column_name_transforms:
+        add_underscore_when_invalid: true
+        lower: true
+        snake_case: true
+      fail_fast: false
+      method: ${BQ_METHOD}
+      bucket: australia-southeast1-meltan-00c049c-bigquery-staging
+
+  transformers:
+  - name: dbt-bigquery
+    variant: dbt-labs
+    pip_url: dbt-core~=1.8.0 dbt-bigquery~=1.8.0 setuptools<82.0
+    commands:
+      facebook_interislander_models:
+        args: run --select facebook__interislander
+      facebook_great_journey_models:
+        args: run --select facebook__great_journey
+      dv360_interislander_models:
+        args: run --select dv360_standard__interislander dv360_youtube__interislander
+      dv360_great_journey_models:
+        args: run --select dv360_standard__great_journey dv360_youtube__great_journey
+      google_ads_interislander_models:
+        args: run --select google_ads_search__interislander google_ads_demand__interislander
+      google_ads_great_journey_models:
+        args: run --select google_ads_search__great_journey google_ads_demand__great_journey
+      ga4_goal_a_interislander_models:
+        args: run --select ga4_goal_a__interislander +ga4_goal_channel__interislander
+      ga4_goal_a_great_journey_models:
+        args: run --select ga4_goal_a__great_journey +ga4_goal_channel__great_journey
+
+ 
+
+  
