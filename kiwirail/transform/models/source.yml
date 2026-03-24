@@ -123,12 +123,12 @@ sources:
       - name: goal
   - name: dash_union__great_journey
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_union__great_journey') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__great_journey') }}"
     tables:
       - name: dash_union__great_journey
   - name: dash_union__interislander
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_union__interislander') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__interislander') }}"
     tables:
       - name: dash_union__interislander
 
