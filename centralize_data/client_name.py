@@ -18,6 +18,7 @@ CLIENT_NAME={
     "inghams":"inghams",
     "liquorland":"liquorland",
     "moe":"moe",
+    "kiwirail":"kiwirail",
     "mpi":"mpi",
     "polestar":"polestar",
     "public_trust":"public-trust",
