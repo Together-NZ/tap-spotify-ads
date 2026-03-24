@@ -63,7 +63,7 @@ def get_ga4_start_date():
 def get_ttd_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
 def get_facebook_start_date():
-    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=2)).strftime("%Y-%m-%dT00:00:00Z")
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%dT00:00:00Z")
 with models.DAG(
     dag_id="amp-meltano-google-ads",
     schedule_interval = "0 14 * * *",
@@ -347,9 +347,16 @@ with models.DAG(
         )
 
     
+    def facebook_comparison_check(**context):
+        result = comparison_trigger_facebook.compare_data()
+        if not result:
+            raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
+        return result
+
     task_facebook_comparison = PythonOperator(
         task_id="task_facebook_comparison",
-        python_callable=comparison_trigger_facebook.compare_data,
+        python_callable=facebook_comparison_check,
+        retries=0,
         trigger_rule="all_done",
     )
   
@@ -433,33 +440,8 @@ with models.DAG(
             #base_container_name=f"meltano-{label}-facebook",
             get_logs = True
     )
-    def set_env_vars_facebook_retry():
-        env = set_env_vars_facebook()
-        env["TAP_FACEBOOK_AIRBYTE_CONFIG_START_DATE"] = comparison_start_date + "T00:00:00Z"
-        return env
-    kube_facebook_retry = KubernetesPodOperator(
-        name="amp-facebook-retry",
-        task_id="amp-facebook_retry",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-facebook", "target-bigquery","dbt-bigquery:facebook_models"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_facebook_retry(),
-        #base_container_name=f"meltano-{label}-facebook",
-        get_logs = True
-    )
-    kube_facebook_done = EmptyOperator(
-        task_id="kube_facebook_done",
-        trigger_rule="all_done",
-    )
-    kube_facebook_union = EmptyOperator(
-        task_id="kube_facebook_union",
-        trigger_rule="all_done",
-    )
-    kube_facebook_done >> kube_facebook_union
-    kube_facebook_retry >> kube_facebook_union
+
+
     # increase retry delay, reduce retries to 1 for ttd
     kube_ttd = KubernetesPodOperator(
             name="amp-ttd-to-bigquery",
@@ -525,19 +507,12 @@ with models.DAG(
     set_env_task_hivestack >> kube_hivestack
     set_env_task_facebook >> kube_facebook
     set_env_task_dv360 >> kube_dv360
-    @task.branch(task_id="branch_task_facebook_comparison")
-    def branc_task_facebook_comparison(**context):
-        xcom_value = context['ti'].xcom_pull(task_ids="task_facebook_comparison")
-        if not xcom_value:
-            return 'amp-facebook_retry'
-        return 'kube_facebook_done'
-
-    set_env_task_facebook >> kube_facebook >> task_facebook_comparison >> branc_task_facebook_comparison() >> [kube_facebook_done, kube_facebook_retry]
+    set_env_task_facebook >> kube_facebook >> task_facebook_comparison
     set_env_task_dash_search >> kube_dash_search
     kube_dash >> kube_dash_search
-        
+    
     brands = ['centralized','wealth','general_insurance','direct']
-    task_list = [kube_cm360,kube_ttd,kube_dv360,kube_linkedin,kube_hivestack,kube_facebook_union,kube_reddit] 
+    task_list = [kube_cm360,kube_ttd,kube_dv360,kube_linkedin,kube_hivestack,kube_facebook,kube_reddit] 
     for brand in brands:
         if brand == 'centralized':
             kube_dash_union_centralized = KubernetesPodOperator(

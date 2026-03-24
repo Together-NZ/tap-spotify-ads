@@ -12,10 +12,11 @@ environments:
           DBT_BIGQUERY_PROJECT: together-internal
           DBT_BIGQUERY_LOCATION: australia-southeast1
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
-          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360
+          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
           REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
           REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
           REFERENCE_REDDIT_BIGQUERY_DATASET: dbt_test_reddit
+          REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
           GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
@@ -23,6 +24,8 @@ environments:
           TTD_SUFFIX: dbt_test_ttd
           REDDIT_SUFFIX: dbt_test_reddit
           HIVESTACK_SUFFIX: dbt_test_hivestack
+          PLAN_CODE: uow
+          REPORT_NAME: amp_report
 - name: prod
 #state_backend:
 #  uri: gs://amp-main-meltano-state-staging

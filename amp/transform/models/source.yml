@@ -42,15 +42,15 @@ models:
       - name: media_cost
         tests:
           - testing_sum.expected_sum:
-              expected_value: 12078.13
+              expected_value: 14549.95
       - name: impressions
         tests:
           - testing_sum.expected_sum:
-              expected_value: 2363422
+              expected_value: 2857616
       - name: clicks
         tests:
           - testing_sum.expected_sum:
-              expected_value: 18927
+              expected_value: 22450
       
 
   - name: dv360_standard
@@ -60,15 +60,15 @@ models:
       - name: media_cost
         tests:
           - testing_sum.expected_sum:
-              expected_value: 132277.41
+              expected_value: 1098.89
       - name: impressions
         tests:
           - testing_sum.expected_sum:
-              expected_value: 9808518
+              expected_value: 591910
       - name: clicks
         tests:
           - testing_sum.expected_sum:
-              expected_value: 10278
+              expected_value: 3354
   - name: dv360_youtube
     config:
       schema: "{{ env_var('DV360_SUFFIX', '') }}"
@@ -76,15 +76,15 @@ models:
       - name: media_cost
         tests:
           - testing_sum.expected_sum:
-              expected_value: 124977.92
+              expected_value: 25911.72
       - name: impressions
         tests:
           - testing_sum.expected_sum:
-              expected_value: 8951645
+              expected_value: 2097511
       - name: clicks
         tests:
           - testing_sum.expected_sum:
-              expected_value: 6257
+              expected_value: 1853
   - name: google_ads_search
     config:
       schema: "{{ env_var('GOOGLE_ADS_SEARCH_SUFFIX', '') }}"
@@ -124,11 +124,11 @@ models:
       - name: media_cost
         tests:
           - testing_sum.expected_sum:
-              expected_value: 14706.55
+              expected_value: 15000.03
       - name: impressions
         tests:
           - testing_sum.expected_sum:
-              expected_value: 799647.09
+              expected_value: 815604.65
       - name: clicks
         tests:
           - testing_sum.expected_sum:
