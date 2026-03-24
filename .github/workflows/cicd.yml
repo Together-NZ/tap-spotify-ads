@@ -52,6 +52,8 @@ jobs:
             | grep -v '/client_name.py' \
             | grep -v '/ci_pre_test.sh' \
             | grep -v '/docker_build.py' \
+            | grep -v '/dv360_youtube.json' \
+            | grep -v '/dv360_standard.json' \
             | cut -d/ -f1 | sort -u \
             | while read dir; do [ -d "$dir" ] && echo "$dir"; done \
             | jq -R . | jq -s -c .)
