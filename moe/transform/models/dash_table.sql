@@ -8,7 +8,7 @@ WITH dash_table AS (
 
     UNION ALL
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,SAFE_CAST(total_conversions as FLOAT64) as conversions
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,SAFE_CAST(conversions as FLOAT64) as conversions
     
     FROM `moe-main.dv360_transformed.dv360_standard`  WHERE LOWER(campaign_name) NOT LIKE '%yt%'
     UNION ALL
