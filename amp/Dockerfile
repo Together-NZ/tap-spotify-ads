@@ -4,7 +4,7 @@ FROM meltano/meltano:v3-python3.10
 # Enable SSH agent forwarding
 # Required for cloning private GitHub repos via SSH
 # Must be enabled via `--ssh default` during build
-RUN apt-get update && apt-get install -y openssh-client git
+RUN apt-get update && apt-get install -y openssh-client git curl
 
 # Set working directory
 WORKDIR /project
@@ -29,7 +29,9 @@ RUN --mount=type=ssh \
     ssh-keyscan github.com >> /root/.ssh/known_hosts && \
     ssh -T git@github.com || true && \
     meltano install
-
+RUN curl -sSL -o dv360_standard.json https://raw.githubusercontent.com/Together-NZ/Impact-CI-DV360_models/main/dv360_standard.json
+RUN curl -sSL -o dv360_youtube.json https://raw.githubusercontent.com/Together-NZ/Impact-CI-DV360_models/main/dv360_youtube.json
+    
 
 # Install any additional Python libraries
 RUN pip install \

@@ -94,8 +94,8 @@ plugins:
     config:
       start_date: ${START_DATE}
       advertiser_id: '6881895348'
-      query_standard: query_standard.json
-      query_youtube: query_youtube.json
+      query_standard: dv360_standard.json
+      query_youtube: dv360_youtube.json
       service_account: ${TAP_DV360_SERVICE_ACCOUNT} 
   - name: tap-hivestack
     namespace: tap-hivestack
