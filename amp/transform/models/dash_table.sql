@@ -54,7 +54,7 @@ FROM `amp-main.reddit_transformed.reddit`
     UNION ALL
 
     SELECT media_cost, impressions, clicks, creative_name,audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,total_conversions AS conversions
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,safe_cast(total_conversions AS INT64) AS conversions
     FROM `amp-main.dv360_transformed.dv360_standard` WHERE LOWER(campaign_name) not like '%yt%'
     UNION ALL
     SELECT media_cost, impressions, clicks, creative_name,audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
