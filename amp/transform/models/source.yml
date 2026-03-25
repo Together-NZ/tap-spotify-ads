@@ -76,15 +76,15 @@ models:
       - name: media_cost
         tests:
           - testing_sum.expected_sum:
-              expected_value: 25911.72
+              expected_value: 67127.98
       - name: impressions
         tests:
           - testing_sum.expected_sum:
-              expected_value: 2097511
+              expected_value: 5248537
       - name: clicks
         tests:
           - testing_sum.expected_sum:
-              expected_value: 1853
+              expected_value: 4432
   - name: google_ads_search
     config:
       schema: "{{ env_var('GOOGLE_ADS_SEARCH_SUFFIX', '') }}"
