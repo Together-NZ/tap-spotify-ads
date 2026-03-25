@@ -240,3 +240,6 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 6867
+
+
+# UPDATE GA4
