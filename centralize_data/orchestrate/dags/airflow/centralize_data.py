@@ -177,7 +177,7 @@ with models.DAG(
         task_id="cm360_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-cm360", "target-bigquery"],
+        arguments=["--environment=prod", "run", "tap-cm360", "target-bigquery","--full-refresh"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
@@ -188,7 +188,7 @@ with models.DAG(
         task_id="cm360_contact_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-cm360", "target-bigquery"],
+        arguments=["--environment=prod", "run", "tap-cm360", "target-bigquery","--full-refresh"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),

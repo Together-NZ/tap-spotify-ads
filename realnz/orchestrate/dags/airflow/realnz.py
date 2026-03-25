@@ -20,7 +20,7 @@ log.setLevel(logging.INFO)
 
 local_tz = pendulum.timezone("Pacific/Auckland")
 yesterday = dt.now(local_tz) - timedelta(days=13)
-ga4_start_date = dt.now(local_tz) - timedelta(days=30)
+ga4_start_date = dt.now(local_tz) - timedelta(days=40)
 
 default_args = {
     "retries": 3,
@@ -271,16 +271,7 @@ with models.DAG(
         ga4_table_map = {"goal": "goal", "ecommerce": "ecommerce_goal"}
         for _type in ga4_type_list:
             table_name = ga4_table_map[_type]
-            delete_ga4 = BigQueryInsertJobOperator(
-                task_id=f"delete_ga4_{label}_{_type}",
-                configuration={
-                    "query": {
-                        "query": f"DELETE FROM `real-nz-main`.`ga4_raw__{label}`.`{table_name}` WHERE PARSE_DATE('%Y%m%d', JSON_VALUE(data, '$.date')) BETWEEN '{get_ga4_start_date()}' AND CURRENT_DATE('Pacific/Auckland')",
-                        "useLegacySql": False,
-                    }
-                },
-                location="australia-southeast1",
-            )
+            
             kube_ga4 = KubernetesPodOperator(
                 name=f"realnz-ga4-to-bigquery-{label}-{_type}",
                 task_id=f"realnz_ga4_to_bigquery_{label}_{_type}",
@@ -290,7 +281,7 @@ with models.DAG(
                 container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
                 env_vars=set_env_vars_ga4(key, label, _type),
             )
-            delete_ga4 >> kube_ga4
+            
             ga4_tasks.append(kube_ga4)
     # ===== Per-label strict order: dash -> dash_search -> dash_union =====
     for label in ["mountain", "tourism"]:
