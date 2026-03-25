@@ -12,7 +12,9 @@ environments:
           DBT_BIGQUERY_PROJECT: together-internal
           DBT_BIGQUERY_LOCATION: australia-southeast1
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
-          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360
+          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+          REPORT_NAME: amp_report
           REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
           REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
           REFERENCE_REDDIT_BIGQUERY_DATASET: dbt_test_reddit
@@ -27,6 +29,7 @@ environments:
           HIVESTACK_SUFFIX: dbt_test_hivestack
           TIKTOK_SUFFIX: dbt_test_tiktok
           SNAPCHAT_SUFFIX: dbt_test_snapchat
+          PLAN_CODE: uow
 - name: prod
 #state_backend:
 #  uri: gs://moe-main-meltano-state-staging

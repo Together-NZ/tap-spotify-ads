@@ -1,4 +1,4 @@
 {{ config(
     materialized='table',
 ) }}
-{{ hivestack.hivestack(table_name='hivestack_raw', report_name='moe_report') }}
+{{ hivestack.hivestack(table_name='hivestack_raw', report_name=env_var('REPORT_NAME', 'moe_report')) }}
