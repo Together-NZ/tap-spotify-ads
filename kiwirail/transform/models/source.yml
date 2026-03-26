@@ -19,8 +19,39 @@ models:
           - testing_sum.expected_sum:
               expected_value: 22450
       
+  - name: facebook__great_journey
+    config:
+      schema: "{{ env_var('META_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 14549.95
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 2857616
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 22450
+  - name: dv360_standard__great_journey
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 1098.89
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 591910
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 3354
 
-      
   - name: dv360_standard__interislander
     config:
       schema: "{{ env_var('DV360_SUFFIX', '') }}"
@@ -45,16 +76,31 @@ models:
       - name: media_cost
         tests:
           - testing_sum.expected_sum:
-              expected_value: 25911.72
+              expected_value: 67127.98
       - name: impressions
         tests:
           - testing_sum.expected_sum:
-              expected_value: 2097511
+              expected_value: 5248537
       - name: clicks
         tests:
           - testing_sum.expected_sum:
-              expected_value: 1853
-
+              expected_value: 4432
+  - name: dv360_youtube__great_journey
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 67127.98
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5248537
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 4432
 
 
 sources:
