@@ -44,5 +44,5 @@ dc.channel
 
 FROM dash_table as dt join `together-internal.channel.publisher_channel` as dc
 ON lower(dt.publisher) = lower(dc.publisher)
-where lower(campaign_name) like '%gjnz%'),
+),
 {{dash_table_general_process.dash_table_general_process()}}
