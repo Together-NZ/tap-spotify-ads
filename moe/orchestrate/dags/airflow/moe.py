@@ -491,28 +491,6 @@ with models.DAG(
         env_vars=set_env_vars_ttd(),
         execution_timeout=timedelta(minutes=60)
     )
-    kube_dash_domestic = KubernetesPodOperator(
-        name="moe-dash-domestic-to-bigquery",
-        task_id="moe-dash_domestic_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_table__domestic"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_dash_domestic()
-    )
-    kube_dash_international = KubernetesPodOperator(
-        name="moe-dash-international-to-bigquery",
-        task_id="moe-dash_international_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_table__international"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_dash_international()
-    )
     kube_dash_search = KubernetesPodOperator(
         name="moe-dash-search-to-bigquery",
         task_id="moe-dash_search_to_bigquery",
