@@ -253,7 +253,7 @@ with models.DAG(
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_dash()
+        env_vars=set_env_vars_dash_international()
     )
     kube_dash_union_domestic = KubernetesPodOperator(
         name="moe-dash-union-domestic-to-bigquery",
@@ -264,7 +264,7 @@ with models.DAG(
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_dash()
+        env_vars=set_env_vars_dash_domestic()
     )
     kube_tiktok>>kube_dash>>kube_google_ads_search >>kube_dash_search>>kube_dash_union>>[kube_dash_union_international,kube_dash_union_domestic]>>kube_ga4_merge
     
@@ -523,7 +523,7 @@ with models.DAG(
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_dash()
+        env_vars=set_env_vars_dash_international()
     )
     kube_dash_union_domestic = KubernetesPodOperator(
         name="moe-dash-union-domestic-to-bigquery",
@@ -534,7 +534,7 @@ with models.DAG(
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_dash()
+        env_vars=set_env_vars_dash_domestic()
     )
     kube_dash = KubernetesPodOperator(
         name="moe-dash-to-bigquery",
