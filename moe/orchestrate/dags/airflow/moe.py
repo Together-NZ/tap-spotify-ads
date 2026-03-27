@@ -114,6 +114,30 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
         env["DBT_BIGQUERY_DATASET"] = 'dash_table'
         return env
+    def set_env_vars_dash_domestic():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
+        env["DBT_BIGQUERY_DATASET"] = 'dash_table__domestic'
+        return env
+    def set_env_vars_dash_international():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
+        env["DBT_BIGQUERY_DATASET"] = 'dash_table__international'
+        return env
+    def set_env_vars_ga4_domestic():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed__domestic'
+        return env
+    def set_env_vars_ga4_international():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed__international'
+        return env
     kube_google_ads_search = KubernetesPodOperator(
         name="moe-google-ads-search-to-bigquery",
         task_id="moe-google-ads-search_to_bigquery",
@@ -125,7 +149,28 @@ with models.DAG(
         ),
         env_vars=set_env_vars_google_ads_search()
     )
-
+    kube_ga4_domestic = KubernetesPodOperator(
+        name="moe-ga4-domestic-to-bigquery",
+        task_id="moe-ga4_domestic_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","ga4_goal_channel__domestic"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ga4_domestic()
+    )
+    kube_ga4_international = KubernetesPodOperator(
+        name="moe-ga4-international-to-bigquery",
+        task_id="moe-ga4_international_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","ga4_goal_channel__international"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ga4_international()
+    )
     kube_tiktok = KubernetesPodOperator(
         name="moe-tiktok-to-bigquery",
         task_id="moe-tiktok_to_bigquery",
@@ -187,7 +232,7 @@ with models.DAG(
         env_vars=set_env_vars_dash()
         )
     for name,kube_ga4 in ga4_list_task.items():
-        kube_ga4 >> kube_ga4_merge
+        kube_ga4 >> kube_ga4_merge >> [kube_ga4_domestic,kube_ga4_international]
     kube_dash_union = KubernetesPodOperator(
         name="moe-dash-union-to-bigquery",
         task_id="moe-dash_union_to_bigquery",
@@ -199,7 +244,29 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dash()
     )
-    kube_tiktok>>kube_dash>>kube_google_ads_search >>kube_dash_search>>kube_dash_union>>kube_ga4_merge
+    kube_dash_union_international = KubernetesPodOperator(
+        name="moe-dash-union-international-to-bigquery",
+        task_id="moe-dash_union_international_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union__international"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash()
+    )
+    kube_dash_union_domestic = KubernetesPodOperator(
+        name="moe-dash-union-domestic-to-bigquery",
+        task_id="moe-dash_union_domestic_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union__domestic"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash()
+    )
+    kube_tiktok>>kube_dash>>kube_google_ads_search >>kube_dash_search>>kube_dash_union>>[kube_dash_union_international,kube_dash_union_domestic]>>kube_ga4_merge
     
 with models.DAG(
     dag_id="moe-meltano-extraction-transformation-dbt",
@@ -284,8 +351,18 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
         env["DBT_BIGQUERY_DATASET"] = 'dash_table'
         return env
- 
-
+    def set_env_vars_dash_domestic():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
+        env["DBT_BIGQUERY_DATASET"] = 'dash_table__domestic'
+        return env
+    def set_env_vars_dash_international():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'moe-main'
+        env["DBT_BIGQUERY_DATASET"] = 'dash_table__international'
+        return env
     set_env_task_reddit = PythonOperator(
         task_id="set_env_reddit",
         python_callable=set_env_vars_reddit,
@@ -414,6 +491,28 @@ with models.DAG(
         env_vars=set_env_vars_ttd(),
         execution_timeout=timedelta(minutes=60)
     )
+    kube_dash_domestic = KubernetesPodOperator(
+        name="moe-dash-domestic-to-bigquery",
+        task_id="moe-dash_domestic_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_table__domestic"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash_domestic()
+    )
+    kube_dash_international = KubernetesPodOperator(
+        name="moe-dash-international-to-bigquery",
+        task_id="moe-dash_international_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_table__international"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash_international()
+    )
     kube_dash_search = KubernetesPodOperator(
         name="moe-dash-search-to-bigquery",
         task_id="moe-dash_search_to_bigquery",
@@ -432,6 +531,28 @@ with models.DAG(
         namespace="composer-user-workloads",
         image=IMAGE,
         arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash()
+    )
+    kube_dash_union_international = KubernetesPodOperator(
+        name="moe-dash-union-international-to-bigquery",
+        task_id="moe-dash_union_international_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union__international"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash()
+    )
+    kube_dash_union_domestic = KubernetesPodOperator(
+        name="moe-dash-union-domestic-to-bigquery",
+        task_id="moe-dash_union_domestic_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union__domestic"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
@@ -457,4 +578,4 @@ with models.DAG(
     set_env_task_linkedin >> kube_linkedin
     set_env_task_reddit >> kube_reddit
     [kube_facebook,kube_snapchat,kube_dv360,kube_reddit,kube_hivestack,kube_cm360,kube_ttd,kube_linkedin] >> kube_dash
-    kube_dash>>kube_dash_search >> kube_dash_union
+    kube_dash>>kube_dash_search >> kube_dash_union >> [kube_dash_union_international,kube_dash_union_domestic]

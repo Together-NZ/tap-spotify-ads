@@ -6,7 +6,8 @@
           "sessionSourceMedium",
           "sessionCampaignName",
           "sessionManualAdContent",
-          "eventName"
+          "eventName",
+          "country"
         ],
         "metrics":[
           "eventCount",
