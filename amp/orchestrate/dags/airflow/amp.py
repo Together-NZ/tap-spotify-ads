@@ -345,8 +345,28 @@ with models.DAG(
         secret_name="airflow-variables-meltano_amp_main",
         project_id=env["PROJECT_ID"]
         )
-
-    
+    comparison_trigger_linkedin = ComparisonTrigger(
+        project_name="amp-main",
+        destination_table="linkedin_transformed",
+        table_name="linkedin",
+        source_name="linkedin",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_amp_main",
+        project_id=env["PROJECT_ID"]
+    )
+    comparison_trigger_linkedin.compare_data()
+    def linkedin_comparison_check(**context):
+        result = comparison_trigger_linkedin.compare_data()
+        if not result:
+            raise ValueError("Linkedin data accuracy check failed — BQ data does not match source API.")
+        return result
+    task_linkedin_comparison = PythonOperator(
+        task_id="task_linkedin_comparison",
+        python_callable=linkedin_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
     def facebook_comparison_check(**context):
         result = comparison_trigger_facebook.compare_data()
         if not result:
@@ -502,7 +522,7 @@ with models.DAG(
     )
     set_env_task_adobe_centralized >> kube_adobe_centralized
     set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd
-    set_env_task_linkedin >> kube_linkedin
+    set_env_task_linkedin >> kube_linkedin >> task_linkedin_comparison
     set_env_task_reddit >> kube_reddit
     set_env_task_hivestack >> kube_hivestack
     set_env_task_facebook >> kube_facebook
