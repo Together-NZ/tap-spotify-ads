@@ -14,7 +14,7 @@ WITH dash_table AS (
     
     UNION ALL
         SELECT media_cost, impressions, creative_name,clicks,  audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date, null as conversions
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date, conversions as conversions
     FROM `arvida-main.dv360_transformed.dv360_youtube`
     UNION ALL
 
