@@ -4,7 +4,7 @@ FROM meltano/meltano:latest
 # Enable SSH agent forwarding
 # Required for cloning private GitHub repos via SSH
 # Must be enabled via `--ssh default` during build
-RUN apt-get update && apt-get install -y openssh-client git
+RUN apt-get update && apt-get install -y openssh-client git curl
 
 # Set working directory
 WORKDIR /project
