@@ -25,7 +25,7 @@ default_args = {
     "concurrency": 1,
     "catchup": False,
     "retry_delay": datetime.timedelta(minutes=5),
-    "start_date": datetime.datetime(2026, 1, 1, tzinfo=local_tz),
+    "start_date": datetime.datetime(2026, 3, 24, tzinfo=local_tz),
 }
 
 BRANDS = ["interislander", "great_journey"]
@@ -35,7 +35,7 @@ def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_kiwirail_main", deserialize_json=True)
     meltano_env_common = Variable.get("meltano_common_developer_main", deserialize_json=True)
     meltano_env_ga4 = Variable.get("meltano_developer_ga4_main", deserialize_json=True)
-    meltano_env = {**meltano_env_common, **meltano_env_unique}
+    meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
     yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=7)
     meltano_env["START_DATE"] = yesterday.strftime("%Y-%m-%d")
     meltano_env["BQ_METHOD"] = "batch_job"
@@ -63,7 +63,7 @@ with models.DAG(
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = "oauth"
         env["DBT_BIGQUERY_PROJECT"] = "kiwirail-main"
-        env["DBT_BIGQUERY_DATASET"] = f"google_ads_transformed__{brand}"
+        env["DBT_BIGQUERY_DATASET"] = f"google_ads_search_transformed__{brand}"
         return env
 
     def set_env_vars_ga4(brand):
