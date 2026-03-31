@@ -42,15 +42,15 @@ models:
       - name: media_cost
         tests:
           - testing_sum.expected_sum:
-              expected_value: 1098.89
+              expected_value: 68223.08
       - name: impressions
         tests:
           - testing_sum.expected_sum:
-              expected_value: 591910
+              expected_value: 5840202
       - name: clicks
         tests:
           - testing_sum.expected_sum:
-              expected_value: 3354
+              expected_value: 7786
 
   - name: dv360_standard__interislander
     config:
@@ -59,15 +59,15 @@ models:
       - name: media_cost
         tests:
           - testing_sum.expected_sum:
-              expected_value: 1098.89
+              expected_value: 68223.08
       - name: impressions
         tests:
           - testing_sum.expected_sum:
-              expected_value: 591910
+              expected_value: 5840202
       - name: clicks
         tests:
           - testing_sum.expected_sum:
-              expected_value: 3354
+              expected_value: 7786
 
   - name: dv360_youtube__interislander
     config:
