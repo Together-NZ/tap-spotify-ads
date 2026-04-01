@@ -13,3 +13,4 @@ WITH {{facebook.daily_breakdown(source_name='facebook_raw', table_name='ads_insi
 {{facebook.campaign_data(source_name='facebook_raw', table_name='campaigns')}},
 {{facebook.interest_data(source_name='facebook_raw', table_name='ads')}},
 {{facebook.final_calculation()}}
+-- UPDATE FACEBOOK
