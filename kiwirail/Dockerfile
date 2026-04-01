@@ -23,6 +23,11 @@ RUN --mount=type=ssh \
     ssh-keyscan github.com >> /root/.ssh/known_hosts && \
     ssh -T git@github.com || true && \
     meltano install
+RUN --mount=type=ssh \
+    mkdir -p /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts && \
+    ssh -T git@github.com || true && \
+    meltano invoke dbt-bigquery deps
 # Install any additional Python libraries
 RUN pip install     httplib2     google-api-python-client     google-auth     google-auth-oauthlib     google-cloud-bigquery     google-cloud-storage     pandas     pyarrow
 
