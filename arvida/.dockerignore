@@ -8,4 +8,5 @@ report.csv
 secret.json
 ttd.py
 ttd_sync.py
-facebook_syncing.py
+transform/dbt_packages
+transform/package-lock.yml

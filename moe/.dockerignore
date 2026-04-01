@@ -5,3 +5,5 @@ secret.json
 tiktok.py
 ttd.py
 .meltano/
+transform/dbt_packages
+transform/package-lock.yml
