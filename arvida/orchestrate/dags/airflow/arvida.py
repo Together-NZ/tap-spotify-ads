@@ -211,8 +211,8 @@ with models.DAG(
     )
 
 
-    set_env_task_google_ads  >> kube_dash >> kube_google_ads_search >> kube_google_ads_good_friends_search >> kube_dash_search
-    kube_dash_search >> kube_dash >> kube_dash_union >> kube_ga4
+    set_env_task_google_ads  >> kube_google_ads_search >> kube_dash >> kube_google_ads_good_friends_search >> kube_dash_search
+    kube_dash_search  >> kube_dash_union >> kube_ga4
     
     
 with models.DAG(
