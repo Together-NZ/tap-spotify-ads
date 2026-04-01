@@ -7,12 +7,7 @@ sources:
       - name: goal
 
 
-  - name: dash_union
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'arvida-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table') }}"
-    tables:
-      - name: dash_union
-      - name: dash_table
+
 
   - name: hivestack_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'arvida-main') }}"
@@ -45,11 +40,12 @@ sources:
     tables:
       - name: standard_streams
 
-  - name: dash_union_non_search
+  - name: dash_union
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'arvida-main') }}"
     schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table') }}"
     tables:
       - name: dash_table
+      - name: dash_union
   
   - name: dash_union_search
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'arvida-main') }}"

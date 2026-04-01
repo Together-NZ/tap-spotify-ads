@@ -138,6 +138,6 @@ plugins:
         args: run --select +neilson_latest_track
         description: Run the Neilson model
       google_ads_models:
-        args: run --select +google_ads_search +google_ads_demand
+        args: run --select +google_ads_search +google_ads_demand +google_ads_demand_2
 elt:
   buffer_size: 52428800

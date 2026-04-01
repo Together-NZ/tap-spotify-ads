@@ -209,22 +209,11 @@ with models.DAG(
         env_vars=set_env_vars_dash_table_search(),
         base_container_name=f"meltano-arvida-dash-search",
     )
-    kube_google_ads = KubernetesPodOperator(
-        name="arvida-google-ads-to-bigquery",
-        task_id="arvida-google_ads_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", "google_ads_display_videos"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_google_ads(),
-        base_container_name=f"meltano-arvida-google-ads",
-    )
 
-    set_env_task_google_ads >> kube_google_ads >> kube_dash >> kube_google_ads_search >> kube_google_ads_good_friends_search >> kube_dash_search
-    kube_dash_search >> kube_dash_union
-    set_env_task_ga4 >> kube_ga4 
+
+    set_env_task_google_ads  >> kube_dash >> kube_google_ads_search >> kube_google_ads_good_friends_search >> kube_dash_search
+    kube_dash_search >> kube_dash >> kube_dash_union >> kube_ga4
+    
     
 with models.DAG(
     dag_id="arvida-meltano-extraction-transformation-dbt",

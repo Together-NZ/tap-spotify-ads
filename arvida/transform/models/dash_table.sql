@@ -19,11 +19,13 @@ WITH dash_table AS (
     UNION ALL
 
 
-    SELECT media_cost, impressions,
-    CAST(ad_name AS STRING) AS creative_name, clicks, 
-           CAST(audience_name AS STRING) AS audience_name,
-           CAST(ad_format AS STRING) AS ad_format,
-           CAST(ad_format_detail AS STRING) AS ad_format_detail, 
+       SELECT media_cost, impressions,
+                      ad_name AS creative_name, clicks,
+               
+           --ARRAY_TO_STRING(media_format, ', ') AS media_format,   -- Convert array to string
+           audience_name, -- Convert array to string
+           ad_format AS ad_format,         -- Convert array to string
+           ad_format_detail AS ad_format_detail, 
             CAST(0 AS INT64) AS video_completion,
             CAST(0 AS INT64) AS video_25_completion,
             CAST(0 AS INT64) AS video_50_completion,
@@ -31,10 +33,9 @@ WITH dash_table AS (
             CAST(0 AS INT64) AS video_views,
            
            campaign_name,publisher, campaign_descr, 
-           CAST(creative_descr AS STRING) AS creative_descr,
-           date,
-       conversions as conversions
-    FROM `arvida-main.google_ads_display_video_transformed.google_ads_display_videos`
+            creative_descr,  -- Convert array to string
+           date, conversions AS conversions
+           FROM `arvida-main.google_ads_search_transformed.google_ads_demand_2`
        UNION ALL
                       SELECT media_cost, impressions,
                       ad_name AS creative_name, clicks,
