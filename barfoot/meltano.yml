@@ -4,6 +4,23 @@ project_id: 8c98d303-4044-4832-a832-27f39bfd17bc
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
+          REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+          META_SUFFIX: dbt_test_facebook
+          DV360_SUFFIX: dbt_test_dv360
+          TTD_SUFFIX: dbt_test_ttd
+          HIVESTACK_SUFFIX: dbt_test_hivestack
+          PLAN_CODE: uow
+          REPORT_NAME: amp_report
 - name: prod
 #state_backend:
 #  uri: gs://barfoot-main-meltano-state-staging
@@ -53,6 +70,7 @@ plugins:
     - ad_sets.*
     - ads.*
     - campaigns.*
+    - custom_conversions.*
   - name: tap-hivestack
     namespace: tap-hivestack
     pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0
@@ -83,8 +101,8 @@ plugins:
     config:
       start_date: ${START_DATE}
       advertiser_id: '673915639'
-      query_standard: query_standard.json
-      query_youtube: query_youtube.json
+      query_standard: dv360_standard.json
+      query_youtube: dv360_youtube.json
       service_account: ${TAP_DV360_SERVICE_ACCOUNT} 
   loaders:
   - name: target-jsonl
@@ -114,7 +132,7 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
+    pip_url: dbt-core~=1.8.0 dbt-bigquery~=1.8.0 setuptools<82.0
     config:
       project: barfoot-and-thompson-main
       method: oauth
