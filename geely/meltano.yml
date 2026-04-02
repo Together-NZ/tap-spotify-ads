@@ -81,17 +81,15 @@ plugins:
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
     config:
-      airbyte_spec:
-        image: airbyte/source-facebook-marketing
-        tag: "3.0.12"
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
+    - ads_insights.*
     - ad_account.*
     - ad_sets.*
     - ads.*
     - campaigns.*
-    - ads_insights.*
+    - custom_conversions.*
 
 
   loaders:
