@@ -27,7 +27,7 @@ default_args = {
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
-    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
+    "start_date": datetime.datetime(2026, 4, 1, tzinfo=local_tz)
 }
 
 

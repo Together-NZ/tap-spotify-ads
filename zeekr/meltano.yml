@@ -4,6 +4,23 @@ project_id: 4f5340fe-b63b-41b8-8b8a-963749a65dc3
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
+          META_SUFFIX: dbt_test_facebook
+
+          LINKEDIN_SUFFIX: dbt_test_linkedin
+          TTD_SUFFIX: dbt_test_ttd
+
+   
+          PLAN_CODE: uow
 - name: prod
 #state_backend:
 #  uri: gs://zeekr-meltano-state-staging
@@ -65,6 +82,7 @@ plugins:
     - ad_sets.*
     - ads.*
     - campaigns.*
+    - custom_conversions.*
 
 
 
@@ -110,6 +128,8 @@ plugins:
         args: run --select facebook
       linkedin_models:
         args: run --select linkedin
+      google_ads_models:
+        args: run --select google_ads_search google_ads_demand
   files:
   - name: files-airflow
     variant: meltano

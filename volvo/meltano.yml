@@ -74,8 +74,12 @@ plugins:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-
-    - custom_conversions.*
+      - ads_insights.*
+      - ad_account.*
+      - ad_sets.*
+      - ads.*
+      - campaigns.*
+      - custom_conversions.*
   - name: tap-hivestack
     namespace: tap-hivestack
     pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0

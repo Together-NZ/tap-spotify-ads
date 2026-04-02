@@ -30,7 +30,7 @@ RUN pip install \
     google-cloud-storage \
     pandas \
     pyarrow
-
+RUN meltano invoke dbt-bigquery deps
 # Entrypoint for container
 ENTRYPOINT ["meltano"]
 

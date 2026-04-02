@@ -244,12 +244,12 @@ with models.DAG(
    
   
         
-    kube_google_ads_search = KubernetesPodOperator(
+    kube_google_ads= KubernetesPodOperator(
             name="zeekr-google-ads-search-to-bigquery",
             task_id="zeekr-google-ads-search_to_bigquery",
             namespace="composer-user-workloads",        
             image=IMAGE,
-            arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","google_ads_search"],
+            arguments=["--environment=prod", "invoke","dbt-bigquery:google_ads_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
@@ -288,17 +288,7 @@ with models.DAG(
             
         
             )
-    kube_google_ads_demand = KubernetesPodOperator(
-            name = "zeekr-google-ads-demand-to-bigquery",
-            task_id="zeekr-google-ads-demand_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","google_ads_demand"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_google_ads_search(),
-        )
+
     kube_dash_union = KubernetesPodOperator(
             name="zeekr-dash-union-to-bigquery",
             task_id="zeekr-dash_union_to_bigquery",
@@ -312,7 +302,5 @@ with models.DAG(
         )
         
 
-    [kube_google_ads_search]>>kube_dash_search
-
-    [kube_google_ads_demand] >> kube_dash
-    kube_dash>>kube_dash_search >> kube_dash_union >> kube_ga4
+ 
+    kube_google_ads>>kube_dash>>kube_dash_search >> kube_dash_union >> kube_ga4
