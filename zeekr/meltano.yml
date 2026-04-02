@@ -59,7 +59,7 @@ plugins:
       start_date: ${START_DATE}
       end_date:
       manual: false
-      advertiser_id: 73sflvx
+      advertiser_id: vq94nsk
   - name: tap-ga4
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
