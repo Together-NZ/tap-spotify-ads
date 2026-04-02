@@ -14,6 +14,7 @@ environments:
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
           REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
           REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_DV360_RAW_BIGQUERY_DATASET: dbt_test_dv360_raw
           REPORT_NAME: amp_report
           REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
           REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
@@ -140,12 +141,6 @@ plugins:
       location: australia-southeast1
       method: oauth
     commands:
-      cm360_geely_models:
-        args: run --select +cm360_seralized__geely +cm360_direct_buy__geely
-        description: Run the CM360 ads model
-      cm360_polestar_models:
-        args: run --select +cm360_seralized__polestar +cm360_direct_buy__polestar
-        description: Run the CM360 ads model
       cm360_volvo_models:
         args: run --select +cm360_seralized__volvo +cm360_direct_buy__volvo
         description: Run the CM360 ads model
