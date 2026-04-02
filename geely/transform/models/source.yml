@@ -1,0 +1,176 @@
+sources:
+
+  - name: ga4_raw__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__geely') }}"
+    tables:
+      - name: goal
+  - name: ga4_raw__lotus
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__lotus') }}"
+    tables:
+      - name: goal
+  
+
+
+  - name: facebook_raw__lotus
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__lotus') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: facebook_raw__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__geely') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+  - name: hivestack_raw__lotus
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw__lotus') }}"
+    tables:
+      - name: lotus_report
+      - name: amp_report
+  - name: hivestack_raw__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw__geely') }}"
+    tables:
+      - name: geely_report
+      - name: amp_report
+
+  - name: linkedin_raw__lotus
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_BIGQUERY_DATASET', 'linkedin_raw__lotus') }}"
+    tables:
+      - name: ad_analytics_by_creative
+      - name: creatives
+      - name: campaigns
+      - name: campaign_groups
+
+  - name: linkedin_raw__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_BIGQUERY_DATASET', 'linkedin_raw__geely') }}"
+    tables:
+      - name: ad_analytics_by_creative
+      - name: creatives
+      - name: campaigns
+      - name: campaign_groups
+
+  - name: ttd_raw__lotus
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_raw__lotus') }}"
+    tables:
+      - name: standard_streams
+
+  - name: ttd_raw__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_raw__geely') }}"
+    tables:
+      - name: standard_streams
+
+  - name: dash_union__lotus
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__lotus') }}"
+    tables:
+      - name: dash_table__lotus
+      - name: dash_union__lotus
+  
+  - name: dash_union_search__lotus
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__lotus') }}"
+    tables:
+      - name: dash_table_search__lotus
+
+  - name: dash_union__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__geely') }}"
+    tables:
+      - name: dash_table__geely
+      - name: dash_union__geely
+  
+  - name: dash_union_search__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__geely') }}"
+    tables:
+      - name: dash_table_search__geely
+
+models:
+
+
+  - name: ttd__geely
+    config: 
+      schema: "{{ env_var('TTD_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 52112.58
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 798906
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 363
+
+  - name: facebook__geely
+    config:
+      schema: "{{ env_var('META_SUFFIX', '') }}"
+
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 14549.95
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 2857616
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 22450
+      
+
+  - name: hivestack__lotus
+    config:
+      schema: "{{ env_var('HIVESTACK_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 15000.03
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 815604.65
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 0
+
+      
+  - name: linkedin__geely
+    config:
+      schema: "{{ env_var('LINKEDIN_SUFFIX','') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 8327.91
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 771281
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5785

@@ -8,7 +8,7 @@ WITH dash_table AS (
         CAST(0 AS INT64) AS video_50_completion,
         CAST(0 AS INT64) AS video_75_completion,
         CAST(0 AS INT64) AS video_views,
-    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date,
+    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date, null as conversions
 
 from `geely-main.ttd_transformed.ttd`
 union all
@@ -18,12 +18,12 @@ union all
         CAST(0 AS INT64) AS video_50_completion,
         CAST(0 AS INT64) AS video_75_completion,
         CAST(0 AS INT64) AS video_views,
-    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date,
+    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date, null as conversions
 
 from `geely-main.cm360_transformed.cm360_direct_buy`
 UNION ALL
 SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_played AS video_views,
-    campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
+    campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,conversions
 FROM `geely-main.facebook_transformed.facebook`
    UNION ALL
            SELECT media_cost, impressions,clicks,
@@ -40,7 +40,7 @@ FROM `geely-main.facebook_transformed.facebook`
            
            campaign_name,publisher, campaign_descr, 
             creative_descr,  -- Convert array to string
-           date,
+           date, conversions
 
     FROM `geely-main.google_ads_search_transformed.google_ads_demand`
 ),

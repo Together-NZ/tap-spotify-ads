@@ -4,6 +4,23 @@ project_id: 4f5340fe-b63b-41b8-8b8a-963749a65dc3
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
+          META_SUFFIX: dbt_test_facebook
+          LINKEDIN_SUFFIX: dbt_test_linkedin
+          HIVESTACK_SUFFIX: dbt_test_hivestack
+          TTD_SUFFIX: dbt_test_ttd
+          REPORT_NAME: amp_report
+          PLAN_CODE: uow
 - name: prod
 #state_backend:
 #  uri: gs://geely-meltano-state-staging
@@ -64,14 +81,17 @@ plugins:
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
     config:
+      airbyte_spec:
+        image: airbyte/source-facebook-marketing
+        tag: "3.0.12"
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights.*
     - ad_account.*
     - ad_sets.*
     - ads.*
     - campaigns.*
+    - ads_insights.*
 
 
   loaders:

@@ -1,0 +1,5 @@
+.meltano
+.meltano/
+transform/dbt_packages
+transform/package-lock.yml
+/.meltano
