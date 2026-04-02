@@ -30,13 +30,14 @@ plugins:
         - ad_sets.*
         - ads.*
         - campaigns.*
+        - custom_conversions.*
   - name: tap-ttd
     namespace: tap-ttd
     pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
     executable: tap-ttd
     config:
       api_key: ${TAP_TTD_API_KEY}
-      start_date: '2025-01-01T00:00:00Z'
+      start_date: ${START_DATE}
       end_date:
       manual: false
       advertiser_id: utfcnv7
@@ -53,8 +54,8 @@ plugins:
     config:
       start_date: ${START_DATE}
       advertiser_id: '1168581503'
-      query_standard: query_standard.json
-      query_youtube: query_youtube.json
+      query_standard: dv360_standard.json
+      query_youtube: dv360_youtube.json
       service_account: together-meltano@together-internal.iam.gserviceaccount.com
   - name: tap-pinterest-ads
     namespace: tap-pinterest-ads
@@ -89,20 +90,30 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
+    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
+    config:
+      project: colorsteel-main
+      location: australia-southeast1
+      method: oauth
     commands:
       pinterest_models:
-        args: run --select pinterest
+        args: run --select +pinterest
+        description: Run the Pinterest ads model
       ga4_models:
-        args: run --select ga4_goal_a ga4_goal_channel
+        args: run --select +ga4_goal_a +ga4_goal_channel
+        description: Run the Google Analytics models
       ttd_models:
-        args: run --select ttd_transformed
+        args: run --select +ttd_transformed
+        description: Run the TTD ads model
       facebook_models:
-        args: run --select facebook
+        args: run --select +facebook
+        description: Run the Facebook ads model
       cm360_models:
-        args: run --select cm360_direct_buy cm360_seralized
+        args: run --select +cm360_direct_buy +cm360_seralized
+        description: Run the CM360 ads model
       dv360_models:
-        args: run --select dv360_standard dv360_youtube
+        args: run --select +dv360_standard +dv360_youtube
+        description: Run the DV360 ads model
 
 elt:
   buffer_size: 52428800

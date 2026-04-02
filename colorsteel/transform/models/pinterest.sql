@@ -57,7 +57,7 @@ ELSE NULL
 END AS audience_name,
 CASE WHEN ARRAY_LENGTH(SPLIT(creative_name, '_')) <8 THEN 'Other' ELSE SPLIT(creative_name, '_')[OFFSET(5)] END AS ad_format_detail,
 CASE WHEN ARRAY_LENGTH(SPLIT(creative_name, '_')) <8 THEN 'Other' ELSE SPLIT(creative_name, '_')[OFFSET(6)] END AS ad_format,
-CASE WHEN ARRAY_LENGTH(SPLIT(creative_name, '_')) <8 THEN 'Other' ELSE SPLIT(creative_name, '_')[OFFSET(7)]END AS creative_descr,
+SPLIT(creative_name, '_')[OFFSET(ARRAY_LENGTH(SPLIT(creative_name, '_'))-1)] AS creative_descr,
 CASE WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_')) <=1 THEN 'Other' ELSE SPLIT(campaign_name,'_')[OFFSET(1)] END AS campaign_descr,
 'Pinterest' AS publisher
 FROM raw_final

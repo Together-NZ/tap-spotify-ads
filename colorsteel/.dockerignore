@@ -1,0 +1,12 @@
+.meltano
+.meltano/
+.venv
+/.git
+/.peter
+secret.json
+docker.py
+report.csv
+*.sqlite
+*.db
+transform/dbt_packages
+transform/package-lock.yml
