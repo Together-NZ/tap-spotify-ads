@@ -4,6 +4,22 @@ project_id: 2de0b6f6-586c-4cae-828a-f4b265302e9e
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_PINTEREST_BIGQUERY_DATASET: dbt_test_pinterest
+          META_SUFFIX: dbt_test_facebook
+          DV360_SUFFIX: dbt_test_dv360
+          TTD_SUFFIX: dbt_test_ttd
+         
+          PLAN_CODE: uow
 - name: prod
 # state_backend:
 #  uri: gs://colorsteel-main-meltano-state-staging
