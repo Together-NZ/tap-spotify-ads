@@ -2,7 +2,7 @@
     materialized='table',
 ) }}
 with dash_table AS (
-SELECT * FROM `farizon-main.google_ads_search_transformed.google_ads_search`
+SELECT * FROM {{ source('google_ads_search_transformed', 'google_ads_search') }}
 )
 SELECT *,
 CASE WHEN 
