@@ -399,7 +399,7 @@ with models.DAG(
         python_callable=set_env_vars_ttd,
     )
     comparison_trigger_facebook = ComparisonTrigger(
-        project_name="amp-main",
+        project_name="moe-main",
         destination_table="facebook_transformed",
         table_name="facebook",
         source_name="meta",
@@ -409,7 +409,7 @@ with models.DAG(
         project_id=env["PROJECT_ID"]
         )
     comparison_trigger_linkedin = ComparisonTrigger(
-        project_name="amp-main",
+        project_name="moe-main",
         destination_table="linkedin_transformed",
         table_name="linkedin",
         source_name="linkedin",
