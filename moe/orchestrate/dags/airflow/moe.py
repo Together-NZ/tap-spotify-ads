@@ -11,6 +11,7 @@ from airflow.config_templates.airflow_local_settings import DEFAULT_LOGGING_CONF
 import sys
 import logging
 from google.oauth2.credentials import Credentials
+from comparison_package import ComparisonTrigger
 from google.auth.transport.requests import Request
 import json
 import time
@@ -32,6 +33,7 @@ log.setLevel(logging.INFO)
 local_tz = pendulum.timezone("Pacific/Auckland")
 yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=1)
 ga4_start_date = datetime.datetime.now(local_tz) - datetime.timedelta(days=30)
+comparison_start_date = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 default_args = {
     "retries": 3,
     "max_active_runs": 1,
@@ -396,6 +398,50 @@ with models.DAG(
         task_id="set_env_ttd",
         python_callable=set_env_vars_ttd,
     )
+    comparison_trigger_facebook = ComparisonTrigger(
+        project_name="amp-main",
+        destination_table="facebook_transformed",
+        table_name="facebook",
+        source_name="meta",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_moe_main",
+        project_id=env["PROJECT_ID"]
+        )
+    comparison_trigger_linkedin = ComparisonTrigger(
+        project_name="amp-main",
+        destination_table="linkedin_transformed",
+        table_name="linkedin",
+        source_name="linkedin",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_moe_main",
+        project_id=env["PROJECT_ID"]
+    )
+    comparison_trigger_linkedin.compare_data()
+    def linkedin_comparison_check(**context):
+        result = comparison_trigger_linkedin.compare_data()
+        if not result:
+            raise ValueError("Linkedin data accuracy check failed — BQ data does not match source API.")
+        return result
+    task_linkedin_comparison = PythonOperator(
+        task_id="task_linkedin_comparison",
+        python_callable=linkedin_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    def facebook_comparison_check(**context):
+        result = comparison_trigger_facebook.compare_data()
+        if not result:
+            raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    task_facebook_comparison = PythonOperator(
+        task_id="task_facebook_comparison",
+        python_callable=facebook_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
     kube_hivestack = KubernetesPodOperator(
         name="moe-hivestack-to-bigquery",
         task_id="moe-hivestack_to_bigquery",
@@ -548,12 +594,12 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dash()
         )
-    set_env_task_facebook >> kube_facebook
+    set_env_task_facebook >> kube_facebook >> task_facebook_comparison
     set_env_task_snapchat >> kube_snapchat 
     set_env_task_dv360 >> kube_dv360
     set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd 
     
-    set_env_task_linkedin >> kube_linkedin
+    set_env_task_linkedin >> kube_linkedin >> task_linkedin_comparison
     set_env_task_reddit >> kube_reddit
     [kube_facebook,kube_snapchat,kube_dv360,kube_reddit,kube_hivestack,kube_cm360,kube_ttd,kube_linkedin] >> kube_dash
     kube_dash>>kube_dash_search >> kube_dash_union >> [kube_dash_union_international,kube_dash_union_domestic]
