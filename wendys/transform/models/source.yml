@@ -12,6 +12,7 @@ sources:
     schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table') }}"
     tables:
       - name: dash_union
+      - name: dash_table
 
   - name: hivestack_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
