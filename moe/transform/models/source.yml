@@ -24,10 +24,21 @@ sources:
     tables:
       - name: moe_report
       - name: amp_report # for testing only
+  - name: hivestack_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET', 'hivestack_transformed') }}"
+    tables:
+      - name: hivestack
 
   - name: dv360_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
     schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+  - name: dv360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed') }}"
     tables:
       - name: dv360_standard
       - name: dv360_youtube
@@ -41,6 +52,11 @@ sources:
       - name: ads
       - name: campaigns
       - name: custom_conversions
+  - name: facebook_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed') }}"
+    tables:
+      - name: facebook
 
   - name: linkedin_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
@@ -50,6 +66,11 @@ sources:
       - name: creatives
       - name: campaigns
       - name: campaign_groups
+  - name: linkedin_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET', 'linkedin_transformed') }}"
+    tables:
+      - name: linkedin
 
   - name: reddit_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
@@ -58,12 +79,22 @@ sources:
       - name: ads
       - name: campaigns
       - name: reports
+  - name: reddit_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_REDDIT_TRANSFORMED_BIGQUERY_DATASET', 'reddit_transformed') }}"
+    tables:
+      - name: reddit
 
   - name: ttd_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
     schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_raw') }}"
     tables:
       - name: standard_streams
+  - name: ttd_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed') }}"
+    tables:
+      - name: ttd_transformed
 
   - name: tiktok_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
@@ -72,6 +103,11 @@ sources:
       - name: ads
       - name: ads_basic_data_metrics_by_day
       - name: ads_video_play_metrics_by_day
+  - name: tiktok_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed') }}"
+    tables:
+      - name: tiktok
 
   - name: snapchat_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
@@ -81,6 +117,11 @@ sources:
       - name: ads
       - name: ad_squads
       - name: campaigns
+  - name: snapchat_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_SNAPCHAT_TRANSFORMED_BIGQUERY_DATASET', 'snapchat_transformed') }}"
+    tables:
+      - name: snapchat
 
   - name: dash_table
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
@@ -88,6 +129,16 @@ sources:
     tables:
       - name: dash_union
       - name: dash_table
+  - name: dash_table_search
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search') }}"
+    tables:
+      - name: dash_table_search
+  - name: cm360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    tables:
+      - name: cm360_direct_buy
 
 
 

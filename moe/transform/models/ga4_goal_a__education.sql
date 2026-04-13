@@ -1,5 +1,8 @@
 {{ config(
-    materialized='table',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
+  
+    partition_by={'field': 'date', 'data_type': 'date'},
 ) }}
 
 WITH deduplicated_data AS (
@@ -108,12 +111,20 @@ WITH deduplicated_data AS (
 
   FROM 
     `moe-main.ga4_raw__education.goal`
+    {% if is_incremental() %}
+    WHERE PARSE_DATE('%Y%m%d', JSON_VALUE(data, '$.date')) >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+    {% endif %}
 
 ),
 
 filtered_creatives as (
   SELECT * except(sessionManualAdContent),
-  CASE WHEN LOWER(sessionManualAdContent) like '%' || 'moe' || '%' THEN SPLIT(sessionManualAdContent,'_')[OFFSET(ARRAY_LENGTH(SPLIT(sessionManualAdContent,'_'))-1)]
+  CASE WHEN LOWER(sessionManualAdContent) IN (
+    SELECT DISTINCT LOWER(creative_name) FROM 
+    `moe-main.dash_table.dash_union`
+  ) 
+  
+   THEN SPLIT(sessionManualAdContent,'_')[OFFSET(ARRAY_LENGTH(SPLIT(sessionManualAdContent,'_'))-1)]
   else sessionManualAdContent
   end as sessionManualAdContent
   from deduplicated_data

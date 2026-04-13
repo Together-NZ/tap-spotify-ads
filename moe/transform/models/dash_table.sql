@@ -2,75 +2,26 @@
     materialized='table',
 ) }}
 WITH dash_table AS (
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,null as conversions
-    FROM `moe-main.ttd_transformed.ttd_transformed`
+    {{ dash_table_general_process.ttd(source_name='ttd_transformed', table_name='ttd_transformed') }}
 
     UNION ALL
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,SAFE_CAST(conversions as FLOAT64) as conversions
-    
-    FROM `moe-main.dv360_transformed.dv360_standard`  WHERE NOT (LOWER(campaign_name) LIKE '%yt%' OR LOWER(campaign_name) LIKE '%youtube%')
+    {{ dash_table_general_process.dv360_standard(source_name='dv360_transformed', table_name='dv360_standard') }}
     UNION ALL
-       SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,conversions as conversions
-    
-    FROM `moe-main.dv360_transformed.dv360_youtube`  
+    {{ dash_table_general_process.dv360_youtube(source_name='dv360_transformed', table_name='dv360_youtube') }}
     UNION ALL
-     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion
-           ,video_25_completion,video_50_completion,video_75_completion, video_play as video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,null as conversions
-    FROM `moe-main.tiktok_transformed.tiktok`
-
+    {{ dash_table_general_process.tiktok(source_name='tiktok_transformed', table_name='tiktok') }}
     UNION ALL
-
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_played AS video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,conversions as conversions
-    FROM `moe-main.facebook_transformed.facebook` WHERE LOWER(campaign_name) LIKE '%moe%'
-
+    {{ dash_table_general_process.meta(source_name='facebook_transformed', table_name='facebook') }}
     UNION ALL
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,null as conversions
-    FROM `moe-main.snapchat_transformed.snapchat`
+    {{ dash_table_general_process.snapchat(source_name='snapchat_transformed', table_name='snapchat') }}
     UNION ALL
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_views,
-            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,null as conversions
-    FROM `moe-main.linkedin_transformed.linkedin`
+    {{ dash_table_general_process.linkedin(source_name='linkedin_transformed', table_name='linkedin') }}
     UNION ALL
-    select media_cost,impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, 
-        CAST(0 AS INT64) AS video_completion,
-        CAST(0 AS INT64) AS video_25_completion,
-        CAST(0 AS INT64) AS video_50_completion,
-        CAST(0 AS INT64) AS video_75_completion,
-        CAST(0 AS INT64) AS video_views,
-    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date,null as conversions
-
-from `moe-main.cm360_transformed.cm360_direct_buy`
+    {{ dash_table_general_process.cm360(source_name='cm360_transformed', table_name='cm360_direct_buy') }}
 UNION ALL
-       select media_cost,impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, 
-        CAST(video_completion AS INT64) AS video_completion,
-        CAST(video_25_completion AS INT64) AS video_25_completion,
-        CAST(video_50_completion AS INT64) AS video_50_completion,
-        CAST(video_75_completion AS INT64) AS video_75_completion,
-        CAST(video_25_completion AS INT64) AS video_views,
-    campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date,null as conversions
-FROM `moe-main.reddit_transformed.reddit`
+{{ dash_table_general_process.reddit(source_name='reddit_transformed', table_name='reddit') }}
 UNION ALL 
-      SELECT media_cost, impressions, CAST(0 AS INT64) AS clicks, 
-           creative_name,   -- Convert array to string
-           audience_name AS audience_name, -- Convert array to string
-           ad_format AS ad_format,         -- Convert array to string
-           ad_format_detail AS ad_format_detail, 
-            CAST(0 AS INT64) AS video_completion,
-            CAST(0 AS INT64) AS video_25_completion,
-            CAST(0 AS INT64) AS video_50_completion,
-            CAST(0 AS INT64) AS video_75_completion,
-            CAST(0 AS INT64) AS video_views,
-           
-           campaign_name,publisher, campaign_descr, 
-           creative_descr AS creative_descr, -- Convert array to string
-           date,null as conversions
-    FROM `moe-main.hivestack_transformed.hivestack`
+{{ dash_table_general_process.hivestack(source_name='hivestack_transformed', table_name='hivestack') }}
 ),
 with_channel AS (
 SELECT * EXCEPT (publisher,channel), 
