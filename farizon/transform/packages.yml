@@ -1,5 +1,12 @@
 packages:
-  - git: https://github.com/Together-NZ/Impact-CI-ga4_models.git
-  - git: https://github.com/Together-NZ/Impact-CI-google_ads_models.git
+
+
+  - git: git@github.com:Together-NZ/Impact-CI-google_ads_models.git
+
+
+
   - git: https://github.com/Together-NZ/Impact-CI-testing_sum.git
+
+  - git: https://github.com/Together-NZ/Impact-CI-ga4_models.git
+
   - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
