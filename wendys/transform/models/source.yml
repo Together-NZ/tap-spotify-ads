@@ -14,6 +14,12 @@ sources:
       - name: dash_union
       - name: dash_table
 
+  - name: dash_union_search
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search') }}"
+    tables:
+      - name: dash_table_search
+
   - name: hivestack_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
     schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw') }}"
@@ -21,9 +27,22 @@ sources:
       - name: wendys_report
       - name: amp_report
 
+  - name: hivestack_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET', 'hivestack_transformed') }}"
+    tables:
+      - name: hivestack
+
   - name: dv360_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
     schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: dv360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed') }}"
     tables:
       - name: dv360_standard
       - name: dv360_youtube
@@ -38,6 +57,12 @@ sources:
       - name: campaigns
       - name: custom_conversions
 
+  - name: facebook_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed') }}"
+    tables:
+      - name: facebook
+
 
 
   - name: ttd_raw
@@ -45,6 +70,12 @@ sources:
     schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_raw') }}"
     tables:
       - name: standard_streams
+
+  - name: ttd_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed') }}"
+    tables:
+      - name: ttd_transformed
 
   - name: tiktok_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
@@ -54,6 +85,12 @@ sources:
       - name: ads_basic_data_metrics_by_day
       - name: ads_video_play_metrics_by_day
 
+  - name: tiktok_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed') }}"
+    tables:
+      - name: tiktok
+
   - name: snapchat_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
     schema: "{{ env_var('REFERENCE_SNAPCHAT_BIGQUERY_DATASET', 'snapchat_raw') }}"
@@ -62,6 +99,25 @@ sources:
       - name: ads
       - name: ad_squads
       - name: campaigns
+
+  - name: snapchat_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
+    schema: "{{ env_var('REFERENCE_SNAPCHAT_TRANSFORMED_BIGQUERY_DATASET', 'snapchat_transformed') }}"
+    tables:
+      - name: snapchat
+  
+  - name: cm360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    tables:
+      - name: cm360_direct_buy
+
+  - name: google_ads
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed') }}"
+    tables:
+      - name: google_ads_demand
+      - name: google_ads_search
 
 
 #testing dbt
