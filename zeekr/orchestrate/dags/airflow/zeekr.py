@@ -12,6 +12,7 @@ import sys
 import logging
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
+from comparison_package import ComparisonTrigger
 import json
 import time
 from datetime import timedelta,datetime, timezone
@@ -40,7 +41,7 @@ default_args = {
     "email_on_failure": True,
     'retry_delay': timedelta(minutes=30)
 }
-
+comparison_start_date = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 
 def get_meltano_env():
     # Update meltano_env with dynamic dates
@@ -174,6 +175,53 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(),
         )
+    env=get_meltano_env()
+    comparison_trigger_facebook = ComparisonTrigger(
+        project_name="zeekr-main",
+        destination_table="facebook_transformed",
+        table_name="facebook",
+        source_name="meta",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_zeekr_main",
+        project_id=env["PROJECT_ID"]
+        )
+    comparison_trigger_linkedin = ComparisonTrigger(
+        project_name="zeekr-main",
+        destination_table="linkedin_transformed",
+        table_name="linkedin",
+        source_name="linkedin",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_zeekr_main",
+        project_id=env["PROJECT_ID"]
+    )
+    comparison_trigger_linkedin.compare_data()
+    def linkedin_comparison_check(**context):
+        result = comparison_trigger_linkedin.compare_data()
+        if not result:
+            raise ValueError("Linkedin data accuracy check failed — BQ data does not match source API.")
+        return result
+    task_linkedin_comparison = PythonOperator(
+        task_id="task_linkedin_comparison",
+        python_callable=linkedin_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    def facebook_comparison_check(**context):
+        result = comparison_trigger_facebook.compare_data()
+        if not result:
+            raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    task_facebook_comparison = PythonOperator(
+        task_id="task_facebook_comparison",
+        python_callable=facebook_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    kube_facebook >> task_facebook_comparison
+    kube_linkedin >> task_linkedin_comparison
     [kube_facebook,kube_linkedin] >> kube_ttd,kube_dash >> kube_dash_search >> kube_dash_union
 with models.DAG(
     dag_id="zeekr-meltano-google_ads",
