@@ -8,7 +8,7 @@ WITH dash_table AS (
        {{dash_table_general_process.ttd(source_name='ttd_transformed', table_name='ttd_transformed') }}
 
     UNION ALL
-    {{dash_table_general_process.dv360_standard(source_name='dv360_transformed', table_name='dv360_standard') }}
+    {{ dash_table_general_process.dv360_standard(source_name='dv360_transformed', table_name='dv360_standard',yt_source_name='dv360_transformed',yt_table_name='dv360_youtube') }}
     
     UNION ALL
     {{dash_table_general_process.dv360_youtube(source_name='dv360_transformed', table_name='dv360_youtube') }}
