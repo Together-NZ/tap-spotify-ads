@@ -13,6 +13,13 @@ sources:
       - name: dv360_standard
       - name: dv360_youtube
 
+  - name: dv360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed__volvo') }}"
+    tables:
+      - name: dv360_standard__volvo
+      - name: dv360_youtube__volvo
+
 
   - name: facebook_raw__volvo
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
@@ -23,6 +30,11 @@ sources:
       - name: ads
       - name: campaigns
       - name: custom_conversions
+  - name: facebook_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed__volvo') }}"
+    tables:
+      - name: facebook__volvo
 
   - name: hivestack_raw__volvo
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
@@ -30,6 +42,11 @@ sources:
     tables:
       - name: volvo_report
       - name: amp_report
+  - name: hivestack_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET', 'hivestack_transformed__volvo') }}"
+    tables:
+      - name: hivestack__volvo
 
   - name: linkedin_raw__volvo
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
@@ -39,7 +56,11 @@ sources:
       - name: creatives
       - name: campaigns
       - name: campaign_groups
-
+  - name: linkedin_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET', 'linkedin_transformed__volvo') }}"
+    tables:
+      - name: linkedin__volvo
 
   - name: ttd_raw__volvo
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
@@ -47,8 +68,26 @@ sources:
     tables:
       - name: standard_streams
 
+  - name: ttd_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed__volvo') }}"
+    tables:
+      - name: ttd_transformed__volvo
+
+  - name: google_ads
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_BIGQUERY_DATASET', 'google_ads_search_transformed__volvo') }}"
+    tables:
+      - name: google_ads_demand__volvo
+      - name: google_ads_demand_2__volvo
+      - name: google_ads_search__volvo
 
 
+  - name: cm360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__volvo') }}"
+    tables:
+      - name: cm360_direct_buy__volvo
   - name: dash_union__volvo
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
     schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__volvo') }}"
