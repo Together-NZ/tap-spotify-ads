@@ -12,13 +12,14 @@ import logging
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from google.cloud import storage
+from comparison_package import ComparisonTrigger
 
 
 IMAGE = "australia-southeast1-docker.pkg.dev/volvo-main/meltano/meltano-volvo-main:prod"
-
+local_tz = pendulum.timezone("Pacific/Auckland")
 log: logging.log = logging.getLogger("airflow.task")
 log.setLevel(logging.INFO)
-
+comparison_start_date = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 local_tz = pendulum.timezone("Pacific/Auckland")
 
 default_args = {
@@ -232,6 +233,7 @@ with models.DAG(
             env_vars=set_env_vars_ga4(brand),
         )
 
+
         kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4
 
 
@@ -360,5 +362,51 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(brand),
         )
+        env=get_meltano_env()
+        comparison_trigger_facebook = ComparisonTrigger(
+            project_name="volvo-main",
+            destination_table="facebook_transformed",
+            table_name="facebook",
+            source_name="meta",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_volvo_main",
+            project_id=env["PROJECT_ID"]
+            )
+        comparison_trigger_linkedin = ComparisonTrigger(
+            project_name="volvo-main",
+            destination_table="linkedin_transformed",
+            table_name="linkedin",
+            source_name="linkedin",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_volvo_main",
+            project_id=env["PROJECT_ID"]
+        )
+        comparison_trigger_linkedin.compare_data()
+        def linkedin_comparison_check(**context):
+            result = comparison_trigger_linkedin.compare_data()
+            if not result:
+                raise ValueError("Linkedin data accuracy check failed — BQ data does not match source API.")
+            return result
+        task_linkedin_comparison = PythonOperator(
+            task_id="task_linkedin_comparison",
+            python_callable=linkedin_comparison_check,
+            retries=0,
+            trigger_rule="all_done",
+        )
+        def facebook_comparison_check(**context):
+            result = comparison_trigger_facebook.compare_data()
+            if not result:
+                raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
+            return result
 
+        task_facebook_comparison = PythonOperator(
+            task_id="task_facebook_comparison",
+            python_callable=facebook_comparison_check,
+            retries=0,
+            trigger_rule="all_done",
+        )
+        kube_facebook >> task_facebook_comparison
+        kube_linkedin >> task_linkedin_comparison
         [kube_facebook, kube_dv360, kube_cm360, kube_linkedin, kube_ttd, kube_hivestack] >> kube_dash >> kube_dash_search >> kube_dash_union
