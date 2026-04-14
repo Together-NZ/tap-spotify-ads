@@ -18,7 +18,11 @@ sources:
       - name: ads
       - name: campaigns
       - name: custom_conversions
-
+  - name: facebook_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'zeekr-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed') }}"
+    tables:
+      - name: facebook
  
 
   - name: linkedin_raw
@@ -29,7 +33,11 @@ sources:
       - name: creatives
       - name: campaigns
       - name: campaign_groups
-
+  - name: linkedin_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'zeekr-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET', 'linkedin_transformed') }}"
+    tables:
+      - name: linkedin
 
   - name: ttd_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'zeekr-main') }}"
@@ -37,7 +45,11 @@ sources:
     tables:
       - name: standard_streams
 
-
+  - name: ttd_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'zeekr-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed') }}"
+    tables:
+      - name: ttd
 
   - name: dash_union
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'zeekr-main') }}"
@@ -51,6 +63,11 @@ sources:
     schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search') }}"
     tables:
       - name: dash_table_search
+  - name: google_ads
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'zeekr-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_DEMAND_BIGQUERY_DATASET', 'google_ads_search_transformed') }}"
+    tables:
+      - name: google_ads_demand
 
 models:
 
