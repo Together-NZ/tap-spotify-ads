@@ -76,7 +76,6 @@ def set_env_vars_facebook(label):
     env["DBT_BIGQUERY_METHOD"] = 'oauth'
     env["DBT_BIGQUERY_PROJECT"] = 'volvo-main'
     env["DBT_BIGQUERY_DATASET"] = f'facebook_transformed__{label}'
-    env["TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_ID"] = env[f"{label}_TAP_FACEBOOK_ACCOUNT_ID"]
     return env
 
 
