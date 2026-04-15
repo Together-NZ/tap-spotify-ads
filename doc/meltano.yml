@@ -17,7 +17,7 @@ environments:
           REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
    
   
-          REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok          REFERENCE_SNAPCHAT_BIGQUERY_DATASET: dbt_test_snapchat
+          REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok       
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
 
