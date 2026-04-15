@@ -56,9 +56,9 @@ RUN --mount=type=ssh \
     && meltano invoke dbt-bigquery deps
 
 # --- DV360 query templates (meltano tap-dv360: query_standard.json / query_youtube.json) ---
-RUN curl -fsSL -o query_standard.json \
+RUN curl -fsSL -o dv360_standard.json \
       https://raw.githubusercontent.com/Together-NZ/Impact-CI-DV360_models/main/dv360_standard.json \
-    && curl -fsSL -o query_youtube.json \
+    && curl -fsSL -o dv360_youtube.json \
       https://raw.githubusercontent.com/Together-NZ/Impact-CI-DV360_models/main/dv360_youtube.json
 
 ENTRYPOINT ["meltano"]
