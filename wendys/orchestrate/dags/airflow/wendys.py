@@ -190,7 +190,7 @@ with models.DAG(
         table_name="tiktok",
         source_name="tiktok",
         start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
         secret_name="airflow-variables-meltano_wendys_main",
         project_id=env["PROJECT_ID"]
         )
