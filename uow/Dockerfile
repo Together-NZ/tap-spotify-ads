@@ -8,7 +8,7 @@ RUN pip install -r requirements.txt
 
 # Copy project files
 COPY . .
-
+RUN apt-get update && apt-get install -y openssh-client git curl
 # Retry-based installation per extractor (prevents one flaky plugin from failing all)
 RUN bash -c 'for i in {1..3}; do meltano install extractor tap-ttd && break || sleep 5; done'
 RUN bash -c 'for i in {1..3}; do meltano install extractor tap-dv360 && break || sleep 5; done'
@@ -27,5 +27,13 @@ RUN bash -c 'for i in {1..3}; do meltano install transformer dbt-bigquery && bre
 RUN pip install httplib2 google-api-python-client google-auth google-auth-oauthlib google-cloud-bigquery pandas db-dtypes pyhumps
 
 RUN pip install --no-cache-dir "pyhumps>=3.8.0"
+RUN --mount=type=ssh \
+    mkdir -p /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts && \
+    ssh -T git@github.com || true && \
+    meltano invoke dbt-bigquery deps
+RUN curl -sSL -o dv360_standard.json https://raw.githubusercontent.com/Together-NZ/Impact-CI-DV360_models/main/dv360_standard.json
+RUN curl -sSL -o dv360_youtube.json https://raw.githubusercontent.com/Together-NZ/Impact-CI-DV360_models/main/dv360_youtube.json
+    
 EXPOSE 5000 
 ENTRYPOINT ["meltano"]

@@ -4,6 +4,29 @@ project_id: 123b8fab-a351-4b3e-a547-d5446bd5cc7c
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
+
+          REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok
+          REFERENCE_SNAPCHAT_BIGQUERY_DATASET: dbt_test_snapchat
+
+          META_SUFFIX: dbt_test_facebook
+          DV360_SUFFIX: dbt_test_dv360
+
+          LINKEDIN_SUFFIX: dbt_test_linkedin
+          TTD_SUFFIX: dbt_test_ttd
+          TIKTOK_SUFFIX: dbt_test_tiktok
+          SNAPCHAT_SUFFIX: dbt_test_snapchat
+      
 - name: prod
 #state_backend:
 #  uri: gs://uowaikato-main-meltano-state-staging
@@ -131,14 +154,14 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
+    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
     commands:
       linkedin_models: run --select +linkedin
       tiktok_models:
-        args: run --select +tiktok_ads_join
+        args: run --select +tiktok
         description: Run the TikTok ads model
       snapchat_models:
-        args: run --select +snapchat_ads
+        args: run --select +snapchat
         description: Run the Snapchat ads model
       ga4_models:
         args: run --select +ga4_goal_a +ga4_goal_channel

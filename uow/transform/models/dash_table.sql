@@ -5,77 +5,39 @@
 
 
 WITH dash_table AS (
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_views,
-           campaign_name, publisher, campaign_descr,  date(date) as date
-    FROM `uowaikato-main.ttd_transformed.ttd_transformed`
+    {{ dash_table_general_process.ttd(source_name='ttd_transformed', table_name='ttd_transformed') }}
 
     UNION ALL
 
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
-           campaign_name, publisher, campaign_descr,  date(date) as date
-    FROM `uowaikato-main.dv360_transformed.dv360_standard` WHERE LOWER(campaign_name) NOT LIKE '%yt%'
+    {{ dash_table_general_process.dv360_standard(source_name='dv360_transformed', table_name='dv360_standard',yt_source_name='dv360_transformed',yt_table_name='dv360_youtube') }}
     
     UNION ALL
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
-           campaign_name, publisher, campaign_descr,  date(date) as date
-    FROM `uowaikato-main.dv360_transformed.dv360_youtube` 
+    {{ dash_table_general_process.dv360_youtube(source_name='dv360_transformed', table_name='dv360_youtube') }}
     UNION ALL
 
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion
-           ,video_25_completion,video_50_completion,video_75_completion, video_play AS video_views,
-           campaign_name, publisher, campaign_descr,  date(date) as date
-    FROM `uowaikato-main.tiktok_transformed.tiktok_ads_join`
+    {{ dash_table_general_process.tiktok(source_name='tiktok_transformed', table_name='tiktok') }}
 
     UNION ALL
 
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_views,
-           campaign_name, publisher, campaign_descr,  date(date) as date
-    FROM `uowaikato-main.snapchat_transformed.snapchat_ads`
+    {{ dash_table_general_process.snapchat(source_name='snapchat_transformed', table_name='snapchat_ads') }}
 
     UNION ALL
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_views,
-           campaign_name, publisher, campaign_descr, date(date) as date
-    FROM `uowaikato-main.linkedin_transformed.linkedin`
+    {{ dash_table_general_process.linkedin(source_name='linkedin_transformed', table_name='linkedin') }}
 
     UNION ALL
     -- Handling Google Ads arrays by converting them to strings
-        SELECT media_cost, impressions,clicks,
-              ad_name AS  creative_name,  
-                     --ARRAY_TO_STRING(media_format, ', ') AS media_format,   -- Convert array to string
-                     audience_name, -- Convert array to string
-                     ad_format,         -- Convert array to string
-                     ad_format_detail, 
-                     CAST(0 AS INT64) AS video_completion,
-                     CAST(0 AS INT64) AS video_25_completion,
-                     CAST(0 AS INT64) AS video_50_completion,
-                     CAST(0 AS INT64) AS video_75_completion,
-                     CAST(0 AS INT64) AS video_views,
-                     
-                     campaign_name,publisher, campaign_descr, 
- -- Convert array to string
-                     date,
+    {{ dash_table_general_process.google_ads(source_name='google_ads', table_name='google_ads') }}
 
-    FROM `uowaikato-main.google_ads_transformed.google_ads`
 
     UNION ALL
 
-    SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion,video_played AS video_views,
-           campaign_name, publisher, campaign_descr,  date(date) as date
-    FROM `uowaikato-main.facebook_transformed.facebook`
+    {{ dash_table_general_process.meta(source_name='facebook_transformed', table_name='facebook') }}
 
     UNION ALL
-    select media_cost,impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, 
-        CAST(0 AS INT64) AS video_completion,
-        CAST(0 AS INT64) AS video_25_completion,
-        CAST(0 AS INT64) AS video_50_completion,
-        CAST(0 AS INT64) AS video_75_completion,
-        CAST(0 AS INT64) AS video_views,
-    campaign_name,  publisher, campaign_descr,  date(date) as date,
-
-from `uowaikato-main.cm360_transformed.cm360_direct_buy`
+    {{ dash_table_general_process.cm360(source_name='cm360_transformed', table_name='cm360_direct_buy') }}
 ),
 with_channel as (
-SELECT * EXCEPT (publisher,channel), 
+SELECT * EXCEPT (publisher,channel,creative_descr), 
 dc.publisher,
 dc.channel
 

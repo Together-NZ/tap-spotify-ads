@@ -20,3 +20,7 @@ tap-ttd/
 secret.json
 test.json
 tap-hivestack/
+.meltano
+.meltano/
+transform/dbt_packages
+transform/package-lock.yml

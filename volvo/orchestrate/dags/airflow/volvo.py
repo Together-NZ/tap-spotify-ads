@@ -375,8 +375,8 @@ with models.DAG(
             )
         comparison_trigger_linkedin = ComparisonTrigger(
             project_name="volvo-main",
-            destination_table="linkedin_transformed",
-            table_name="linkedin",
+            destination_table="linkedin_transformed__volvo",
+            table_name="linkedin__volvo",
             source_name="linkedin",
             start_date=comparison_start_date,
             end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
