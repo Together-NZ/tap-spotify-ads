@@ -377,7 +377,7 @@ with models.DAG(
         project_name="doconservation-main",
         destination_table="facebook_transformed",
         table_name="facebook",
-        source_name="facebook",
+        source_name="meta",
         start_date=comparison_start_date,
         end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
         secret_name="airflow-variables-meltano_doconservation_main",
