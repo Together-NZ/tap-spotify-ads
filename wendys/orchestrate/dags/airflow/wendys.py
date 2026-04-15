@@ -183,6 +183,29 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dash(),
     )
+    comparison_trigger_tiktok = ComparisonTrigger(
+        project_name="wendys-main",
+        destination_table="tiktok_transformed",
+        table_name="tiktok",
+        source_name="tiktok",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_wendys_main",
+        project_id=env["PROJECT_ID"]
+        )
+    def tiktok_comparison_check(**context):
+        result = comparison_trigger_tiktok.compare_data()
+        if not result:
+            raise ValueError("Tiktok data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    task_tiktok_comparison = PythonOperator(
+        task_id="task_tiktok_comparison",
+        python_callable=tiktok_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    kube_tiktok >> task_tiktok_comparison
     kube_tiktok >> kube_google_ads_search >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4
     
     
