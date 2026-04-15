@@ -214,8 +214,28 @@ with models.DAG(
         env_vars=set_env_vars_dash(),
         
         )
-    set_env_task_ga4 >> kube_ga4
-    set_env_task_tiktok >> kube_tiktok
+    env = get_meltano_env()
+    comparison_trigger_tiktok = ComparisonTrigger(
+        project_name="uowaikato-main",
+        destination_table="tiktok_transformed",
+        table_name="tiktok",
+        source_name="tiktok",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_uowaikato_main",
+        project_id=env["PROJECT_ID"])
+    def tiktok_comparison_check(**context):
+        result = comparison_trigger_tiktok.compare_data()
+        if not result:
+            raise ValueError("Tiktok data accuracy check failed — BQ data does not match source API.")
+        return result
+    task_tiktok_comparison = PythonOperator(
+        task_id="task_tiktok_comparison",
+        python_callable=tiktok_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    set_env_task_ga4 >> kube_ga4 >> task_tiktok_comparison
     set_env_task_google_ads >> kube_google_ads
     [kube_tiktok,kube_google_ads] >> kube_dash >> kube_dash_union >> kube_ga4
 with models.DAG(
@@ -431,6 +451,7 @@ with models.DAG(
         secret_name="airflow-variables-meltano_uowaikato_main",
         project_id=env["PROJECT_ID"]
         )
+
     comparison_trigger_linkedin = ComparisonTrigger(
         project_name="uowaikato-main",
         destination_table="linkedin_transformed",
@@ -442,6 +463,7 @@ with models.DAG(
         project_id=env["PROJECT_ID"]
     )
     comparison_trigger_linkedin.compare_data()
+
     def linkedin_comparison_check(**context):
         result = comparison_trigger_linkedin.compare_data()
         if not result:
