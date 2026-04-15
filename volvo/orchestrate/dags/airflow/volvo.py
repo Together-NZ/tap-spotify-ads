@@ -365,8 +365,8 @@ with models.DAG(
         env=get_meltano_env()
         comparison_trigger_facebook = ComparisonTrigger(
             project_name="volvo-main",
-            destination_table="facebook_transformed",
-            table_name="facebook",
+            destination_table="facebook_transformed__volvo",
+            table_name="facebook__volvo",
             source_name="meta",
             start_date=comparison_start_date,
             end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
