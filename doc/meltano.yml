@@ -57,8 +57,8 @@ plugins:
     config:
       start_date: ${START_DATE}
       advertiser_id: '7579219911'
-      query_standard: query_standard.json
-      query_youtube: query_youtube.json
+      query_standard: dv360_standard.json
+      query_youtube: dv360_youtube.json
       service_account: 
         together-meltano@together-internal.iam.gserviceaccount.com
   - name: tap-facebook
@@ -73,6 +73,7 @@ plugins:
     - ad_sets.*
     - ads.*
     - campaigns.*
+    - custom_conversions.*
 
 
 

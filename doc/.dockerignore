@@ -1,0 +1,11 @@
+.meltano
+.venv
+**/logs
+**/target
+**/dbt_packages
+ttd.py
+tiktok.py
+report.csv
+secret.json
+state1.json
+**/.DS_Store
