@@ -85,7 +85,7 @@ def get_ttd_start_date():
 def get_meta_start_date():
     return (
         datetime.datetime.now(datetime.timezone.utc)
-        - datetime.timedelta(days=15)
+        - datetime.timedelta(days=30)
     ).replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def get_linkedin_start_date():
@@ -488,10 +488,10 @@ with models.DAG(
         trigger_rule="all_done",
     )
 
-    set_env_task_facebook >> kube_facebook
+    set_env_task_facebook >> kube_facebook >> task_facebook_comparison
     set_env_task_snapchat >> kube_snapchat 
     set_env_task_dv360 >> kube_dv360
     set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd 
-    set_env_task_linkedin >> kube_linkedin
+    set_env_task_linkedin >> kube_linkedin >> task_linkedin_comparison
     [kube_facebook,kube_snapchat,kube_dv360,kube_cm360,kube_ttd,kube_linkedin] >> kube_dash
     kube_dash >> kube_dash_union
