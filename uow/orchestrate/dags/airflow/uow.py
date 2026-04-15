@@ -462,7 +462,6 @@ with models.DAG(
         secret_name="airflow-variables-meltano_uowaikato_main",
         project_id=env["PROJECT_ID"]
     )
-    comparison_trigger_linkedin.compare_data()
 
     def linkedin_comparison_check(**context):
         result = comparison_trigger_linkedin.compare_data()
