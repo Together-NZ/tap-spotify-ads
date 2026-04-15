@@ -183,6 +183,7 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dash(),
     )
+    env = get_meltano_env()
     comparison_trigger_tiktok = ComparisonTrigger(
         project_name="wendys-main",
         destination_table="tiktok_transformed",
