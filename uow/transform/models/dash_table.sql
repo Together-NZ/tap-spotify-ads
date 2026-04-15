@@ -19,7 +19,7 @@ WITH dash_table AS (
 
     UNION ALL
 
-    {{ dash_table_general_process.snapchat(source_name='snapchat_transformed', table_name='snapchat_ads') }}
+    {{ dash_table_general_process.snapchat(source_name='snapchat_transformed', table_name='snapchat') }}
 
     UNION ALL
     {{ dash_table_general_process.linkedin(source_name='linkedin_transformed', table_name='linkedin') }}
