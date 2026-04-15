@@ -151,6 +151,8 @@ with models.DAG(
         ),
         env_vars=set_env_vars_google_ads_search()
     )
+
+    
     kube_ga4_domestic = KubernetesPodOperator(
         name="moe-ga4-domestic-to-bigquery",
         task_id="moe-ga4_domestic_to_bigquery",
@@ -268,6 +270,28 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dash_domestic()
     )
+    comparison_trigger_tiktok = ComparisonTrigger(
+        project_name="moe-main",
+        destination_table="tiktok_transformed",
+        table_name="tiktok",
+        source_name="tiktok",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_moe_main",
+        project_id=env["PROJECT_ID"]
+    )
+    def tiktok_comparison_check(**context):
+        result = comparison_trigger_tiktok.compare_data()
+        if not result:
+            raise ValueError("Tiktok data accuracy check failed — BQ data does not match source API.")
+        return result
+    task_tiktok_comparison = PythonOperator(
+        task_id="task_tiktok_comparison",
+        python_callable=tiktok_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    kube_tiktok >> task_tiktok_comparison
     kube_tiktok>>kube_dash>>kube_google_ads_search >>kube_dash_search>>kube_dash_union>>[kube_dash_union_international,kube_dash_union_domestic]>>kube_ga4_merge
     
 with models.DAG(
