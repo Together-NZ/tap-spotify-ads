@@ -89,7 +89,7 @@ WITH parsed_data AS (
         CAST(JSON_VALUE(JSON_EXTRACT(data, "$['06 - Time Weighted Decay Conversion Revenue']")) AS FLOAT64) AS Time_Weighted_Decay_Conversion_Revenue_06
 
     FROM
-        `tepuia-main.ttd_raw.standard_streams`
+        {{ source('ttd_raw', 'standard_streams') }}
 ),
 ranked_data AS (
     SELECT

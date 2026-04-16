@@ -1,1 +1,11 @@
+.meltano
+.venv
+**/logs
+**/target
+**/dbt_packages
+**/.DS_Store
 .peter/
+.meltano
+.meltano/
+transform/dbt_packages
+transform/package-lock.yml

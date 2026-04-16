@@ -1,21 +1,57 @@
-# registry.gitlab.com/meltano/meltano:latest is also available in GitLab Registry
-ARG MELTANO_IMAGE=meltano/meltano:latest
-FROM $MELTANO_IMAGE
+# Meltano + dbt-bigquery image for tepuia.
+#
+# Build (private git packages need SSH agent):
+#   docker build --ssh default -t meltano-tepuia .
+#
+# dbt deps: `meltano invoke dbt-bigquery deps` reads transform/packages.yml and
+# populates transform/dbt_packages/ inside the image.
+
+FROM meltano/meltano:v3-python3.10
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssh-client \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /project
 
-# Install any additional requirements
-COPY ./requirements.txt .
-RUN pip install -r requirements.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir -U "setuptools<81"
 
-
-# Copy over Meltano project directory
 COPY . .
-RUN meltano install 
-RUN pip install httplib2 google-api-python-client google-auth google-auth-oauthlib google-cloud-bigquery pandas db-dtypes
 
+RUN --mount=type=ssh \
+    mkdir -p /root/.ssh \
+    && ssh-keyscan github.com >> /root/.ssh/known_hosts \
+    && ssh -T git@github.com || true \
+    && meltano install
 
-# Expose default port used by `meltano ui`
-EXPOSE 5000
+RUN pip install --no-cache-dir \
+    httplib2 \
+    google-api-python-client \
+    google-auth \
+    google-auth-oauthlib \
+    google-cloud-bigquery \
+    google-cloud-storage \
+    pandas \
+    pyarrow
+
+RUN for v in /project/.meltano/*/*/venv/bin/python; do \
+      "$v" -m ensurepip --upgrade || true; \
+      "$v" -m pip install --no-cache-dir -U "setuptools<81" || true; \
+    done
+
+RUN --mount=type=ssh \
+    mkdir -p /root/.ssh \
+    && ssh-keyscan github.com >> /root/.ssh/known_hosts \
+    && ssh -T git@github.com || true \
+    && meltano invoke dbt-bigquery deps
+
+RUN curl -fsSL -o dv360_standard.json \
+      https://raw.githubusercontent.com/Together-NZ/Impact-CI-DV360_models/main/dv360_standard.json \
+    && curl -fsSL -o dv360_youtube.json \
+      https://raw.githubusercontent.com/Together-NZ/Impact-CI-DV360_models/main/dv360_youtube.json
 
 ENTRYPOINT ["meltano"]

@@ -1,0 +1,139 @@
+version: 2
+
+# Tepuia BigQuery layout. Defaults match `tepuia-main.*`.
+# Override with DBT_BIGQUERY_PROJECT and REFERENCE_* env vars per environment.
+
+sources:
+
+  - name: ga4_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw') }}"
+    tables:
+      - name: goal
+      - name: ecommerce_goal
+
+  - name: dash_union
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table') }}"
+    tables:
+      - name: dash_union
+      - name: dash_table
+
+  - name: dash_union_search
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET', 'dash_table_search') }}"
+    tables:
+      - name: dash_table_search
+
+  - name: dv360_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: dv360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: facebook_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: facebook_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed') }}"
+    tables:
+      - name: facebook
+
+  - name: ttd_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_RAW_BIGQUERY_DATASET', 'ttd_raw') }}"
+    tables:
+      - name: standard_streams
+
+  - name: ttd_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed') }}"
+    tables:
+      - name: ttd_transformed
+
+  - name: google_ads
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed') }}"
+    tables:
+      - name: google_ads_demand
+      - name: google_ads_search
+      - name: google_ads_demand_2
+
+  - name: google_ads_dv_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_DV_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_dv_transformed') }}"
+    tables:
+      - name: google_ads_dv
+
+  - name: cm360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    tables:
+      - name: cm360_direct_buy
+      - name: cm360_seralized
+
+models:
+  - name: facebook
+    config:
+      schema: "{{ env_var('META_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 14549.95
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 2857616
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 22450   
+  - name: dv360_standard
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 68223.08
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5840202
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 7786
+  - name: dv360_youtube
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 67127.98
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5248537
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 4432

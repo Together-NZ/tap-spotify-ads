@@ -4,6 +4,28 @@ project_id: 1e524c19-2fff-406e-9f57-2873ab2d7f86
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_dv360_transformed
+          REFERENCE_TTD_RAW_BIGQUERY_DATASET: dbt_test_ttd_raw
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd_transformed
+          REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_GOOGLE_ADS_DV_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_dv
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
+          META_SUFFIX: dbt_test_facebook
+          DV360_SUFFIX: dbt_test_dv360
+          TTD_SUFFIX: dbt_test_ttd
+          GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
 - name: prod
 #state_backend:
 #  uri: gs://taxi-together-main-meltano-state-staging
@@ -27,7 +49,7 @@ plugins:
       service_account: together-meltano@together-internal.iam.gserviceaccount.com
   - name: tap-ga4
     variant: meltanolabs
-    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
       reports: ${GA4_REPORTS}
       start_date: ${START_DATE}
@@ -56,6 +78,7 @@ plugins:
     - ad_sets.*
     - ads.*
     - campaigns.*
+    - custom_conversions.*
   loaders:
   - name: target-bigquery
     variant: z3z1ma
@@ -80,23 +103,37 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
+    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
     commands:
-      cm360_models: 
-        args: run --select cm360_seralized cm360_direct_buy
+      cm360_models:
+        args: run --select +cm360_seralized +cm360_direct_buy
+        description: Run CM360 models
       dv360_models:
-        args: run --select dv360_standard dv360_youtube
-      ttd_models: 
-        args: run --select ttd_transformed
-      facebook_models: 
-        args: run --select facebook
+        args: run --select +dv360_standard +dv360_youtube
+        description: Run DV360 models
+      ttd_models:
+        args: run --select +ttd_transformed
+        description: Run TTD model
+      facebook_models:
+        args: run --select +facebook
+        description: Run Facebook model
       google_ads_models:
-        args: run --select google_ads_search google_ads_demand
-      ga4_goal_models: 
-        args: run --select ga4_goal_a ga4_goal_channel
+        args: run --select +google_ads_search +google_ads_demand + google_ads_demand_2
+        description: Run Google Ads Search / Demand Gen models
+ 
+      ga4_goal_models:
+        args: run --select +ga4_goal_a +ga4_goal_channel
+        description: Run GA4 goal models
       ga4_ecommerce_models:
-        args: run --select ga4_goal_ecommerce
+        args: run --select +ga4_goal_ecommerce
+        description: Run GA4 ecommerce goal model
+    config:
+      project: tepuia-main
+      location: australia-southeast1
+      method: oauth
   files:
   - name: files-airflow
     variant: meltano
     pip_url: git+https://github.com/meltano/files-airflow.git
+elt:
+  buffer_size: 52428800
