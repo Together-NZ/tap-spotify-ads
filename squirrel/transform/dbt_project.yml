@@ -2,7 +2,7 @@ name: my_meltano_project
 version: '1.0'
 profile: meltano
 config-version: 2
-require-dbt-version: [">=1.0.0", "<2.0.0"]
+require-dbt-version: [">=1.9.0", "<2.0.0"]
 model-paths:
 - models
 analysis-paths:

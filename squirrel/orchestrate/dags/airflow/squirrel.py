@@ -13,6 +13,7 @@ import logging
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 import json
+from comparison_package import ComparisonTrigger
 import time
 from datetime import timedelta,datetime, timezone
 import datetime
@@ -31,6 +32,7 @@ log.setLevel(logging.INFO)
 
 local_tz = pendulum.timezone("Pacific/Auckland")
 yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=13)
+comparison_start_date = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 default_args = {
     "retries": 3,
     "max_active_runs": 1,
@@ -130,6 +132,29 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(),
     )
+    env = get_meltano_env()
+    comparison_trigger_tiktok = ComparisonTrigger(
+        project_name="squirrel-together-main",
+        destination_table="tiktok_transformed",
+        table_name="tiktok",
+        source_name="tiktok",
+        start_date=comparison_start_date,
+        end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_squirrel_main",
+        project_id=env["PROJECT_ID"]
+        )
+    def tiktok_comparison_check(**context):
+        result = comparison_trigger_tiktok.compare_data()
+        if not result:
+            raise ValueError("Tiktok data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    task_tiktok_comparison = PythonOperator(
+        task_id="task_tiktok_comparison",
+        python_callable=tiktok_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
     kube_dash_union=KubernetesPodOperator(
             name="squirrel-dash-union-to-bigquery",
             task_id="squirrel-dash_union_to_bigquery",
@@ -141,6 +166,7 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(),
     )
+    kube_tiktok>>task_tiktok_comparison
     kube_tiktok>>kube_dash>>kube_dash_union>>kube_ga4
     
     
@@ -280,4 +306,28 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(),
     )
+    comparison_trigger_facebook = ComparisonTrigger(
+        project_name="squirrel-together-main",
+        destination_table="facebook_transformed",
+        table_name="facebook",
+        source_name="meta",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_squirrel_main",
+        project_id=env["PROJECT_ID"]
+        )
+    def facebook_comparison_check(**context):
+        result = comparison_trigger_facebook.compare_data()
+        if not result:
+            raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    task_facebook_comparison = PythonOperator(
+        task_id="task_facebook_comparison",
+        python_callable=facebook_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    kube_facebook>>task_facebook_comparison
+
     [kube_facebook,kube_ttd,kube_hivestack,kube_cm360,kube_dv360]>>kube_dash>>kube_dash_union

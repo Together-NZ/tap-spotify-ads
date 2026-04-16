@@ -54,7 +54,7 @@ WITH cm360reference AS (
                 SAFE.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.date"))) DESC
         ) AS row_num
     FROM 
-        `together-internal.cm360_raw.cm360_report_stream`
+        {{ source('cm360_raw', 'cm360_report_stream') }}
     WHERE 
         lower(JSON_VALUE(JSON_EXTRACT(data, "$.advertiser"))) = 'squirrel'
 )    
