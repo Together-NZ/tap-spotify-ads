@@ -137,3 +137,19 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 4432
+  - name: ttd_transformed
+    config: 
+      schema: "{{ env_var('TTD_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 52112.58
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 798906
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 363

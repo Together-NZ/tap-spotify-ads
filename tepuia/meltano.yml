@@ -13,19 +13,10 @@ environments:
           DBT_BIGQUERY_LOCATION: australia-southeast1
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
           REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
-          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_dv360_transformed
-          REFERENCE_TTD_RAW_BIGQUERY_DATASET: dbt_test_ttd_raw
-          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd_transformed
-          REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_search
-          REFERENCE_GOOGLE_ADS_DV_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_dv
-          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
-          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
-          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
-          REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
           TTD_SUFFIX: dbt_test_ttd
-          GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
 - name: prod
 #state_backend:
 #  uri: gs://taxi-together-main-meltano-state-staging
